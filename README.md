@@ -9,6 +9,10 @@ morning, so the report is a single HTML mail with the things that need attention
 
 Tested on OPNsense 26.7.
 
+![A daily report](docs/report-en_US.png)
+
+*A daily report (sample data).*
+
 ## What is in a report
 
 - **Needs attention**: gateway down or losing packets, outage alarms, new devices, high severity
@@ -43,6 +47,17 @@ Each schedule picks which of these sections it includes.
 - Preview and "send now" buttons, a history of everything sent, and copies of sent reports kept
   on the firewall for a configurable number of days.
 - Mail goes through the SMTP server already configured for Monit, or a separate one.
+
+## Screenshots
+
+The GUI below is shown in Arabic, with the right-to-left layout from
+[opnsense-rtl](https://github.com/AbdelmonemAwad/opnsense-rtl); in English it is laid out the usual way.
+
+| Schedules | Editing a schedule |
+| --- | --- |
+| ![Schedules](docs/gui-schedules-ar.png) | ![Editing a schedule](docs/gui-dialog-ar.png) |
+
+The same report in Arabic: [docs/report-ar_SA.png](docs/report-ar_SA.png).
 
 ## Where the data comes from
 

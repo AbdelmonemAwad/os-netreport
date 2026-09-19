@@ -120,17 +120,21 @@ def esc(s):
 
 
 def human_bytes(n):
+    """e.g. 38.4 GB, wrapped in unicode isolates so right-to-left text keeps the unit after the number"""
     n = float(n or 0)
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
         if abs(n) < 1000:
-            return f'{int(n)} B' if unit == 'B' else f'{n:.1f} {unit}'
+            text = f'{int(n)} B' if unit == 'B' else f'{n:.1f} {unit}'
+            break
         n /= 1000
-    return f'{n:.1f} PB'
+    else:
+        text = f'{n:.1f} PB'
+    return f'⁦{text}⁩'
 
 
 def load_json(path, default):
     try:
-        with open(path) as fh:
+        with open(path, encoding='utf-8') as fh:
             return json.load(fh)
     except Exception:
         return default
@@ -139,7 +143,7 @@ def load_json(path, default):
 def save_json(path, data):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     tmp = path + '.tmp'
-    with open(tmp, 'w') as fh:
+    with open(tmp, 'w', encoding='utf-8') as fh:
         json.dump(data, fh, indent=1, ensure_ascii=False)
     os.replace(tmp, path)
 
@@ -917,7 +921,7 @@ def archive(settings, uuid, page):
         return ''
     os.makedirs(ARCHIVE_DIR, exist_ok=True)
     name = f'{datetime.datetime.now():%Y%m%d-%H%M%S}-{(uuid or "x")[:8]}.html'
-    with open(os.path.join(ARCHIVE_DIR, name), 'w') as fh:
+    with open(os.path.join(ARCHIVE_DIR, name), 'w', encoding='utf-8') as fh:
         fh.write(page)
     cutoff = time.time() - keep * 86400
     for path in glob.glob(os.path.join(ARCHIVE_DIR, '*.html')):
@@ -1050,7 +1054,7 @@ def main():
         print(json.dumps(load_json(HISTORY_FILE, []), ensure_ascii=False))
     elif cmd == 'view':
         if re.match(r'^[0-9A-Za-z_-]+\.html$', arg) and os.path.exists(os.path.join(ARCHIVE_DIR, arg)):
-            print(open(os.path.join(ARCHIVE_DIR, arg)).read())
+            print(open(os.path.join(ARCHIVE_DIR, arg), encoding='utf-8').read())
     else:
         sys.exit(__doc__)
 
