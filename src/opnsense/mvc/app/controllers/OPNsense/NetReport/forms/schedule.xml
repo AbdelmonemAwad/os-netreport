@@ -1,0 +1,123 @@
+<form>
+    <field>
+        <id>schedule.enabled</id>
+        <label>Enabled</label>
+        <type>checkbox</type>
+        <grid_view>
+            <width>6em</width>
+            <type>boolean</type>
+            <formatter>rowtoggle</formatter>
+        </grid_view>
+    </field>
+    <field>
+        <id>schedule.description</id>
+        <label>Name</label>
+        <type>text</type>
+        <help>For example: Daily report, Weekly summary for the family.</help>
+    </field>
+    <field>
+        <type>header</type>
+        <label>When</label>
+    </field>
+    <field>
+        <id>schedule.frequency</id>
+        <label>Repeat</label>
+        <type>dropdown</type>
+    </field>
+    <field>
+        <id>schedule.weekdays</id>
+        <label>Days of the week</label>
+        <type>select_multiple</type>
+        <help>Pick one or more days, for example Sunday only for a weekly summary.</help>
+        <grid_view>
+            <ignore>true</ignore>
+        </grid_view>
+    </field>
+    <field>
+        <id>schedule.monthday</id>
+        <label>Day of the month</label>
+        <type>dropdown</type>
+        <grid_view>
+            <ignore>true</ignore>
+        </grid_view>
+    </field>
+    <field>
+        <id>schedule.send_time</id>
+        <label>Time</label>
+        <type>text</type>
+        <hint>08:00</hint>
+        <help>24-hour clock, firewall time zone. If the firewall is off at that moment the report is sent when it comes back, up to 12 hours later.</help>
+    </field>
+    <field>
+        <id>schedule.period</id>
+        <label>Period covered</label>
+        <type>dropdown</type>
+        <help>By default each report covers the time since the previous one, so nothing is counted twice or missed.</help>
+    </field>
+    <field>
+        <type>header</type>
+        <label>Content</label>
+    </field>
+    <field>
+        <id>schedule.language</id>
+        <label>Language</label>
+        <type>dropdown</type>
+    </field>
+    <field>
+        <id>schedule.sections</id>
+        <label>Sections</label>
+        <type>select_multiple</type>
+        <help>Choose which parts appear in the report.</help>
+        <grid_view>
+            <ignore>true</ignore>
+        </grid_view>
+    </field>
+    <field>
+        <id>schedule.top_n</id>
+        <label>Rows per list</label>
+        <type>text</type>
+        <help>How many entries the top lists show (devices, domains, alerts).</help>
+        <grid_view>
+            <ignore>true</ignore>
+        </grid_view>
+    </field>
+    <field>
+        <id>schedule.compare</id>
+        <label>Compare with previous period</label>
+        <type>checkbox</type>
+        <help>Show how usage, DNS queries and alerts changed against the period before.</help>
+        <grid_view>
+            <ignore>true</ignore>
+        </grid_view>
+    </field>
+    <field>
+        <type>header</type>
+        <label>Delivery</label>
+    </field>
+    <field>
+        <id>schedule.recipients</id>
+        <label>Recipients</label>
+        <type>select_multiple</type>
+        <style>tokenize</style>
+        <allownew>true</allownew>
+        <help>Leave empty to use the default recipients from the settings tab.</help>
+    </field>
+    <field>
+        <id>schedule.only_issues</id>
+        <label>Only when something needs attention</label>
+        <type>checkbox</type>
+        <help>Skip the mail when there are no warnings, such as an outage, a new device, a severe alert or a threshold crossed.</help>
+        <grid_view>
+            <ignore>true</ignore>
+        </grid_view>
+    </field>
+    <field>
+        <id>schedule.attach</id>
+        <label>Attach as file</label>
+        <type>checkbox</type>
+        <help>Also attach the report as an HTML file, handy for keeping or forwarding.</help>
+        <grid_view>
+            <ignore>true</ignore>
+        </grid_view>
+    </field>
+</form>

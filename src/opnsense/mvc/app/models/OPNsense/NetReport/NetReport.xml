@@ -1,0 +1,276 @@
+<model>
+    <mount>//OPNsense/NetReport</mount>
+    <version>1.0.0</version>
+    <description>Network report</description>
+    <items>
+        <general>
+            <enabled type="BooleanField">
+                <Required>Y</Required>
+                <Default>1</Default>
+            </enabled>
+            <title type="TextField">
+                <Required>Y</Required>
+                <Default>Home network</Default>
+            </title>
+            <recipients type="CSVListField">
+                <Mask>/^[^@,\s]+@[^@,\s]+\.[^@,\s]+(,[^@,\s]+@[^@,\s]+\.[^@,\s]+)*$/</Mask>
+                <ValidationMessage>Enter one or more valid email addresses.</ValidationMessage>
+            </recipients>
+            <language type="OptionField">
+                <Required>Y</Required>
+                <Default>default</Default>
+                <OptionValues>
+                    <default>System language</default>
+                    <en_US>English</en_US>
+                    <ar_SA>Arabic</ar_SA>
+                    <zh_CN>Chinese (Simplified)</zh_CN>
+                    <zh_TW>Chinese (Traditional)</zh_TW>
+                    <cs_CZ>Czech</cs_CZ>
+                    <fr_FR>French</fr_FR>
+                    <de_DE>German</de_DE>
+                    <el_GR>Greek</el_GR>
+                    <it_IT>Italian</it_IT>
+                    <ja_JP>Japanese</ja_JP>
+                    <ko_KR>Korean</ko_KR>
+                    <no_NO>Norwegian</no_NO>
+                    <fa_IR>Persian</fa_IR>
+                    <pl_PL>Polish</pl_PL>
+                    <pt_BR>Portuguese (Brazil)</pt_BR>
+                    <pt_PT>Portuguese (Portugal)</pt_PT>
+                    <ru_RU>Russian</ru_RU>
+                    <es_ES>Spanish</es_ES>
+                    <tr_TR>Turkish</tr_TR>
+                    <uk_UA>Ukrainian</uk_UA>
+                    <vi_VN>Vietnamese</vi_VN>
+                </OptionValues>
+            </language>
+            <mail_source type="OptionField">
+                <Required>Y</Required>
+                <Default>monit</Default>
+                <OptionValues>
+                    <monit>Use the Monit mail settings</monit>
+                    <custom>Custom SMTP server</custom>
+                </OptionValues>
+            </mail_source>
+            <smtp_host type="HostnameField"/>
+            <smtp_port type="PortField">
+                <Default>465</Default>
+            </smtp_port>
+            <smtp_security type="OptionField">
+                <Required>Y</Required>
+                <Default>ssl</Default>
+                <OptionValues>
+                    <ssl>SSL/TLS</ssl>
+                    <starttls>STARTTLS</starttls>
+                    <none>None</none>
+                </OptionValues>
+            </smtp_security>
+            <smtp_user type="TextField"/>
+            <smtp_password type="UpdateOnlyTextField"/>
+            <from_address type="TextField">
+                <Mask>/^[^@,\s]+@[^@,\s]+\.[^@,\s]+$/</Mask>
+                <ValidationMessage>Enter a valid email address.</ValidationMessage>
+            </from_address>
+            <wan_interface type="InterfaceField">
+                <Required>Y</Required>
+                <Default>wan</Default>
+            </wan_interface>
+            <lan_interface type="InterfaceField">
+                <Required>Y</Required>
+                <Default>lan</Default>
+            </lan_interface>
+            <vpn_interfaces type="InterfaceField">
+                <Multiple>Y</Multiple>
+            </vpn_interfaces>
+            <new_device_alert type="BooleanField">
+                <Required>Y</Required>
+                <Default>1</Default>
+            </new_device_alert>
+            <temp_warn type="IntegerField">
+                <Required>Y</Required>
+                <Default>75</Default>
+                <MinimumValue>30</MinimumValue>
+                <MaximumValue>110</MaximumValue>
+            </temp_warn>
+            <disk_warn type="IntegerField">
+                <Required>Y</Required>
+                <Default>85</Default>
+                <MinimumValue>10</MinimumValue>
+                <MaximumValue>100</MaximumValue>
+            </disk_warn>
+            <loss_warn type="IntegerField">
+                <Required>Y</Required>
+                <Default>5</Default>
+                <MinimumValue>1</MinimumValue>
+                <MaximumValue>100</MaximumValue>
+            </loss_warn>
+            <backup_warn type="IntegerField">
+                <Required>Y</Required>
+                <Default>2</Default>
+                <MinimumValue>0</MinimumValue>
+                <MaximumValue>60</MaximumValue>
+            </backup_warn>
+            <monthly_cap type="IntegerField">
+                <Required>Y</Required>
+                <Default>0</Default>
+                <MinimumValue>0</MinimumValue>
+            </monthly_cap>
+            <keep_days type="IntegerField">
+                <Required>Y</Required>
+                <Default>90</Default>
+                <MinimumValue>0</MinimumValue>
+                <MaximumValue>3650</MaximumValue>
+            </keep_days>
+        </general>
+        <schedules>
+            <schedule type="ArrayField">
+                <enabled type="BooleanField">
+                    <Required>Y</Required>
+                    <Default>1</Default>
+                </enabled>
+                <description type="TextField">
+                    <Required>Y</Required>
+                </description>
+                <frequency type="OptionField">
+                    <Required>Y</Required>
+                    <Default>daily</Default>
+                    <OptionValues>
+                        <daily>Daily</daily>
+                        <weekly>Weekly</weekly>
+                        <monthly>Monthly</monthly>
+                    </OptionValues>
+                </frequency>
+                <send_time type="TextField">
+                    <Required>Y</Required>
+                    <Default>08:00</Default>
+                    <Mask>/^([01][0-9]|2[0-3]):[0-5][0-9]$/</Mask>
+                    <ValidationMessage>Enter the time as HH:MM (24-hour clock).</ValidationMessage>
+                </send_time>
+                <weekdays type="OptionField">
+                    <Multiple>Y</Multiple>
+                    <Default>0</Default>
+                    <OptionValues>
+                        <v0 value="0">Sunday</v0>
+                        <v1 value="1">Monday</v1>
+                        <v2 value="2">Tuesday</v2>
+                        <v3 value="3">Wednesday</v3>
+                        <v4 value="4">Thursday</v4>
+                        <v5 value="5">Friday</v5>
+                        <v6 value="6">Saturday</v6>
+                    </OptionValues>
+                </weekdays>
+                <monthday type="OptionField">
+                    <Required>Y</Required>
+                    <Default>1</Default>
+                    <OptionValues>
+                        <v1 value="1">1</v1>
+                        <v2 value="2">2</v2>
+                        <v3 value="3">3</v3>
+                        <v4 value="4">4</v4>
+                        <v5 value="5">5</v5>
+                        <v6 value="6">6</v6>
+                        <v7 value="7">7</v7>
+                        <v8 value="8">8</v8>
+                        <v9 value="9">9</v9>
+                        <v10 value="10">10</v10>
+                        <v11 value="11">11</v11>
+                        <v12 value="12">12</v12>
+                        <v13 value="13">13</v13>
+                        <v14 value="14">14</v14>
+                        <v15 value="15">15</v15>
+                        <v16 value="16">16</v16>
+                        <v17 value="17">17</v17>
+                        <v18 value="18">18</v18>
+                        <v19 value="19">19</v19>
+                        <v20 value="20">20</v20>
+                        <v21 value="21">21</v21>
+                        <v22 value="22">22</v22>
+                        <v23 value="23">23</v23>
+                        <v24 value="24">24</v24>
+                        <v25 value="25">25</v25>
+                        <v26 value="26">26</v26>
+                        <v27 value="27">27</v27>
+                        <v28 value="28">28</v28>
+                        <last>Last day of the month</last>
+                    </OptionValues>
+                </monthday>
+                <period type="OptionField">
+                    <Required>Y</Required>
+                    <Default>auto</Default>
+                    <OptionValues>
+                        <auto>Since the previous scheduled report</auto>
+                        <day>Last 24 hours</day>
+                        <week>Last 7 days</week>
+                        <month>Last 30 days</month>
+                        <prev_month>Previous calendar month</prev_month>
+                        <mtd>Month to date</mtd>
+                    </OptionValues>
+                </period>
+                <language type="OptionField">
+                    <Required>Y</Required>
+                    <Default>default</Default>
+                    <OptionValues>
+                        <default>System language</default>
+                        <en_US>English</en_US>
+                        <ar_SA>Arabic</ar_SA>
+                        <zh_CN>Chinese (Simplified)</zh_CN>
+                        <zh_TW>Chinese (Traditional)</zh_TW>
+                        <cs_CZ>Czech</cs_CZ>
+                        <fr_FR>French</fr_FR>
+                        <de_DE>German</de_DE>
+                        <el_GR>Greek</el_GR>
+                        <it_IT>Italian</it_IT>
+                        <ja_JP>Japanese</ja_JP>
+                        <ko_KR>Korean</ko_KR>
+                        <no_NO>Norwegian</no_NO>
+                        <fa_IR>Persian</fa_IR>
+                        <pl_PL>Polish</pl_PL>
+                        <pt_BR>Portuguese (Brazil)</pt_BR>
+                        <pt_PT>Portuguese (Portugal)</pt_PT>
+                        <ru_RU>Russian</ru_RU>
+                        <es_ES>Spanish</es_ES>
+                        <tr_TR>Turkish</tr_TR>
+                        <uk_UA>Ukrainian</uk_UA>
+                        <vi_VN>Vietnamese</vi_VN>
+                    </OptionValues>
+                </language>
+                <recipients type="CSVListField">
+                    <Mask>/^[^@,\s]+@[^@,\s]+\.[^@,\s]+(,[^@,\s]+@[^@,\s]+\.[^@,\s]+)*$/</Mask>
+                    <ValidationMessage>Enter one or more valid email addresses.</ValidationMessage>
+                </recipients>
+                <sections type="OptionField">
+                    <Multiple>Y</Multiple>
+                    <Required>Y</Required>
+                    <Default>summary,internet,connection,dns,security,devices,system</Default>
+                    <OptionValues>
+                        <summary>Highlights</summary>
+                        <internet>Internet usage</internet>
+                        <connection>Connection quality</connection>
+                        <dns>DNS filtering</dns>
+                        <security>Security</security>
+                        <devices>Devices</devices>
+                        <system>Firewall health</system>
+                    </OptionValues>
+                </sections>
+                <top_n type="IntegerField">
+                    <Required>Y</Required>
+                    <Default>10</Default>
+                    <MinimumValue>3</MinimumValue>
+                    <MaximumValue>50</MaximumValue>
+                </top_n>
+                <compare type="BooleanField">
+                    <Required>Y</Required>
+                    <Default>1</Default>
+                </compare>
+                <only_issues type="BooleanField">
+                    <Required>Y</Required>
+                    <Default>0</Default>
+                </only_issues>
+                <attach type="BooleanField">
+                    <Required>Y</Required>
+                    <Default>0</Default>
+                </attach>
+            </schedule>
+        </schedules>
+    </items>
+</model>

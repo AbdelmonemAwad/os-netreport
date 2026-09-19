@@ -1,0 +1,10 @@
+<acl>
+    <page-reporting-netreport>
+        <name>Reporting: Network Report</name>
+        <description>Allow access to the network report settings, previews and history</description>
+        <patterns>
+            <pattern>ui/netreport/*</pattern>
+            <pattern>api/netreport/*</pattern>
+        </patterns>
+    </page-reporting-netreport>
+</acl>

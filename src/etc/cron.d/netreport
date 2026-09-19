@@ -1,0 +1,3 @@
+# Network report scheduler: sends due reports and watches for new devices.
+# The schedules themselves are configured under Reporting: Network Report.
+*	*	*	*	*	root	/usr/local/opnsense/scripts/netreport/netreport.py scheduler > /dev/null 2>&1

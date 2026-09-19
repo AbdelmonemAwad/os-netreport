@@ -1,0 +1,5 @@
+<menu>
+    <Reporting>
+        <NetReport VisibleName="Network Report" cssClass="fa fa-envelope-o fa-fw" url="/ui/netreport"/>
+    </Reporting>
+</menu>

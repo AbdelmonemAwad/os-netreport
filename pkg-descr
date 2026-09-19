@@ -1,0 +1,16 @@
+Network Report mails a readable summary of the network on a schedule:
+internet volume, connection quality, DNS blocking, security alerts,
+devices and firewall health, in Arabic or English.
+
+Any number of schedules can be defined (daily, selected weekdays or a
+day of the month) with their own time, period, language, sections and
+recipients. Reports can be previewed and sent from the GUI, a history
+of sent reports is kept, and an alert is mailed when a new device
+joins the local network.
+
+Plugin Changelog
+================
+
+1.0
+
+* Initial release

@@ -1,0 +1,145 @@
+<form>
+    <field>
+        <type>header</type>
+        <label>General</label>
+    </field>
+    <field>
+        <id>netreport.general.enabled</id>
+        <label>Enabled</label>
+        <type>checkbox</type>
+        <help>Send the scheduled reports and alerts. When disabled nothing is mailed, but previews still work.</help>
+    </field>
+    <field>
+        <id>netreport.general.title</id>
+        <label>Network name</label>
+        <type>text</type>
+        <help>Shown in the report heading and the mail subject.</help>
+    </field>
+    <field>
+        <id>netreport.general.recipients</id>
+        <label>Default recipients</label>
+        <type>select_multiple</type>
+        <style>tokenize</style>
+        <allownew>true</allownew>
+        <help>Used by every schedule that has no recipients of its own. When empty, the mail account's own address is used.</help>
+    </field>
+    <field>
+        <id>netreport.general.language</id>
+        <label>Alert language</label>
+        <type>dropdown</type>
+        <help>Language of the instant alerts and test messages. Every schedule has its own report language.</help>
+    </field>
+    <field>
+        <type>header</type>
+        <label>Mail delivery</label>
+    </field>
+    <field>
+        <id>netreport.general.mail_source</id>
+        <label>Mail server</label>
+        <type>dropdown</type>
+        <help>Reuse the mail server already configured under Services: Monit, or enter a separate SMTP server.</help>
+    </field>
+    <field>
+        <id>netreport.general.smtp_host</id>
+        <label>SMTP server</label>
+        <type>text</type>
+        <style>smtp_custom</style>
+    </field>
+    <field>
+        <id>netreport.general.smtp_port</id>
+        <label>SMTP port</label>
+        <type>text</type>
+        <style>smtp_custom</style>
+        <help>Usually 465 for SSL/TLS or 587 for STARTTLS.</help>
+    </field>
+    <field>
+        <id>netreport.general.smtp_security</id>
+        <label>Encryption</label>
+        <type>dropdown</type>
+        <style>selectpicker smtp_custom</style>
+    </field>
+    <field>
+        <id>netreport.general.smtp_user</id>
+        <label>Username</label>
+        <type>text</type>
+        <style>smtp_custom</style>
+    </field>
+    <field>
+        <id>netreport.general.smtp_password</id>
+        <label>Password</label>
+        <type>password</type>
+        <style>smtp_custom</style>
+        <help>Stored on this firewall only. Leave empty to keep the current password.</help>
+    </field>
+    <field>
+        <id>netreport.general.from_address</id>
+        <label>Sender address</label>
+        <type>text</type>
+        <style>smtp_custom</style>
+    </field>
+    <field>
+        <type>header</type>
+        <label>Interfaces</label>
+    </field>
+    <field>
+        <id>netreport.general.wan_interface</id>
+        <label>Internet interface</label>
+        <type>dropdown</type>
+        <help>Used for internet volume and the monthly data cap.</help>
+    </field>
+    <field>
+        <id>netreport.general.lan_interface</id>
+        <label>Local network</label>
+        <type>dropdown</type>
+        <help>Devices on this network are listed in the report and watched for new arrivals.</help>
+    </field>
+    <field>
+        <id>netreport.general.vpn_interfaces</id>
+        <label>VPN tunnels</label>
+        <type>select_multiple</type>
+        <help>Traffic and state of these tunnels are included in the report.</help>
+    </field>
+    <field>
+        <type>header</type>
+        <label>Alerts and thresholds</label>
+    </field>
+    <field>
+        <id>netreport.general.new_device_alert</id>
+        <label>New device alert</label>
+        <type>checkbox</type>
+        <help>Send a short message within five minutes when a device joins the local network for the first time.</help>
+    </field>
+    <field>
+        <id>netreport.general.temp_warn</id>
+        <label>Temperature warning (°C)</label>
+        <type>text</type>
+    </field>
+    <field>
+        <id>netreport.general.disk_warn</id>
+        <label>Disk usage warning (%)</label>
+        <type>text</type>
+    </field>
+    <field>
+        <id>netreport.general.loss_warn</id>
+        <label>Packet loss warning (%)</label>
+        <type>text</type>
+    </field>
+    <field>
+        <id>netreport.general.backup_warn</id>
+        <label>Backup age warning (days)</label>
+        <type>text</type>
+        <help>Warn when the last remote configuration backup is older than this. 0 disables the check.</help>
+    </field>
+    <field>
+        <id>netreport.general.monthly_cap</id>
+        <label>Monthly data cap (GB)</label>
+        <type>text</type>
+        <help>Download and upload together. Warns at 80% and 100%. 0 means unlimited.</help>
+    </field>
+    <field>
+        <id>netreport.general.keep_days</id>
+        <label>Keep sent reports (days)</label>
+        <type>text</type>
+        <help>Copies of sent reports stay on the firewall for this many days and can be opened from the history tab. 0 keeps none.</help>
+    </field>
+</form>
