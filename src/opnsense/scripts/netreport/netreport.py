@@ -50,7 +50,6 @@ import json
 import os
 import re
 import smtplib
-import socket
 import ssl
 import subprocess
 import sys
