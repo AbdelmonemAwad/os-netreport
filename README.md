@@ -75,8 +75,58 @@ whose source is missing simply show "no data".
 
 ## Installation
 
-The plugin is not in the official repository yet. To install it by hand, copy this repository
-to the firewall and run the installer as root:
+The plugin is not in the OPNsense plugin repository yet, so there is no
+`pkg install os-netreport`. There is a package, and you build it — on the firewall,
+from this repository, in one command. Building needs no root and installs nothing.
+
+```sh
+fetch -o /tmp/netreport.tar.gz https://github.com/AbdelmonemAwad/os-netreport/archive/refs/heads/main.tar.gz
+tar -xzf /tmp/netreport.tar.gz -C /tmp
+cd /tmp/os-netreport-main
+sh tools/make-package.sh -o /tmp -c net
+```
+
+It tells you where it put the package, its digest, and which commit it came from:
+
+```
+/tmp/os-netreport-1.0.pkg
+SHA256 fa87eefb3acd9c1d2094e00e7816a84ae2f52804fb5c195cecea9f64b5f1c417
+commit 3ba5f0ad1
+built on OPNsense 26.7 amd64
+```
+
+The digest is of the file you just built. Two builds of the same commit do not
+produce the same digest unless the commit date is passed in, because otherwise every
+file in the archive carries its own mtime:
+
+```sh
+SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) sh tools/make-package.sh -o /tmp
+```
+
+Read it before you install it. Nothing about a package file makes it trustworthy, and both of
+these questions are answered out of the file itself, without touching the machine:
+
+```sh
+pkg info -F  /tmp/os-netreport-1.0.pkg    # version, licence, dependencies, description
+pkg info -lF /tmp/os-netreport-1.0.pkg    # every file it will write, and it writes no others
+```
+
+Then, as root:
+
+```sh
+pkg add /tmp/os-netreport-1.0.pkg
+```
+
+Then open **Reporting → Network Report**, check the mail settings on the Settings tab
+(the *Save and send test message* button is the quickest way), and add a schedule.
+
+A newer version goes on over an installed one with `pkg add -f`. Settings in `config.xml` and
+state under `/var/db` survive, because pkg replaces only the files the package owns.
+
+<details>
+<summary>Installing by hand instead, with no package</summary>
+
+`install/install.sh` does the same work and is what existed before there was a package:
 
 ```sh
 fetch -o /tmp/netreport.tar.gz https://github.com/AbdelmonemAwad/os-netreport/archive/refs/heads/main.tar.gz
@@ -84,21 +134,27 @@ tar -xzf /tmp/netreport.tar.gz -C /root
 sh /root/os-netreport-main/install/install.sh
 ```
 
-Then open **Reporting > Network Report**, check the mail settings on the Settings tab (the
-"Save and send test message" button is the quickest way), and add a schedule.
+The difference is only in the bookkeeping: pkg does not know the files are there, so
+`opnsense-version -c os-netreport` answers *not installed* on a machine where the plugin is
+running, and removal is `install/uninstall.sh` rather than `pkg delete`.
 
-The layout of this repository matches a plugin directory in
-[opnsense/plugins](https://github.com/opnsense/plugins), so `Makefile` and `pkg-descr` are
-only used when it is built as a package there.
+</details>
 
 ### Removing it
 
 ```sh
-sh /root/os-netreport-main/install/uninstall.sh
+pkg delete os-netreport
 ```
 
-Settings stay in `config.xml` and the history in `/var/db/netreport`, so a reinstall picks up
-where it left off.
+Settings stay in `config.xml` and the history in `/var/db/netreport`, so a reinstall
+picks up where it left off.
+
+### What a package outside the OPNsense repository does not get
+
+It is not upgraded by **System → Firmware → Updates**, because that only offers what the
+OPNsense repository carries, and this is not in it. A firmware update does not remove it —
+the files are pkg's, and OPNsense does not delete packages it did not install — but it will
+not be updated either. Build a new package from a newer tag and `pkg add -f` it.
 
 ## How it works
 
