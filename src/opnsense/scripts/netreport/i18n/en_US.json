@@ -112,5 +112,7 @@
   "November",
   "December"
  ],
- "list_sep": ", "
+ "list_sep": ", ",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.",
+ "The language this report is written in, whatever the GUI is set to. Choose\n        System language to follow the GUI instead. Changing the alert language on the\n        Settings tab does not change this one.": "The language this report is written in, whatever the GUI is set to. Choose\n        System language to follow the GUI instead. Changing the alert language on the\n        Settings tab does not change this one."
 }
