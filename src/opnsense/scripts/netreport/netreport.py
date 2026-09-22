@@ -50,6 +50,7 @@ import json
 import os
 import re
 import smtplib
+import socket
 import ssl
 import subprocess
 import sys
@@ -418,10 +419,50 @@ print(json.dumps(out))
     return res
 
 
+def local_networks():
+    """Every network this firewall is directly attached to.
+
+    Read from the machine rather than from a setting, because the answer changes when an
+    interface does, and a stale answer here would put a device's own traffic in the column
+    headed "somebody is attacking you".
+    """
+    nets = []
+    for line in run('/sbin/ifconfig -a').splitlines():
+        found = re.search(r'inet (\d+\.\d+\.\d+\.\d+) netmask (0x[0-9a-fA-F]+)', line)
+        if not found:
+            continue
+        try:
+            bits = bin(int(found.group(2), 16)).count('1')
+            nets.append(ipaddress.ip_network('%s/%d' % (found.group(1), bits), strict=False))
+        except Exception:
+            continue
+    return nets
+
+
+def started_inside(address, nets):
+    """Whether the address that opened a flow is one of ours.
+
+    On a firewall watching its WAN, a connection a LAN device opened arrives with the
+    firewall's own outside address as the flow source, because NAT has already happened.
+    On a firewall watching a LAN interface it arrives with the device's own address. Both
+    are covered by asking whether the address sits in a network this machine is attached
+    to - which is why the test is by network and not by a list of addresses.
+    """
+    if not address:
+        return False
+    try:
+        value = ipaddress.ip_address(address)
+    except Exception:
+        return False
+    return any(value in net for net in nets)
+
+
 def suricata_alerts(start, end, top_n):
     s, e = start.timestamp(), end.timestamp()
     sigs, srcs = Counter(), Counter()
-    total = severe = 0
+    out_sigs, out_hosts = Counter(), Counter()
+    total = severe = inbound = inbound_severe = out_total = out_severe = 0
+    nets = local_networks()
     for path in sorted(glob.glob('/var/log/suricata/eve.json*')):
         if os.path.getmtime(path) < s:
             continue
@@ -440,13 +481,38 @@ def suricata_alerts(start, end, top_n):
                     if not s <= ts < e:
                         continue
                     total += 1
+                    grave = ev['alert'].get('severity', 3) == 1
+                    if grave:
+                        severe += 1
+
+                    # flow.src_ip is the address that OPENED the conversation, which is
+                    # not the source of the packet the rule matched. A reply arriving
+                    # from outside, on a connection this network made, reads as inbound
+                    # by src_ip and as ours by this. Where a record carries no flow
+                    # object the question cannot be answered, and falling back to src_ip
+                    # is the only honest thing left.
+                    opener = (ev.get('flow') or {}).get('src_ip') or ev.get('src_ip')
+                    if started_inside(opener, nets):
+                        out_total += 1
+                        out_sigs[ev['alert'].get('signature', '?')] += 1
+                        out_hosts[opener or '?'] += 1
+                        if grave:
+                            out_severe += 1
+                        continue
+
+                    inbound += 1
+                    if grave:
+                        inbound_severe += 1
                     sigs[ev['alert'].get('signature', '?')] += 1
                     srcs[ev.get('src_ip', '?')] += 1
-                    if ev['alert'].get('severity', 3) == 1:
-                        severe += 1
         except Exception:
             pass
-    return {'total': total, 'severe': severe, 'sigs': sigs.most_common(top_n), 'srcs': srcs.most_common(top_n)}
+    return {'total': total, 'severe': severe,
+            'inbound': inbound, 'inbound_severe': inbound_severe,
+            'out_total': out_total, 'out_severe': out_severe,
+            'sigs': sigs.most_common(top_n), 'srcs': srcs.most_common(top_n),
+            'out_sigs': out_sigs.most_common(top_n),
+            'out_hosts': out_hosts.most_common(top_n)}
 
 
 def crowdsec(start):
@@ -752,8 +818,13 @@ def build_report(settings, sched, start, end):
     ids = suricata_alerts(start, end, top_n)
     ids_prev = suricata_alerts(prev_start, start, 1) if compare and 'security' in sections else None
     cs = crowdsec(start)
-    if ids['severe']:
-        issues.append(('bad', t['i_severe'].format(n=ids['severe'])))
+    # Only what came from outside belongs under "needs your attention". An alert on a
+    # connection this network opened is still reported, further down and in its own
+    # words, because it can mean something - but it is not somebody at the door.
+    if ids['inbound_severe']:
+        issues.append(('bad', t['i_severe_in'].format(n=ids['inbound_severe'])))
+    if ids['out_severe']:
+        issues.append(('info', t['i_outbound'].format(n=ids['out_severe'])))
     if cs['alerts']:
         issues.append(('info', t['i_crowdsec'].format(n=cs['alerts'])))
     items = [
@@ -767,6 +838,13 @@ def build_report(settings, sched, start, end):
         [f'<span class="ltr">{esc(s)}</span>', f'{n:,}'] for s, n in ids['sigs']])
     body += f'<h3>{esc(t["top_srcs"])}</h3>' + table(t, [t['address'], t['times']], [
         [f'<span class="ltr">{esc(ip)}</span>', f'{n:,}'] for ip, n in ids['srcs']])
+    if ids['out_total']:
+        body += f'<h3>{esc(t["out_heading"])}</h3>'
+        body += f'<p class="muted">{esc(t["out_intro"])}</p>'
+        body += table(t, [t['alert'], t['times']], [
+            [f'<span class="ltr">{esc(s)}</span>', f'{n:,}'] for s, n in ids['out_sigs']])
+        body += table(t, [t['address'], t['times']], [
+            [f'<span class="ltr">{esc(ip)}</span>', f'{n:,}'] for ip, n in ids['out_hosts']])
     ids_general = settings.root.find('./OPNsense/IDS/general')
     if ids_general is not None and ids_general.findtext('enabled') == '1' and ids_general.findtext('ips') != '1':
         body += f'<p class="muted">{esc(t["ids_note"])}</p>'

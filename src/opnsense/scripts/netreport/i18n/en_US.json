@@ -112,5 +112,9 @@
   "November",
   "December"
  ],
- "list_sep": ", "
+ "list_sep": ", ",
+ "i_severe_in": "High severity alerts from outside: {n}.",
+ "i_outbound": "{n} high severity alerts on connections your own network opened.",
+ "out_heading": "Alerts on connections your network opened",
+ "out_intro": "These were raised on traffic that came back to a connection made from inside, not on somebody reaching in. A rule can match a byte pattern inside ordinary bulk traffic, and peer-to-peer transfers produce a great deal of it. Worth a look if you do not know what opened them; not an attack."
 }
