@@ -113,8 +113,6 @@
   "ديسمبر"
  ],
  "list_sep": " ، ",
- "i_severe_in": "تنبيهات عالية الخطورة من الخارج: {n}.",
- "i_outbound": "{n} تنبيهًا عالي الخطورة على اتصالات بدأت من شبكتك.",
- "out_heading": "تنبيهات على اتصالات بدأت من شبكتك",
- "out_intro": "أُطلقت هذه على حركة عائدة إلى اتصال بدأ من الداخل، لا على أحد يحاول الدخول. وقد تطابق قاعدةٌ نمطَ بايتات داخل حركة كثيفة عادية، وحركة الند للند تنتج منها الكثير. تستحق نظرة إن كنت لا تعرف ما الذي فتحها، لكنها ليست هجومًا."
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "هذه ليست لغة التقارير. لكل جدول لغته الخاصة، وهي معروضة في عمود اللغة في تبويب الجداول، ولا يتبع التقرير لغة النظام إلا إذا كان ذلك الجدول مضبوطًا على «لغة النظام». هذا الحقل للغة التنبيهات الفورية ورسالة الاختبار.",
+ "The language this report is written in, whatever the GUI is set to. Choose\n        System language to follow the GUI instead. Changing the alert language on the\n        Settings tab does not change this one.": "اللغة التي يُكتب بها هذا التقرير، مهما كانت لغة الواجهة. اختر «لغة النظام» ليتبع الواجهة بدلًا من ذلك. وتغيير لغة التنبيهات في تبويب الإعدادات لا يغيّر هذه."
 }
