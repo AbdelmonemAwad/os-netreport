@@ -62,6 +62,9 @@
         <id>schedule.language</id>
         <label>Language</label>
         <type>dropdown</type>
+        <help>The language this report is written in, whatever the GUI is set to. Choose
+        System language to follow the GUI instead. Changing the alert language on the
+        Settings tab does not change this one.</help>
     </field>
     <field>
         <id>schedule.sections</id>

@@ -27,7 +27,7 @@
         <id>netreport.general.language</id>
         <label>Alert language</label>
         <type>dropdown</type>
-        <help>Language of the instant alerts and test messages. Every schedule has its own report language.</help>
+        <help>This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.</help>
     </field>
     <field>
         <type>header</type>
