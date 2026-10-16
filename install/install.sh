@@ -12,6 +12,8 @@ chmod 755 /usr/local/opnsense/scripts/netreport/netreport.py
 chmod 755 /usr/local/opnsense/scripts/netreport/merge_ui_translations.py
 chmod 755 /usr/local/etc/rc.syshook.d/start/60-netreport
 chmod 644 /usr/local/etc/cron.d/netreport
+chmod 755 /usr/local/opnsense/scripts/netreport/self-update.py
+chmod 644 /usr/local/etc/cron.d/netreport-update
 
 # syntax check before anything is reloaded
 for f in $(find "${HERE}/src" -name '*.php'); do
@@ -26,5 +28,21 @@ rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
 # GUI strings for every installed language, then reload php so the new catalogs are used
 echo "translated strings added: $(/usr/local/opnsense/scripts/netreport/merge_ui_translations.py)"
 configctl webgui restart > /dev/null 2>&1 || true
+
+# What this install is, for the daily self-update: the commit, from a git checkout, or from the
+# .source-commit stamp that an xgs-image-builder image or the self-update leaves in the tree.
+# Without either it is recorded as unknown, and the self-update takes the latest release once.
+REV=; RDATE=; RSRC=unknown
+if [ -e "${HERE}/.git" ] && REV=$(git -C "${HERE}" rev-parse HEAD 2>/dev/null); then
+    RDATE=$(git -C "${HERE}" log -1 --format=%cI 2>/dev/null); RSRC=git
+elif [ -s "${HERE}/.source-commit" ]; then
+    read -r REV RDATE _ < "${HERE}/.source-commit"; RSRC=stamp
+else
+    REV=
+fi
+case ${REV} in *[!0-9a-f]*) REV=; RDATE=; RSRC=unknown ;; esac
+install -d -m 0755 /usr/local/share/os-netreport
+printf '{"commit": "%s", "date": "%s", "source": "%s", "installed_at": %s}\n' \
+    "${REV}" "${RDATE}" "${RSRC}" "$(date +%s)" > /usr/local/share/os-netreport/installed.json
 
 echo "Network Report installed: Reporting > Network Report"

@@ -2,6 +2,9 @@
 # Remove the Network Report plugin files. Settings stay in config.xml and the
 # history in /var/db/netreport, so a later reinstall picks up where it left off.
 
+# the daily self-update first, so that it cannot reinstall half way through this
+rm -f /usr/local/etc/cron.d/netreport-update
+rm -rf /usr/local/share/os-netreport
 rm -f /usr/local/etc/cron.d/netreport
 rm -f /usr/local/etc/rc.syshook.d/start/60-netreport
 rm -f /usr/local/share/pkg/triggers/os-netreport.ucl
