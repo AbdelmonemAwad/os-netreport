@@ -165,8 +165,9 @@ not be updated either. Build a new package from a newer tag and `pkg add -f` it.
   under `OPNsense/NetReport` in `config.xml`.
 - Report texts live in `i18n/<locale>.json`. GUI strings for languages other than English are
   in `i18n/ui/<locale>.json` and are merged into the system catalogs by
-  `merge_ui_translations.py`, which also runs at boot because core updates replace those
-  catalogs. Once the plugin is part of the official repository this step goes away, since its
+  `merge_ui_translations.py`, which also runs when pkg writes a catalog
+  (`/usr/local/share/pkg/triggers/os-netreport.ucl`) and at boot, because core updates replace
+  those catalogs and an update that only installs packages does not reboot. Once the plugin is part of the official repository this step goes away, since its
   strings would then be translated through the normal OPNsense process.
 - State, history and archived reports are kept in `/var/db/netreport`.
 
@@ -186,6 +187,14 @@ the English one.
 - Some languages change word forms with the number (Polish, Russian, Ukrainian and others).
   The wording was chosen to read well for most numbers, but not every count is grammatically
   perfect.
+
+## In the XGS image
+
+[xgs-image-builder](https://github.com/AbdelmonemAwad/xgs-image-builder) builds an OPNsense image
+for Sophos XGS appliances with this repository in it, installed at the image's first boot. It holds
+no copy of this repository: every build takes `main` as it is that day, so a change merged here is
+in the next image without anything being done there. What the image calls here - `install/install.sh` - is checked
+from that side every day, so moving or renaming one of them is caught there; keep them where they are.
 
 ## License
 
