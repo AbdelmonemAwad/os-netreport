@@ -4,6 +4,7 @@
 
 rm -f /usr/local/etc/cron.d/netreport
 rm -f /usr/local/etc/rc.syshook.d/start/60-netreport
+rm -f /usr/local/share/pkg/triggers/os-netreport.ucl
 rm -f /usr/local/opnsense/service/conf/actions.d/actions_netreport.conf
 rm -rf /usr/local/opnsense/scripts/netreport
 rm -rf /usr/local/opnsense/mvc/app/models/OPNsense/NetReport
