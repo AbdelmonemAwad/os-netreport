@@ -95,5 +95,12 @@
  "System language",
  "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.",
  "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.",
- "Allow access to the network report settings, previews and history"
+ "Allow access to the network report settings, previews and history",
+ "Last report",
+ "Mail",
+ "None yet",
+ "enabled",
+ "failed",
+ "none failed",
+ "not set"
 ]
