@@ -58,6 +58,53 @@
             $('#grid-history').bootgrid('reload');
         }
 
+        let status_text = {};
+
+        /* Summary cards above the tabs, as on the appliance's other pages: the schedules, the last
+           report, what was sent, and where the mail goes out from. */
+        function card(cls, icon, key, value, sub) {
+            return $('<div class="nr-card"/>').addClass(cls)
+                .append($('<i class="fa"/>').addClass(icon))
+                .append($('<div class="k"/>').text(key))
+                .append($('<div class="v"/>').text(value))
+                .append($('<div class="s"/>').text(sub || ' '));
+        }
+
+        function plain(value) {
+            return $('<textarea/>').html(value === null || value === undefined ? '' : String(value)).text();
+        }
+
+        function draw_cards() {
+            $.when(
+                $.ajax({url: '/api/netreport/settings/search_schedule', type: 'POST', dataType: 'json', data: {current: 1, rowCount: -1}}),
+                $.ajax({url: '/api/netreport/service/history', type: 'POST', dataType: 'json', data: {current: 1, rowCount: -1}}),
+                $.ajax({url: '/api/netreport/settings/get', dataType: 'json'})
+            ).done(function (schedules, history, settings) {
+                const rows = (schedules[0] && schedules[0].rows) || [];
+                const enabled = rows.filter(function (row) { return String(row.enabled) === '1'; }).length;
+                const sent = (history[0] && history[0].rows) || [];
+                const last = sent.length ? sent[0] : null;
+                const ok = sent.filter(function (row) { return row.status === 'sent' || row.status === 'alert'; }).length;
+                const failed = sent.filter(function (row) { return row.status === 'failed'; }).length;
+                const general = (((settings[0] || {}).netreport || {}).general) || {};
+                const source = Object.keys(general.mail_source || {}).find(function (key) {
+                    return general.mail_source[key].selected;
+                }) || 'monit';
+                const host = plain(general.smtp_host || '');
+                $('#nr-cards').empty()
+                    .append(card(enabled ? 'ok' : 'warn', 'fa-calendar', "{{ lang._('Schedules') }}",
+                        enabled + ' / ' + rows.length, "{{ lang._('enabled') }}"))
+                    .append(card(last === null ? '' : (last.status === 'failed' ? 'bad' : 'ok'), 'fa-envelope-o',
+                        "{{ lang._('Last report') }}", last === null ? "{{ lang._('None yet') }}" : (status_text[last.status] || last.status),
+                        last === null ? '' : plain(last.time)))
+                    .append(card(failed ? 'warn' : (ok ? 'ok' : ''), 'fa-paper-plane', "{{ lang._('Sent') }}", String(ok),
+                        failed ? "{{ lang._('failed') }}" + ' ' + failed : "{{ lang._('none failed') }}"))
+                    .append(card(source === 'custom' && !host ? 'warn' : 'ok', 'fa-server', "{{ lang._('Mail') }}",
+                        source === 'custom' ? (host || "{{ lang._('not set') }}") : 'Monit',
+                        source === 'custom' ? "{{ lang._('Custom SMTP server') }}" : "{{ lang._('Use the Monit mail settings') }}"));
+            });
+        }
+
         /* schedules */
         $("#{{ formGridSchedule['table_id'] }}").UIBootgrid({
             search: '/api/netreport/settings/search_schedule',
@@ -159,7 +206,7 @@
         });
 
         /* history */
-        const status_text = {
+        status_text = {
             'sent': "{{ lang._('Sent') }}",
             'skipped': "{{ lang._('Skipped') }}",
             'failed': "{{ lang._('Failed') }}",
@@ -200,6 +247,9 @@
             }
         });
 
+        $("#{{ formGridSchedule['table_id'] }}").on('loaded.rs.jquery.bootgrid', draw_cards);
+        draw_cards();
+
         /* keep the selected tab in the url */
         const selected_tab = window.location.hash !== '' ? window.location.hash : '#schedules';
         $('a[href="' + selected_tab + '"]').tab('show');
@@ -209,6 +259,23 @@
     });
 </script>
 
+<style>
+    /* Summary cards, the same as the appliance's other pages: the theme's text and a faint tint of it. */
+    .nr-cards { display: flex; flex-wrap: wrap; gap: 12px; padding: 0 0 15px; }
+    .nr-card { flex: 1 1 200px; min-width: 190px; border: 1px solid rgba(128, 128, 128, 0.25);
+               border-inline-start: 4px solid #9e9e9e; border-radius: 3px; padding: 10px 14px;
+               background-color: rgba(128, 128, 128, 0.04); }
+    .nr-card.ok { border-inline-start-color: #5cb85c; }
+    .nr-card.warn { border-inline-start-color: #f0ad4e; }
+    .nr-card.bad { border-inline-start-color: #d9534f; }
+    .nr-card .k { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; opacity: 0.6; }
+    .nr-card .v { font-size: 19px; font-weight: 600; line-height: 1.3; margin: 2px 0; }
+    .nr-card .s { font-size: 12px; opacity: 0.7; }
+    .nr-card .fa { opacity: 0.35; float: inline-end; font-size: 18px; margin-top: 2px; }
+</style>
+
+<div class="nr-cards" id="nr-cards"></div>
+
 <ul class="nav nav-tabs" data-tabs="tabs" id="maintabs">
     <li><a data-toggle="tab" href="#schedules">{{ lang._('Schedules') }}</a></li>
     <li><a data-toggle="tab" href="#settings">{{ lang._('Settings') }}</a></li>
@@ -217,8 +284,7 @@
 
 <div class="tab-content content-box">
     <div id="schedules" class="tab-pane fade in">
-        <div class="alert alert-info" role="alert" style="margin: 10px;">
-            <i class="fa fa-fw fa-info-circle"></i>
+        <div class="text-muted" style="padding: 10px 15px 0;">
             {{ lang._('Each schedule sends one report. Use the eye button to preview it and the plane button to send it now.') }}
         </div>
         {{ partial('layout_partials/base_bootgrid_table', formGridSchedule + {'command_width': '160'}) }}
