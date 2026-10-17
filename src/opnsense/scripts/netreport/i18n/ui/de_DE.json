@@ -92,5 +92,7 @@
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "Üblicherweise 465 für SSL/TLS oder 587 für STARTTLS.",
  "VPN tunnels": "VPN-Tunnel",
  "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Warnen, wenn die letzte externe Konfigurationssicherung älter ist als dieser Wert. 0 deaktiviert die Prüfung.",
- "System language": "Systemsprache"
+ "System language": "Systemsprache",
+ "BSD-2-Clause licence": "Lizenz BSD-2-Clause",
+ "An independent project, not affiliated with Deciso B.V.": "Ein unabhängiges Projekt, nicht mit Deciso B.V. verbunden"
 }

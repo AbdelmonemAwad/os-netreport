@@ -92,5 +92,7 @@
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "Συνήθως 465 για SSL/TLS ή 587 για STARTTLS.",
  "VPN tunnels": "Σήραγγες VPN",
  "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Προειδοποίηση όταν το τελευταίο απομακρυσμένο αντίγραφο ασφαλείας ρυθμίσεων είναι παλαιότερο από αυτό. Το 0 απενεργοποιεί τον έλεγχο.",
- "System language": "Γλώσσα συστήματος"
+ "System language": "Γλώσσα συστήματος",
+ "BSD-2-Clause licence": "Άδεια BSD-2-Clause",
+ "An independent project, not affiliated with Deciso B.V.": "Ανεξάρτητο έργο, χωρίς σχέση με την Deciso B.V."
 }

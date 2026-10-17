@@ -320,3 +320,5 @@
 </div>
 
 {{ partial("layout_partials/base_dialog", ['fields': scheduleForm, 'id': formGridSchedule['edit_dialog_id'], 'label': lang._('Edit report schedule')]) }}
+
+{{ partial("OPNsense/NetReport/credit") }}
