@@ -92,5 +92,8 @@
  "Usually 465 for SSL/TLS or 587 for STARTTLS.",
  "VPN tunnels",
  "Warn when the last remote configuration backup is older than this. 0 disables the check.",
- "System language"
+ "System language",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.",
+ "Allow access to the network report settings, previews and history"
 ]
