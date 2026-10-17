@@ -92,5 +92,7 @@
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "일반적으로 SSL/TLS는 465, STARTTLS는 587입니다.",
  "VPN tunnels": "VPN 터널",
  "Warn when the last remote configuration backup is older than this. 0 disables the check.": "마지막 원격 설정 백업이 이 일수보다 오래되면 경고합니다. 0이면 검사를 사용하지 않습니다.",
- "System language": "시스템 언어"
+ "System language": "시스템 언어",
+ "BSD-2-Clause licence": "BSD-2-Clause 라이선스",
+ "An independent project, not affiliated with Deciso B.V.": "Deciso B.V.와 관련이 없는 독립 프로젝트"
 }
