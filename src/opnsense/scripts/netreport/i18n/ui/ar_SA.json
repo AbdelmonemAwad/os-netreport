@@ -92,5 +92,8 @@
  "Saved": "تم الحفظ",
  "Report": "التقرير",
  "Edit report schedule": "تعديل جدول التقرير",
- "System language": "لغة النظام"
+ "System language": "لغة النظام",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "هذه ليست لغة التقارير. لكل جدول لغته الخاصة، تظهر في عمود اللغة في تبويب الجداول، ولا يتبع التقرير لغة النظام إلا حين يُضبط ذلك الجدول على «لغة النظام». هذا الحقل هو لغة التنبيهات الفورية والرسالة التجريبية.",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.": "اللغة التي يُكتب بها هذا التقرير، أيًّا كانت لغة الواجهة. اختر «لغة النظام» ليتبع الواجهة بدلًا من ذلك. تغيير لغة التنبيهات في تبويب الإعدادات لا يغيّر هذه.",
+ "Allow access to the network report settings, previews and history": "السماح بالوصول إلى إعدادات تقرير الشبكة ومعايناته وسجلّه"
 }
