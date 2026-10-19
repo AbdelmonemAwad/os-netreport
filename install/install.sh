@@ -1,4 +1,8 @@
 #!/bin/sh
+#-
+# SPDX-License-Identifier: BSD-2-Clause
+# Copyright (c) 2026 Abdelmonem Awad <eg2@live.com>
+#
 # Install the Network Report plugin from a copy of this repository on the firewall:
 #   sh install/install.sh
 # Safe to run again after an update: settings in config.xml are kept.

@@ -1,3 +1,7 @@
+#-
+# SPDX-License-Identifier: BSD-2-Clause
+# Copyright (c) 2026 Abdelmonem Awad <eg2@live.com>
+#
 # Network report scheduler: sends due reports and watches for new devices.
 # The schedules themselves are configured under Reporting: Network Report.
 *	*	*	*	*	root	/usr/local/opnsense/scripts/netreport/netreport.py scheduler > /dev/null 2>&1
