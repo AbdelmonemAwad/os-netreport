@@ -1,4 +1,8 @@
 #!/bin/sh
+#-
+# SPDX-License-Identifier: BSD-2-Clause
+# Copyright (c) 2026 Abdelmonem Awad <eg2@live.com>
+#
 # Remove the Network Report plugin files. Settings stay in config.xml and the
 # history in /var/db/netreport, so a later reinstall picks up where it left off.
 

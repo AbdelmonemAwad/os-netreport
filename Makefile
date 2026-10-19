@@ -1,3 +1,7 @@
+#-
+# SPDX-License-Identifier: BSD-2-Clause
+# Copyright (c) 2026 Abdelmonem Awad <eg2@live.com>
+#
 PLUGIN_NAME=		netreport
 PLUGIN_VERSION=		1.0
 PLUGIN_COMMENT=		Scheduled network reports and new device alerts by email
