@@ -220,3 +220,5 @@ nothing, and the uninstaller removes the updater, its cron entry and the stamp.
 ## License
 
 BSD 2-Clause, the same as OPNsense. See [LICENSE](LICENSE).
+
+The photographs and screenshots under `docs/` are &copy; 2026 Abdelmonem Awad, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): use them freely, naming the author and linking here. Each carries that notice in a strip added below it.
