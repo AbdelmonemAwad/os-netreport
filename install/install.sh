@@ -17,7 +17,10 @@ chmod 755 /usr/local/opnsense/scripts/netreport/merge_ui_translations.py
 chmod 755 /usr/local/etc/rc.syshook.d/start/60-netreport
 chmod 644 /usr/local/etc/cron.d/netreport
 chmod 755 /usr/local/opnsense/scripts/netreport/self-update.py
-chmod 644 /usr/local/etc/cron.d/netreport-update
+# No daily self-update since 2026-10-20: a release is installed from XGS: Updates
+# (its Plugins tab, in os-xgs-npu) or by hand with self-update.py. An older
+# install's cron entry goes.
+rm -f /usr/local/etc/cron.d/netreport-update
 
 # syntax check before anything is reloaded
 for f in $(find "${HERE}/src" -name '*.php'); do
@@ -33,7 +36,7 @@ rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
 echo "translated strings added: $(/usr/local/opnsense/scripts/netreport/merge_ui_translations.py)"
 configctl webgui restart > /dev/null 2>&1 || true
 
-# What this install is, for the daily self-update: the commit, from a git checkout, or from the
+# What this install is, for the self-update: the commit, from a git checkout, or from the
 # .source-commit stamp that an xgs-image-builder image or the self-update leaves in the tree.
 # Without either it is recorded as unknown, and the self-update takes the latest release once.
 REV=; RDATE=; RSRC=unknown
