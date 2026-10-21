@@ -107,14 +107,14 @@ Read it before you install it. Nothing about a package file makes it trustworthy
 these questions are answered out of the file itself, without touching the machine:
 
 ```sh
-pkg info -F  /tmp/os-netreport-1.0.pkg    # version, licence, dependencies, description
-pkg info -lF /tmp/os-netreport-1.0.pkg    # every file it will write, and it writes no others
+pkg info -F  /tmp/os-netreport-*.pkg      # version, licence, dependencies, description
+pkg info -lF /tmp/os-netreport-*.pkg      # every file it will write, and it writes no others
 ```
 
 Then, as root:
 
 ```sh
-pkg add /tmp/os-netreport-1.0.pkg
+pkg add /tmp/os-netreport-*.pkg
 ```
 
 Then open **Reporting → Network Report**, check the mail settings on the Settings tab

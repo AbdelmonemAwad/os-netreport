@@ -11,6 +11,12 @@ joins the local network.
 Plugin Changelog
 ================
 
+1.0.1
+
+* The GUI's Arabic is in opnsense-arabic's catalogue; the other languages'
+  GUI strings are still merged by this plugin, and the reports are still
+  written in every language from its own files
+
 1.0
 
 * Initial release
