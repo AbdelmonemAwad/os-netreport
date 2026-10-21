@@ -121,17 +121,17 @@ jobs:
         run: |
           [ -f tools/check-strings.py ] || { echo "not this plugin"; exit 0; }
           python3 tools/check-strings.py
+          # The GUI's Arabic is in opnsense-arabic's catalogue since 2026-10-22; the other
+          # languages' GUI strings stay in i18n/ui/<locale>.json and are merged from here.
           python3 - <<'PY'
-          import glob, json, sys
-          name = sorted(glob.glob('src/opnsense/scripts/*/i18n/ui/source.json'))
-          if not name:
-              print('no catalogue here')
-              sys.exit(0)
-          src = json.load(open(name[0], encoding='utf-8'))
-          ar = json.load(open(name[0].replace('source.json', 'ar_SA.json'), encoding='utf-8'))
-          missing = [k for k in src if k not in ar]
+          import json, sys
+          sys.path.insert(0, 'tools')
+          import arabic_catalogue
+          src = json.load(open('src/opnsense/scripts/netreport/i18n/ui/source.json', encoding='utf-8'))
+          ar = arabic_catalogue.catalogue()
+          missing = [k for k in src if not ar.get(k)]
           for key in missing:
-              print('no Arabic for: %s' % key[:90])
-          print('%d msgids, %d translated' % (len(src), len(ar)))
+              print('no Arabic in opnsense-arabic for: %s' % key[:90])
+          print('%d msgids, %d with Arabic in opnsense-arabic' % (len(src), len(src) - len(missing)))
           sys.exit(1 if missing else 0)
           PY
