@@ -163,7 +163,9 @@ not be updated either. Build a new package from a newer tag and `pkg add -f` it.
   devices every five minutes.
 - The GUI (model, controllers, view) follows the usual OPNsense MVC layout. Settings are stored
   under `OPNsense/NetReport` in `config.xml`.
-- Report texts live in `i18n/<locale>.json`. GUI strings for languages other than English are
+- Report texts live in `i18n/<locale>.json`, Arabic among them. The GUI's Arabic is in
+  [opnsense-arabic](https://github.com/AbdelmonemAwad/opnsense-arabic)'s catalogue with the rest of
+  the GUI since 2026-10-22. GUI strings for the other languages are
   in `i18n/ui/<locale>.json` and are merged into the system catalogs by
   `merge_ui_translations.py`, which also runs when pkg writes a catalog
   (`/usr/local/share/pkg/triggers/os-netreport.ucl`) and at boot, because core updates replace

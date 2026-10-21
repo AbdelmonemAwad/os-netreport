@@ -32,7 +32,10 @@ python3 -m py_compile /usr/local/opnsense/scripts/netreport/netreport.py
 service configd restart > /dev/null
 rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
 
-# GUI strings for every installed language, then reload php so the new catalogs are used
+# GUI strings for every installed language but Arabic, then reload php so the new catalogs
+# are used. The Arabic is in opnsense-arabic's catalogue since 2026-10-22; the copy an earlier
+# install left goes, so that nothing merges it again.
+rm -f /usr/local/opnsense/scripts/netreport/i18n/ui/ar_SA.json
 echo "translated strings added: $(/usr/local/opnsense/scripts/netreport/merge_ui_translations.py)"
 configctl webgui restart > /dev/null 2>&1 || true
 

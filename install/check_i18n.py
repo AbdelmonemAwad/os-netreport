@@ -34,7 +34,15 @@ for loc in LOCALES:
                 msgs.append(f'placeholders in {k}: {tr.get(k)!r}')
             elif isinstance(v, str) and k != 'list_sep' and not tr.get(k, '').strip():
                 msgs.append(f'empty {k}')
-    if loc != 'en_US':
+    if loc == 'ar_SA':
+        # The GUI's Arabic is in opnsense-arabic's catalogue since 2026-10-22, not in ui/ar_SA.json.
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tools'))
+        import arabic_catalogue
+        ui = arabic_catalogue.catalogue()
+        empty = [k for k in source if not (ui.get(k) or '').strip()]
+        if empty:
+            msgs.append(f'no GUI Arabic in opnsense-arabic: {empty[:3]}')
+    elif loc != 'en_US':
         upath = os.path.join(BASE, 'ui', f'{loc}.json')
         if not os.path.exists(upath):
             msgs.append('ui file missing')
