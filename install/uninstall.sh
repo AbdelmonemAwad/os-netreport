@@ -15,9 +15,14 @@ rm -f /usr/local/etc/rc.syshook.d/start/60-netreport
 rm -f /usr/local/share/pkg/triggers/os-netreport.ucl
 rm -f /usr/local/opnsense/service/conf/actions.d/actions_netreport.conf
 rm -rf /usr/local/opnsense/scripts/netreport
+# the menu file place-menu.sh wrote, which no list of the package's files names
+rm -f /usr/local/opnsense/mvc/app/models/OPNsense/NetReport/Menu/Menu.xml
+rmdir /usr/local/opnsense/mvc/app/models/OPNsense/NetReport/Menu 2> /dev/null || true
 rm -rf /usr/local/opnsense/mvc/app/models/OPNsense/NetReport
 rm -rf /usr/local/opnsense/mvc/app/controllers/OPNsense/NetReport
 rm -rf /usr/local/opnsense/mvc/app/views/OPNsense/NetReport
 service configd restart > /dev/null
-rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
+# the menu and ACL caches: in /var/lib/php/tmp on 26.7, /tmp before it
+rm -f /var/lib/php/tmp/opnsense_menu_cache.xml /var/lib/php/tmp/opnsense_acl_cache.json \
+    /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
 echo "Network Report removed"
