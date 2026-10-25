@@ -11,6 +11,16 @@ joins the local network.
 Plugin Changelog
 ================
 
+1.0.2
+
+* The page goes in the XGS section when os-xgs-npu is installed - among
+  the appliance's pages, in OPNsense's order - and under Reporting when it is
+  not; os-xgs-npu moves it when it is installed or removed
+* The archive an appliance downloads carries what it reads: the
+  documentation, the workflows and the repository's tools left out
+* The menu and privilege caches are cleared where OPNsense 26.7 keeps
+  them, so the page appears at once
+
 1.0.1
 
 * The GUI's Arabic is in opnsense-arabic's catalogue; the other languages'
