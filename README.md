@@ -203,7 +203,7 @@ from that side every day, so moving or renaming one of them is caught there; kee
 
 An installed copy is updated to this repository's **releases** by hand: from **XGS: Updates**, its *Plugins*
 tab ([os-xgs-npu](https://github.com/AbdelmonemAwad/os-xgs-npu)), or with `/usr/local/opnsense/scripts/netreport/self-update.py`. ~~Once a day, at 03:17, from `/usr/local/etc/cron.d/netreport-update`~~ - nothing
-is installed on its own since 2026-10-20, at the owner's word. It asks GitHub for the latest release and, when it is ahead of what
+is installed on its own since 2026-10-20: an update runs when the appliance's owner starts it. It asks GitHub for the latest release and, when it is ahead of what
 is installed, downloads it and runs the `install/install.sh` it carries - the same script a hand install
 runs. A change merged on `main` reaches installed firewalls when it is released, not before; with
 no release published, nothing changes.
