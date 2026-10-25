@@ -117,7 +117,8 @@ Then, as root:
 pkg add /tmp/os-netreport-*.pkg
 ```
 
-Then open **Reporting → Network Report**, check the mail settings on the Settings tab
+Then open **Reporting → Network Report** (**XGS → Network Report** when os-xgs-npu is installed),
+check the mail settings on the Settings tab
 (the *Save and send test message* button is the quickest way), and add a schedule.
 
 A newer version goes on over an installed one with `pkg add -f`. Settings in `config.xml` and

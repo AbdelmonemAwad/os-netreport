@@ -28,9 +28,15 @@ for f in $(find "${HERE}/src" -name '*.php'); do
 done
 python3 -m py_compile /usr/local/opnsense/scripts/netreport/netreport.py
 
-# reload configd actions, menu and ACL caches
+# Where the page goes in the menu: XGS when os-xgs-npu is installed, Reporting when it is not.
+# OPNsense's menu file takes no condition, so place-menu.sh writes it from menu/ and says which.
+chmod 755 /usr/local/opnsense/scripts/netreport/place-menu.sh
+MENUPLACE=$(/usr/local/opnsense/scripts/netreport/place-menu.sh)
+
+# reload configd actions, menu and ACL caches (in /var/lib/php/tmp on 26.7, /tmp before it)
 service configd restart > /dev/null
-rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
+rm -f /var/lib/php/tmp/opnsense_menu_cache.xml /var/lib/php/tmp/opnsense_acl_cache.json \
+    /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
 
 # GUI strings for every installed language but Arabic, then reload php so the new catalogs
 # are used. The Arabic is in opnsense-arabic's catalogue since 2026-10-22; the copy an earlier
@@ -55,4 +61,8 @@ install -d -m 0755 /usr/local/share/os-netreport
 printf '{"commit": "%s", "date": "%s", "source": "%s", "installed_at": %s}\n' \
     "${REV}" "${RDATE}" "${RSRC}" "$(date +%s)" > /usr/local/share/os-netreport/installed.json
 
-echo "Network Report installed: Reporting > Network Report"
+if [ "${MENUPLACE}" = xgs ]; then
+    echo "Network Report installed: XGS > Network Report"
+else
+    echo "Network Report installed: Reporting > Network Report"
+fi
