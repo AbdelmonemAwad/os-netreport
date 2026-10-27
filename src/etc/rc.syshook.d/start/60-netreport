@@ -4,9 +4,10 @@
 # Copyright (c) 2026 Abdelmonem Awad <eg2@live.com>
 #
 
-# core updates replace the GUI translation catalogs; add the Network Report strings back
-ADDED=$(/usr/local/opnsense/scripts/netreport/merge_ui_translations.py 2> /dev/null)
-if [ -n "${ADDED}" ] && [ "${ADDED}" != "0" ]; then
+# core updates replace the GUI translation catalogs; add the Network Report strings back.
+# The merge prints the strings it added and the ones it corrected: "0 0" when it wrote nothing.
+MERGED=$(/usr/local/opnsense/scripts/netreport/merge_ui_translations.py 2> /dev/null)
+if [ -n "${MERGED}" ] && [ "${MERGED}" != "0 0" ]; then
 	# running php processes keep the old catalog in memory
 	configctl webgui restart > /dev/null 2>&1
 fi

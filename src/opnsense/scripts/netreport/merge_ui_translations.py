@@ -27,8 +27,11 @@ POSSIBILITY OF SUCH DAMAGE.
 
 Add the Network Report GUI strings (i18n/ui/<locale>.json) to the OPNsense gettext
 catalog of every installed GUI language. Strings the catalog already translates are left
-alone, so running it again is harmless. Core updates replace the catalogs, which is why
-this also runs at boot. Prints the number of strings added; exit code 0 either way.
+alone, so that OPNsense keeps its own words and running it again is harmless. The one
+exception is this script's own earlier text: what it wrote is recorded in OWNED, and an
+entry that still holds exactly that text takes a corrected translation from a later
+release. Core updates replace the catalogs, which is why this also runs at boot. Prints
+two numbers, the strings added and the strings corrected ("3 0"); exit code 0 either way.
 """
 
 import glob
@@ -39,6 +42,9 @@ import sys
 
 LOCALE_DIR = '/usr/local/share/locale'
 UI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'i18n', 'ui')
+# What this script wrote into each catalog, {locale: {msgid: text}}. In the plugin's state
+# directory, which an upgrade and a reinstall keep; the uninstallers remove this file.
+OWNED = '/var/db/netreport/i18n-owned.json'
 
 
 def read_mo(path):
@@ -83,8 +89,31 @@ def write_mo(path, entries):
     os.replace(tmp, path)
 
 
+def read_owned():
+    """locale -> {msgid: text this script wrote there}; empty when there is no readable record"""
+    try:
+        with open(OWNED, encoding='utf-8') as fh:
+            owned = json.load(fh)
+        return {locale: {msgid: text for msgid, text in texts.items() if isinstance(text, str)}
+                for locale, texts in owned.items() if isinstance(texts, dict)}
+    except Exception:
+        return {}
+
+
+def write_owned(owned):
+    """replaced whole, like a catalog; a hand install can get here before anything has made the
+    directory, so it is made at the 0750 pkg/post-install.sh gives it"""
+    os.makedirs(os.path.dirname(OWNED), mode=0o750, exist_ok=True)
+    tmp = OWNED + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as fh:
+        json.dump(owned, fh, indent=1, ensure_ascii=False, sort_keys=True)
+    os.replace(tmp, OWNED)
+
+
 def main():
-    added_total = 0
+    owned = read_owned()
+    record = {}
+    added_total = corrected_total = 0
     for src in sorted(glob.glob(os.path.join(UI_DIR, '*_*.json'))):
         locale = os.path.basename(src)[:-5]
         mo = os.path.join(LOCALE_DIR, locale, 'LC_MESSAGES', 'OPNsense.mo')
@@ -95,18 +124,41 @@ def main():
             entries = read_mo(mo)
         except Exception as exc:
             print(f'{locale}: skipped ({exc})', file=sys.stderr)
+            if locale in owned:
+                record[locale] = owned[locale]      # nothing learnt about it this time
             continue
-        added = 0
+        # This script's own entries: those that still hold exactly the text it recorded writing.
+        # Every other entry stays as it is - OPNsense's own translation, or one something else
+        # has written since. So does one merged before there was a record: it keeps its first
+        # wording until an OPNsense update replaces the catalog and the merge adds it anew.
+        mine = {msgid: text for msgid, text in owned.get(locale, {}).items()
+                if entries.get(msgid.encode('utf-8')) == text.encode('utf-8')}
+        added = corrected = 0
         for msgid, msgstr in strings.items():
+            if not msgstr:
+                continue
             key = msgid.encode('utf-8')
-            if msgstr and not entries.get(key):
-                entries[key] = msgstr.encode('utf-8')
+            if not entries.get(key):
                 added += 1
-        if added:
+            elif msgid in mine and mine[msgid] != msgstr:
+                corrected += 1
+            else:
+                continue
+            entries[key] = msgstr.encode('utf-8')
+            mine[msgid] = msgstr
+        if added or corrected:
             write_mo(mo, entries)
             read_mo(mo)          # sanity check: the result must parse
+        if mine:
+            record[locale] = mine
         added_total += added
-    print(added_total)
+        corrected_total += corrected
+    if record != owned:
+        try:
+            write_owned(record)
+        except OSError as exc:
+            print(f'record not written ({exc})', file=sys.stderr)
+    print(added_total, corrected_total)
 
 
 if __name__ == '__main__':

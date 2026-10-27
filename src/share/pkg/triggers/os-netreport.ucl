@@ -4,14 +4,15 @@
 # from the opnsense-lang package - and the Network Report strings merged into them go with them. An
 # update that only installs packages does not reboot, so the boot hook (60-netreport) on its own
 # would leave the page untranslated until the next boot. pkg runs this the moment it writes a
-# catalog. The merge only adds what a catalog does not hold, so running it again is harmless.
+# catalog. The merge only adds what a catalog does not hold and corrects only text it wrote
+# itself, so running it again is harmless.
 #
 # It does not restart the web GUI: the update does that itself once pkg is done, and a restart
 # in the middle of the transaction would cut the firmware page off from the update it is showing.
 # After a hand-run pkg upgrade, `configctl webgui restart` lets running pages see the strings.
 # pkg matches a trigger against the DIRECTORIES a package writes into, not against its files -
 # measured: a trigger naming a file never ran, the same trigger naming its directory did. So this
-# runs whenever any package writes into the directory, and what it runs only adds what is missing.
+# runs whenever any package writes into the directory, and what it runs changes only its own strings.
 path_glob: [ "/usr/local/share/locale/*/LC_MESSAGES" ]
 trigger: {
 	type: lua
