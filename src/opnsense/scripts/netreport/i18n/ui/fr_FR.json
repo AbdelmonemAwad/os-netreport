@@ -95,5 +95,5 @@
  "System language": "Langue du système",
  "BSD-2-Clause licence": "Licence BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Projet indépendant, sans lien avec Deciso B.V.",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Se connecter au serveur SMTP avec le nom d'utilisateur et le mot de passe ci-dessous. Désactivez-la pour un serveur qui accepte le courrier sans connexion."
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Se connecter au serveur SMTP avec le nom d'utilisateur et le mot de passe ci-dessous. Désactivez-la pour un serveur qui accepte les e-mails sans connexion."
 }

@@ -95,5 +95,5 @@
  "System language": "Γλώσσα συστήματος",
  "BSD-2-Clause licence": "Άδεια BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Ανεξάρτητο έργο, χωρίς σχέση με την Deciso B.V.",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Σύνδεση στον διακομιστή SMTP με το όνομα χρήστη και τον κωδικό πρόσβασης παρακάτω. Απενεργοποιήστε το για διακομιστή που δέχεται αλληλογραφία χωρίς σύνδεση."
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Σύνδεση στον διακομιστή SMTP με το όνομα χρήστη και τον κωδικό πρόσβασης παρακάτω. Απενεργοποιήστε αυτήν την επιλογή για διακομιστή που δέχεται αλληλογραφία χωρίς σύνδεση."
 }
