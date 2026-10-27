@@ -63,6 +63,13 @@
         <style>selectpicker smtp_custom</style>
     </field>
     <field>
+        <id>netreport.general.smtp_auth</id>
+        <label>Authentication</label>
+        <type>checkbox</type>
+        <style>smtp_custom</style>
+        <help>Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.</help>
+    </field>
+    <field>
         <id>netreport.general.smtp_user</id>
         <label>Username</label>
         <type>text</type>

@@ -40,7 +40,10 @@ class NetReport extends BaseModel
         $general = $this->general;
         if ($validateFullModel || $general->isFieldChanged()) {
             if ((string)$general->mail_source == 'custom') {
-                foreach (['smtp_host', 'smtp_user', 'from_address'] as $field) {
+                // the username is only needed when the server wants a sign-in
+                $required = (string)$general->smtp_auth == '1' ?
+                    ['smtp_host', 'smtp_user', 'from_address'] : ['smtp_host', 'from_address'];
+                foreach ($required as $field) {
                     if ((string)$general->$field == '') {
                         $messages->appendMessage(new Message(
                             gettext('This field is required when a custom SMTP server is used.'),

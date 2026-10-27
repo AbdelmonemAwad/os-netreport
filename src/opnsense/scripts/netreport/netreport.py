@@ -172,7 +172,7 @@ def line_time(line):
 class Settings:
     DEFAULTS = {
         'enabled': '1', 'title': 'Home network', 'recipients': '', 'language': 'default', 'mail_source': 'monit',
-        'smtp_port': '465', 'smtp_security': 'ssl', 'wan_interface': 'wan', 'lan_interface': 'lan',
+        'smtp_port': '465', 'smtp_security': 'ssl', 'smtp_auth': '1', 'wan_interface': 'wan', 'lan_interface': 'lan',
         'vpn_interfaces': '', 'new_device_alert': '1', 'temp_warn': '75', 'disk_warn': '85', 'loss_warn': '5',
         'backup_warn': '2', 'monthly_cap': '0', 'keep_days': '90',
     }
@@ -928,10 +928,13 @@ def build_report(settings, sched, start, end):
 
 def mail_settings(settings):
     if settings.get('mail_source') == 'custom':
-        user = settings.get('smtp_user')
+        # without authentication the saved username and password are left unused
+        auth = settings.get('smtp_auth') == '1'
+        user = settings.get('smtp_user') if auth else ''
         return {'host': settings.get('smtp_host'), 'port': settings.num('smtp_port') or 465,
                 'security': settings.get('smtp_security') or 'ssl', 'user': user,
-                'password': settings.get('smtp_password'), 'sender': settings.get('from_address') or user}
+                'password': settings.get('smtp_password') if auth else '',
+                'sender': settings.get('from_address') or user}
     monit = settings.root.find('./OPNsense/monit/general')
     if monit is None or not monit.findtext('mailserver'):
         raise RuntimeError('No mail server: configure Services: Monit or a custom SMTP server.')
@@ -947,8 +950,11 @@ def mail_settings(settings):
 def recipients_for(settings, sched, ms):
     rcpt = csv_list(sched.get('recipients')) if sched else []
     rcpt = rcpt or csv_list(settings.get('recipients'))
-    if not rcpt and '@' in ms['user']:
-        rcpt = [ms['user']]
+    # the mail account's own address: its username, or the sender address of a custom server
+    # that takes mail without signing in, which leaves no username
+    own = ms['user'] or (ms['sender'] if settings.get('mail_source') == 'custom' else '')
+    if not rcpt and '@' in own:
+        rcpt = [own]
     if not rcpt:
         raise RuntimeError('No recipients configured.')
     return rcpt

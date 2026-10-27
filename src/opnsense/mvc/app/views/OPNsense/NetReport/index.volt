@@ -176,8 +176,17 @@
 
         $('#netreport\\.general\\.mail_source').change(function () {
             const custom = $(this).val() === 'custom';
-            ['smtp_host', 'smtp_port', 'smtp_security', 'smtp_user', 'smtp_password', 'from_address'].forEach(function (f) {
+            ['smtp_host', 'smtp_port', 'smtp_security', 'smtp_auth', 'from_address'].forEach(function (f) {
                 $('#row_netreport\\.general\\.' + f).toggle(custom);
+            });
+            $('#netreport\\.general\\.smtp_auth').change();
+        });
+
+        /* the username and password only matter when the server wants a sign-in */
+        $('#netreport\\.general\\.smtp_auth').change(function () {
+            const shown = $('#netreport\\.general\\.mail_source').val() === 'custom' && $(this).is(':checked');
+            ['smtp_user', 'smtp_password'].forEach(function (f) {
+                $('#row_netreport\\.general\\.' + f).toggle(shown);
             });
         });
 

@@ -94,5 +94,6 @@
  "Warn when the last remote configuration backup is older than this. 0 disables the check.": "마지막 원격 설정 백업이 이 일수보다 오래되면 경고합니다. 0이면 검사를 사용하지 않습니다.",
  "System language": "시스템 언어",
  "BSD-2-Clause licence": "BSD-2-Clause 라이선스",
- "An independent project, not affiliated with Deciso B.V.": "Deciso B.V.와 관련이 없는 독립 프로젝트"
+ "An independent project, not affiliated with Deciso B.V.": "Deciso B.V.와 관련이 없는 독립 프로젝트",
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "아래의 사용자 이름과 비밀번호로 SMTP 서버에 로그인합니다. 로그인 없이 메일을 받는 서버라면 끄세요."
 }
