@@ -105,5 +105,15 @@
  "BSD-2-Clause licence",
  "An independent project, not affiliated with Deciso B.V.",
  "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.",
- "Sections"
+ "Sections",
+ "Subject",
+ "Send",
+ "Sent",
+ "Failed",
+ "Recipients",
+ "Schedules",
+ "Username",
+ "Language",
+ "Status",
+ "General"
 ]

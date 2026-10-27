@@ -105,5 +105,15 @@
  "failed": "ناموفق:",
  "none failed": "هیچ‌کدام ناموفق نبود",
  "not set": "تنظیم نشده",
- "Sections": "بخش‌ها"
+ "Sections": "بخش‌ها",
+ "Subject": "موضوع",
+ "Send": "ارسال",
+ "Sent": "ارسال‌شده",
+ "Failed": "ناموفق",
+ "Recipients": "گیرندگان",
+ "Schedules": "زمان‌بندی‌ها",
+ "Username": "نام کاربری",
+ "Language": "زبان",
+ "Status": "وضعیت",
+ "General": "عمومی"
 }

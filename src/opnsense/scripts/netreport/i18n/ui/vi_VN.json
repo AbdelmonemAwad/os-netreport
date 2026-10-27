@@ -105,5 +105,15 @@
  "failed": "thất bại:",
  "none failed": "không có báo cáo nào thất bại",
  "not set": "chưa đặt",
- "Sections": "Các phần"
+ "Sections": "Các phần",
+ "Subject": "Chủ đề",
+ "Send": "Gửi",
+ "Sent": "Đã gửi",
+ "Failed": "Thất bại",
+ "Recipients": "Người nhận",
+ "Schedules": "Lịch",
+ "Username": "Tên người dùng",
+ "Language": "Ngôn ngữ",
+ "Status": "Trạng thái",
+ "General": "Chung"
 }

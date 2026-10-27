@@ -105,5 +105,15 @@
  "failed": "en échec :",
  "none failed": "aucun échec",
  "not set": "non défini",
- "Sections": "Sections"
+ "Sections": "Sections",
+ "Subject": "Objet",
+ "Send": "Envoyer",
+ "Sent": "Envoyé",
+ "Failed": "Échec",
+ "Recipients": "Destinataires",
+ "Schedules": "Planifications",
+ "Username": "Nom d'utilisateur",
+ "Language": "Langue",
+ "Status": "État",
+ "General": "Général"
 }

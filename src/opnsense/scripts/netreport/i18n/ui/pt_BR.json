@@ -105,5 +105,15 @@
  "failed": "com falha:",
  "none failed": "nenhum com falha",
  "not set": "não definido",
- "Sections": "Partes"
+ "Sections": "Partes",
+ "Subject": "Assunto",
+ "Send": "Enviar",
+ "Sent": "Enviado",
+ "Failed": "Com falha",
+ "Recipients": "Destinatários",
+ "Schedules": "Agendamentos",
+ "Username": "Usuário",
+ "Language": "Idioma",
+ "Status": "Status",
+ "General": "Geral"
 }

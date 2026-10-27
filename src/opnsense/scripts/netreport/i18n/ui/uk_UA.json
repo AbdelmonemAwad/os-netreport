@@ -105,5 +105,15 @@
  "failed": "не вдалося:",
  "none failed": "невдалих немає",
  "not set": "не вказано",
- "Sections": "Розділи"
+ "Sections": "Розділи",
+ "Subject": "Тема",
+ "Send": "Надіслати",
+ "Sent": "Надіслано",
+ "Failed": "Не вдалося",
+ "Recipients": "Отримувачі",
+ "Schedules": "Розклади",
+ "Username": "Ім'я користувача",
+ "Language": "Мова",
+ "Status": "Стан",
+ "General": "Загальні"
 }

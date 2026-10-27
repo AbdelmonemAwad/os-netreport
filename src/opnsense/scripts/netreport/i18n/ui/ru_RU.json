@@ -105,5 +105,15 @@
  "failed": "не удалось:",
  "none failed": "неудачных нет",
  "not set": "не указано",
- "Sections": "Разделы"
+ "Sections": "Разделы",
+ "Subject": "Тема",
+ "Send": "Отправить",
+ "Sent": "Отправлено",
+ "Failed": "Не удалось",
+ "Recipients": "Получатели",
+ "Schedules": "Расписания",
+ "Username": "Имя пользователя",
+ "Language": "Язык",
+ "Status": "Состояние",
+ "General": "Общие"
 }

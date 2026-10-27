@@ -105,5 +105,15 @@
  "failed": "başarısız:",
  "none failed": "başarısız olan yok",
  "not set": "ayarlanmamış",
- "Sections": "Bölümler"
+ "Sections": "Bölümler",
+ "Subject": "Konu",
+ "Send": "Gönder",
+ "Sent": "Gönderildi",
+ "Failed": "Başarısız",
+ "Recipients": "Alıcılar",
+ "Schedules": "Zamanlamalar",
+ "Username": "Kullanıcı adı",
+ "Language": "Dil",
+ "Status": "Durum",
+ "General": "Genel"
 }
