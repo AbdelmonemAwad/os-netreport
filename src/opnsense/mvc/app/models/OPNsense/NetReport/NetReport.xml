@@ -69,6 +69,10 @@
                     <none>None</none>
                 </OptionValues>
             </smtp_security>
+            <smtp_auth type="BooleanField">
+                <Required>Y</Required>
+                <Default>1</Default>
+            </smtp_auth>
             <smtp_user type="TextField"/>
             <smtp_password type="UpdateOnlyTextField"/>
             <from_address type="TextField">

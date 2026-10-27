@@ -94,5 +94,6 @@
  "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Cảnh báo khi bản sao lưu cấu hình từ xa gần nhất cũ hơn mức này. 0 là tắt kiểm tra.",
  "System language": "Ngôn ngữ hệ thống",
  "BSD-2-Clause licence": "Giấy phép BSD-2-Clause",
- "An independent project, not affiliated with Deciso B.V.": "Dự án độc lập, không liên kết với Deciso B.V."
+ "An independent project, not affiliated with Deciso B.V.": "Dự án độc lập, không liên kết với Deciso B.V.",
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Đăng nhập vào máy chủ SMTP bằng tên người dùng và mật khẩu bên dưới. Tắt tùy chọn này với máy chủ nhận thư mà không cần đăng nhập."
 }

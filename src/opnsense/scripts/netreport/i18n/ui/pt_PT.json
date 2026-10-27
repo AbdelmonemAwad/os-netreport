@@ -94,5 +94,6 @@
  "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Avisar quando a última cópia de segurança remota da configuração for mais antiga do que isto. 0 desativa a verificação.",
  "System language": "Idioma do sistema",
  "BSD-2-Clause licence": "Licença BSD-2-Clause",
- "An independent project, not affiliated with Deciso B.V.": "Projeto independente, sem ligação à Deciso B.V."
+ "An independent project, not affiliated with Deciso B.V.": "Projeto independente, sem ligação à Deciso B.V.",
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Iniciar sessão no servidor SMTP com o nome de utilizador e a palavra-passe abaixo. Desative para um servidor que aceita correio sem iniciar sessão."
 }

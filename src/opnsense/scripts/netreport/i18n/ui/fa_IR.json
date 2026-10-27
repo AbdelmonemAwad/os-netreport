@@ -94,5 +94,6 @@
  "Warn when the last remote configuration backup is older than this. 0 disables the check.": "وقتی آخرین پشتیبان راه دور پیکربندی قدیمی‌تر از این باشد هشدار داده شود. 0 این بررسی را غیرفعال می‌کند.",
  "System language": "زبان سیستم",
  "BSD-2-Clause licence": "مجوز BSD-2-Clause",
- "An independent project, not affiliated with Deciso B.V.": "پروژه‌ای مستقل، بدون وابستگی به Deciso B.V."
+ "An independent project, not affiliated with Deciso B.V.": "پروژه‌ای مستقل، بدون وابستگی به Deciso B.V.",
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "ورود به سرور SMTP با نام کاربری و گذرواژهٔ زیر. برای سروری که بدون ورود ایمیل را می‌پذیرد، این گزینه را خاموش کنید."
 }

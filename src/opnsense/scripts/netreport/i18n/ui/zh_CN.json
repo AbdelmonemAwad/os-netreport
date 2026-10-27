@@ -94,5 +94,6 @@
  "Warn when the last remote configuration backup is older than this. 0 disables the check.": "当最近一次远程配置备份早于此天数时发出警告。0 表示禁用此检查。",
  "System language": "系统语言",
  "BSD-2-Clause licence": "BSD-2-Clause 许可证",
- "An independent project, not affiliated with Deciso B.V.": "独立项目，与 Deciso B.V. 无关联"
+ "An independent project, not affiliated with Deciso B.V.": "独立项目，与 Deciso B.V. 无关联",
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "使用下方的用户名和密码登录 SMTP 服务器。如果服务器无需登录即可接收邮件，请关闭此项。"
 }

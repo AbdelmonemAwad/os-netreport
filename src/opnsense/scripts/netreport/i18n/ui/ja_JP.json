@@ -94,5 +94,6 @@
  "Warn when the last remote configuration backup is older than this. 0 disables the check.": "最後のリモート設定バックアップがこの日数より古い場合に警告します。0 でチェックを無効にします。",
  "System language": "システム言語",
  "BSD-2-Clause licence": "BSD-2-Clause ライセンス",
- "An independent project, not affiliated with Deciso B.V.": "独立したプロジェクトであり、Deciso B.V. とは無関係です"
+ "An independent project, not affiliated with Deciso B.V.": "独立したプロジェクトであり、Deciso B.V. とは無関係です",
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "下のユーザー名とパスワードで SMTP サーバーにサインインします。サインインなしでメールを受け付けるサーバーではオフにしてください。"
 }

@@ -94,5 +94,6 @@
  "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Son uzak yapılandırma yedeği bundan eskiyse uyar. 0 denetimi devre dışı bırakır.",
  "System language": "Sistem dili",
  "BSD-2-Clause licence": "BSD-2-Clause lisansı",
- "An independent project, not affiliated with Deciso B.V.": "Deciso B.V. ile bağlantısı olmayan bağımsız bir proje"
+ "An independent project, not affiliated with Deciso B.V.": "Deciso B.V. ile bağlantısı olmayan bağımsız bir proje",
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "SMTP sunucusunda aşağıdaki kullanıcı adı ve parolayla oturum açar. Oturum açmadan posta kabul eden bir sunucu için kapatın."
 }
