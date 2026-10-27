@@ -170,7 +170,10 @@ not be updated either. Build a new package from a newer tag and `pkg add -f` it.
   in `i18n/ui/<locale>.json` and are merged into the system catalogs by
   `merge_ui_translations.py`, which also runs when pkg writes a catalog
   (`/usr/local/share/pkg/triggers/os-netreport.ucl`) and at boot, because core updates replace
-  those catalogs and an update that only installs packages does not reboot. Once the plugin is part of the official repository this step goes away, since its
+  those catalogs and an update that only installs packages does not reboot. A string a catalog
+  already translates keeps OPNsense's words, unless the merge wrote it itself: what it wrote is
+  recorded in `/var/db/netreport/i18n-owned.json`, and takes a corrected translation from a later
+  release. Once the plugin is part of the official repository this step goes away, since its
   strings would then be translated through the normal OPNsense process.
 - State, history and archived reports are kept in `/var/db/netreport`.
 

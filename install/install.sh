@@ -40,9 +40,11 @@ rm -f /var/lib/php/tmp/opnsense_menu_cache.xml /var/lib/php/tmp/opnsense_acl_cac
 
 # GUI strings for every installed language but Arabic, then reload php so the new catalogs
 # are used. The Arabic is in opnsense-arabic's catalogue since 2026-10-22; the copy an earlier
-# install left goes, so that nothing merges it again.
+# install left goes, so that nothing merges it again. The merge prints two numbers: the strings
+# it added, and the strings of its own it corrected.
 rm -f /usr/local/opnsense/scripts/netreport/i18n/ui/ar_SA.json
-echo "translated strings added: $(/usr/local/opnsense/scripts/netreport/merge_ui_translations.py)"
+MERGED=$(/usr/local/opnsense/scripts/netreport/merge_ui_translations.py) || MERGED='0 0'
+echo "translated strings added: ${MERGED%% *}, corrected: ${MERGED##* }"
 configctl webgui restart > /dev/null 2>&1 || true
 
 # What this install is, for the self-update: the commit, from a git checkout, or from the

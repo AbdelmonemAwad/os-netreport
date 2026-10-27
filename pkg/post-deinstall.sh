@@ -8,7 +8,7 @@
 # pkg has already removed every file the package owns, including the cron line in
 # /usr/local/etc/cron.d/netreport and the boot hook, and every directory under them that
 # it created and that is now empty. What is left is what pkg cannot know about: the entry
-# this plugin made in config.xml, and the GUI's caches.
+# this plugin made in config.xml, the GUI's caches, and the merge's record.
 
 # Take the plugin back out of config.xml's system/firmware/plugins. Left in, it would be a
 # plugin OPNsense believes it is managing and cannot find, and the next plugin sync would
@@ -28,6 +28,12 @@ rm -f /usr/local/opnsense/mvc/app/models/OPNsense/NetReport/Menu/Menu.xml
 rmdir /usr/local/opnsense/mvc/app/models/OPNsense/NetReport/Menu \
     /usr/local/opnsense/mvc/app/models/OPNsense/NetReport 2> /dev/null || true
 rm -f /var/lib/php/tmp/opnsense_menu_cache.xml /tmp/opnsense_menu_cache.xml
+
+# The record of what merge_ui_translations.py wrote into the GUI catalogues, kept beside the
+# history but not part of it. The strings themselves stay (see the end); a reinstall without
+# the record leaves them as it finds them, as on a machine merged before there was a record,
+# until opnsense-lang replaces the catalogues.
+rm -f /var/db/netreport/i18n-owned.json
 
 # system_cache_flush(): without it the menu keeps a dead entry and the user manager keeps
 # an ACL tag pointing at a page that is not there, for up to an hour each.

@@ -16,6 +16,8 @@ name: checks
 #   * a shell script or Python file with a syntax error, found after it was installed;
 #   * a string added to the page or to a data file and never translated, which shows
 #     up as one English sentence in the middle of an Arabic page;
+#   * a corrected translation that never replaced the first one on a firewall that had
+#     merged it;
 #   * an address from the machine this was written on, left in an example.
 
 on:
@@ -142,3 +144,9 @@ jobs:
       # as it stands and so never finds in a catalogue.
       - name: Every language has every string
         run: python3 install/check_i18n.py
+
+      # The merge writes a string only where a catalogue has none, so that OPNsense keeps its own
+      # words, and remembers what it wrote, so that a later release can correct that and nothing
+      # else (issue 27). Run on a catalogue made up for it, with no OPNsense needed.
+      - name: A corrected translation replaces the merge's own text and nothing else
+        run: python3 tools/check-merge.py

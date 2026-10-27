@@ -74,12 +74,13 @@ fi
 # boot - the catalogues belong to the opnsense-lang package, which replaces them on its
 # own schedule, independent of the core version - so doing it now takes no new liberty
 # with the machine; it only brings the first run forward from the next reboot to now.
-# The webgui is restarted only when there was something to add, because a restart takes
-# away every logged-in session's php worker.
+# The merge prints two numbers, the strings it added and the strings of its own it corrected.
+# The webgui is restarted only when it wrote something, because a restart takes away every
+# logged-in session's php worker.
 if [ -x /usr/local/opnsense/scripts/netreport/merge_ui_translations.py ]; then
-	ADDED=$(/usr/local/opnsense/scripts/netreport/merge_ui_translations.py 2> /dev/null) || ADDED=
-	echo "translated strings added: ${ADDED:-0}"
-	if [ -n "${ADDED}" ] && [ "${ADDED}" != "0" ]; then
+	MERGED=$(/usr/local/opnsense/scripts/netreport/merge_ui_translations.py 2> /dev/null) || MERGED='0 0'
+	echo "translated strings added: ${MERGED%% *}, corrected: ${MERGED##* }"
+	if [ -n "${MERGED}" ] && [ "${MERGED}" != "0 0" ]; then
 		# absolute, because a pkg script does not necessarily inherit a PATH with
 		# /usr/local/sbin in it - which is why os-vnstat's own post-install calls
 		# /usr/local/sbin/configctl by its full path too
