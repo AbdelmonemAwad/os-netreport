@@ -105,5 +105,15 @@
  "failed": "mislyktes:",
  "none failed": "ingen mislyktes",
  "not set": "ikke angitt",
- "Sections": "Deler"
+ "Sections": "Deler",
+ "Subject": "Emne",
+ "Send": "Send",
+ "Sent": "Sendt",
+ "Failed": "Mislyktes",
+ "Recipients": "Mottakere",
+ "Schedules": "Planer",
+ "Username": "Brukernavn",
+ "Language": "Språk",
+ "Status": "Status",
+ "General": "Generelt"
 }

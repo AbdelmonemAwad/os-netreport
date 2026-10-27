@@ -105,5 +105,15 @@
  "failed": "失败",
  "none failed": "无失败",
  "not set": "未设置",
- "Sections": "报告部分"
+ "Sections": "报告部分",
+ "Subject": "主题",
+ "Send": "发送",
+ "Sent": "已发送",
+ "Failed": "失败",
+ "Recipients": "收件人",
+ "Schedules": "计划",
+ "Username": "用户名",
+ "Language": "语言",
+ "Status": "状态",
+ "General": "常规"
 }

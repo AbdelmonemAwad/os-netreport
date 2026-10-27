@@ -105,5 +105,15 @@
  "failed": "실패",
  "none failed": "실패 없음",
  "not set": "설정 안 됨",
- "Sections": "표시 항목"
+ "Sections": "표시 항목",
+ "Subject": "제목",
+ "Send": "보내기",
+ "Sent": "보냄",
+ "Failed": "실패",
+ "Recipients": "수신자",
+ "Schedules": "스케줄",
+ "Username": "사용자 이름",
+ "Language": "언어",
+ "Status": "상태",
+ "General": "일반"
 }

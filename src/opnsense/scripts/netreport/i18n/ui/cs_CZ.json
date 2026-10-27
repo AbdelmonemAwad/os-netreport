@@ -105,5 +105,15 @@
  "failed": "selhalo:",
  "none failed": "nic neselhalo",
  "not set": "nenastaveno",
- "Sections": "Části"
+ "Sections": "Části",
+ "Subject": "Předmět",
+ "Send": "Odeslat",
+ "Sent": "Odesláno",
+ "Failed": "Selhalo",
+ "Recipients": "Příjemci",
+ "Schedules": "Plány",
+ "Username": "Uživatelské jméno",
+ "Language": "Jazyk",
+ "Status": "Stav",
+ "General": "Obecné"
 }

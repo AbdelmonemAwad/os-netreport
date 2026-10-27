@@ -105,5 +105,15 @@
  "failed": "nieudane:",
  "none failed": "brak nieudanych",
  "not set": "nie ustawiono",
- "Sections": "Sekcje"
+ "Sections": "Sekcje",
+ "Subject": "Temat",
+ "Send": "Wyślij",
+ "Sent": "Wysłano",
+ "Failed": "Nieudane",
+ "Recipients": "Odbiorcy",
+ "Schedules": "Harmonogramy",
+ "Username": "Nazwa użytkownika",
+ "Language": "Język",
+ "Status": "Status",
+ "General": "Ogólne"
 }

@@ -105,5 +105,15 @@
  "failed": "fehlgeschlagen:",
  "none failed": "keiner fehlgeschlagen",
  "not set": "nicht festgelegt",
- "Sections": "Abschnitte"
+ "Sections": "Abschnitte",
+ "Subject": "Betreff",
+ "Send": "Senden",
+ "Sent": "Gesendet",
+ "Failed": "Fehlgeschlagen",
+ "Recipients": "Empfänger",
+ "Schedules": "Zeitpläne",
+ "Username": "Benutzername",
+ "Language": "Sprache",
+ "Status": "Status",
+ "General": "Allgemein"
 }

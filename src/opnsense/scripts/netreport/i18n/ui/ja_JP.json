@@ -105,5 +105,15 @@
  "failed": "失敗",
  "none failed": "失敗なし",
  "not set": "未設定",
- "Sections": "表示項目"
+ "Sections": "表示項目",
+ "Subject": "件名",
+ "Send": "送信",
+ "Sent": "送信済み",
+ "Failed": "失敗",
+ "Recipients": "宛先",
+ "Schedules": "スケジュール",
+ "Username": "ユーザー名",
+ "Language": "言語",
+ "Status": "状態",
+ "General": "一般"
 }

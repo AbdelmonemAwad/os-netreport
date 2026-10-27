@@ -105,5 +105,15 @@
  "failed": "falliti:",
  "none failed": "nessuno fallito",
  "not set": "non impostato",
- "Sections": "Sezioni"
+ "Sections": "Sezioni",
+ "Subject": "Oggetto",
+ "Send": "Invia",
+ "Sent": "Inviato",
+ "Failed": "Fallito",
+ "Recipients": "Destinatari",
+ "Schedules": "Pianificazioni",
+ "Username": "Nome utente",
+ "Language": "Lingua",
+ "Status": "Stato",
+ "General": "Generale"
 }
