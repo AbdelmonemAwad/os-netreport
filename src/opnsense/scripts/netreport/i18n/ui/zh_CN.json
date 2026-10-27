@@ -33,7 +33,6 @@
  "Internet interface": "互联网接口",
  "Internet usage": "互联网使用量",
  "Keep sent reports (days)": "保留已发送报告（天）",
- "Language of the instant alerts and test messages. Every schedule has its own report language.": "即时告警和测试邮件使用的语言。每个计划有各自的报告语言。",
  "Last 24 hours": "最近 24 小时",
  "Last 30 days": "最近 30 天",
  "Last 7 days": "最近 7 天",
@@ -95,5 +94,16 @@
  "System language": "系统语言",
  "BSD-2-Clause licence": "BSD-2-Clause 许可证",
  "An independent project, not affiliated with Deciso B.V.": "独立项目，与 Deciso B.V. 无关联",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "使用下方的用户名和密码登录 SMTP 服务器。如果服务器无需登录即可接收邮件，请关闭此项。"
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "使用下方的用户名和密码登录 SMTP 服务器。如果服务器无需登录即可接收邮件，请关闭此项。",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "此字段设置的并不是报告的语言。每个计划都有各自的语言，显示在计划选项卡的语言列中；只有当该计划设置为系统语言时，报告才会使用系统语言。此字段设置的是即时告警和测试邮件使用的语言。",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.": "撰写此报告所用的语言，不受 GUI 语言设置的影响。如需跟随 GUI，请选择系统语言。在设置选项卡中更改告警语言不会改变此处的设置。",
+ "Allow access to the network report settings, previews and history": "允许访问网络报告的设置、预览和历史记录",
+ "Last report": "最近报告",
+ "Mail": "邮件",
+ "None yet": "暂无",
+ "enabled": "已启用",
+ "failed": "失败",
+ "none failed": "无失败",
+ "not set": "未设置",
+ "Sections": "报告部分"
 }

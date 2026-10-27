@@ -33,7 +33,6 @@
  "Internet interface": "Internettgrensesnitt",
  "Internet usage": "Internettbruk",
  "Keep sent reports (days)": "Behold sendte rapporter (dager)",
- "Language of the instant alerts and test messages. Every schedule has its own report language.": "Språk for umiddelbare varsler og testmeldinger. Hver plan har sitt eget rapportspråk.",
  "Last 24 hours": "Siste 24 timer",
  "Last 30 days": "Siste 30 dager",
  "Last 7 days": "Siste 7 dager",
@@ -95,5 +94,16 @@
  "System language": "Systemspråk",
  "BSD-2-Clause licence": "Lisens BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Et uavhengig prosjekt, ikke tilknyttet Deciso B.V.",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Logg på SMTP-serveren med brukernavnet og passordet nedenfor. Slå av for en server som tar imot e-post uten pålogging."
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Logg på SMTP-serveren med brukernavnet og passordet nedenfor. Slå av for en server som tar imot e-post uten pålogging.",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "Dette er IKKE språket for rapportene. Hver plan har sitt eget, vist i kolonnen Språk i planfanen, og en rapport følger bare systemspråket når den planen er satt til Systemspråk. Dette feltet angir språket for umiddelbare varsler og testmeldingen.",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.": "Språket denne rapporten skrives på, uansett hva brukergrensesnittet er satt til. Velg Systemspråk for å følge brukergrensesnittet i stedet. Å endre varslingsspråket i innstillingsfanen endrer ikke dette språket.",
+ "Allow access to the network report settings, previews and history": "Tillat tilgang til innstillingene, forhåndsvisningene og historikken for nettverksrapporten",
+ "Last report": "Siste rapport",
+ "Mail": "E-post",
+ "None yet": "Ingen ennå",
+ "enabled": "aktiverte",
+ "failed": "mislyktes:",
+ "none failed": "ingen mislyktes",
+ "not set": "ikke angitt",
+ "Sections": "Deler"
 }

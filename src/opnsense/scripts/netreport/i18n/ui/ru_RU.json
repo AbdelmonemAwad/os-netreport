@@ -33,7 +33,6 @@
  "Internet interface": "Интерфейс интернета",
  "Internet usage": "Использование интернета",
  "Keep sent reports (days)": "Хранить отправленные отчёты (дни)",
- "Language of the instant alerts and test messages. Every schedule has its own report language.": "Язык мгновенных оповещений и тестовых сообщений. У каждого расписания свой язык отчёта.",
  "Last 24 hours": "Последние 24 часа",
  "Last 30 days": "Последние 30 дней",
  "Last 7 days": "Последние 7 дней",
@@ -95,5 +94,16 @@
  "System language": "Язык системы",
  "BSD-2-Clause licence": "Лицензия BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Независимый проект, не связанный с Deciso B.V.",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Входить на SMTP-сервер с указанными ниже именем пользователя и паролем. Отключите для сервера, который принимает почту без входа."
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Входить на SMTP-сервер с указанными ниже именем пользователя и паролем. Отключите для сервера, который принимает почту без входа.",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "Это НЕ язык отчётов. У каждого расписания свой язык, указанный в столбце языка на вкладке расписаний, и отчёт использует язык системы, только если для этого расписания выбран язык системы. Это поле задаёт язык мгновенных оповещений и тестового сообщения.",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.": "Язык, на котором составляется этот отчёт, независимо от языка интерфейса. Чтобы отчёт следовал языку интерфейса, выберите язык системы. Изменение языка оповещений на вкладке настроек на этот язык не влияет.",
+ "Allow access to the network report settings, previews and history": "Разрешить доступ к настройкам, предпросмотру и истории отчёта о сети",
+ "Last report": "Последний отчёт",
+ "Mail": "Почта",
+ "None yet": "Пока нет",
+ "enabled": "включены",
+ "failed": "не удалось:",
+ "none failed": "неудачных нет",
+ "not set": "не указано",
+ "Sections": "Разделы"
 }

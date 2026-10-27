@@ -33,7 +33,6 @@
  "Internet interface": "インターネットインターフェース",
  "Internet usage": "インターネット使用量",
  "Keep sent reports (days)": "送信済みレポートの保存期間（日）",
- "Language of the instant alerts and test messages. Every schedule has its own report language.": "即時アラートとテストメッセージの言語です。レポートの言語はスケジュールごとに設定します。",
  "Last 24 hours": "過去 24 時間",
  "Last 30 days": "過去 30 日間",
  "Last 7 days": "過去 7 日間",
@@ -95,5 +94,16 @@
  "System language": "システム言語",
  "BSD-2-Clause licence": "BSD-2-Clause ライセンス",
  "An independent project, not affiliated with Deciso B.V.": "独立したプロジェクトであり、Deciso B.V. とは無関係です",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "下のユーザー名とパスワードで SMTP サーバーにサインインします。サインインなしでメールを受け付けるサーバーではオフにしてください。"
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "下のユーザー名とパスワードで SMTP サーバーにサインインします。サインインなしでメールを受け付けるサーバーではオフにしてください。",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "注意：この項目はレポートの言語ではありません。レポートの言語はスケジュールごとに設定され、スケジュールタブの言語列に表示されます。レポートがシステム言語に従うのは、そのスケジュールがシステム言語に設定されている場合だけです。この項目は即時アラートとテストメッセージの言語です。",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.": "このレポートを作成する言語です。GUI の言語設定には左右されません。GUI に合わせるにはシステム言語を選択します。設定タブでアラートの言語を変更しても、この言語は変わりません。",
+ "Allow access to the network report settings, previews and history": "ネットワークレポートの設定、プレビュー、履歴へのアクセスを許可します",
+ "Last report": "最新のレポート",
+ "Mail": "メール",
+ "None yet": "まだありません",
+ "enabled": "有効",
+ "failed": "失敗",
+ "none failed": "失敗なし",
+ "not set": "未設定",
+ "Sections": "表示項目"
 }

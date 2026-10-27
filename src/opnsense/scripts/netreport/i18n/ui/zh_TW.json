@@ -33,7 +33,6 @@
  "Internet interface": "網際網路介面",
  "Internet usage": "網際網路用量",
  "Keep sent reports (days)": "保留已寄出報告（天）",
- "Language of the instant alerts and test messages. Every schedule has its own report language.": "即時警報與測試郵件使用的語言。每個排程各有自己的報告語言。",
  "Last 24 hours": "過去 24 小時",
  "Last 30 days": "過去 30 天",
  "Last 7 days": "過去 7 天",
@@ -95,5 +94,16 @@
  "System language": "系統語言",
  "BSD-2-Clause licence": "BSD-2-Clause 授權條款",
  "An independent project, not affiliated with Deciso B.V.": "獨立專案，與 Deciso B.V. 無關聯",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "使用下方的使用者名稱和密碼登入 SMTP 伺服器。若伺服器不需登入即可收信，請關閉此項。"
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "使用下方的使用者名稱和密碼登入 SMTP 伺服器。若伺服器不需登入即可收信，請關閉此項。",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "此欄位設定的並不是報告的語言。每個排程各有自己的語言，顯示在排程分頁的語言欄中；只有在該排程設為系統語言時，報告才會使用系統語言。此欄位設定的是即時警報與測試郵件使用的語言。",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.": "撰寫此報告所用的語言，不受 GUI 語言設定影響。若要跟隨 GUI，請選擇系統語言。在設定分頁變更警報語言不會改變此處的設定。",
+ "Allow access to the network report settings, previews and history": "允許存取網路報告的設定、預覽與歷史記錄",
+ "Last report": "最近報告",
+ "Mail": "郵件",
+ "None yet": "尚無",
+ "enabled": "已啟用",
+ "failed": "失敗",
+ "none failed": "無失敗",
+ "not set": "未設定",
+ "Sections": "報告部分"
 }

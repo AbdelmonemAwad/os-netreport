@@ -33,7 +33,6 @@
  "Internet interface": "Interfejs internetowy",
  "Internet usage": "Wykorzystanie internetu",
  "Keep sent reports (days)": "Przechowuj wysłane raporty (dni)",
- "Language of the instant alerts and test messages. Every schedule has its own report language.": "Język natychmiastowych alertów i wiadomości testowych. Każdy harmonogram ma własny język raportu.",
  "Last 24 hours": "Ostatnie 24 godziny",
  "Last 30 days": "Ostatnie 30 dni",
  "Last 7 days": "Ostatnie 7 dni",
@@ -95,5 +94,16 @@
  "System language": "Język systemu",
  "BSD-2-Clause licence": "Licencja BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Niezależny projekt, niepowiązany z Deciso B.V.",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Logowanie do serwera SMTP przy użyciu poniższej nazwy użytkownika i hasła. Wyłącz dla serwera, który przyjmuje pocztę bez logowania."
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Logowanie do serwera SMTP przy użyciu poniższej nazwy użytkownika i hasła. Wyłącz dla serwera, który przyjmuje pocztę bez logowania.",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "To NIE jest język raportów. Każdy harmonogram ma własny, widoczny w kolumnie Język na karcie harmonogramów, a raport używa języka systemu tylko wtedy, gdy ten harmonogram ma ustawiony Język systemu. To pole określa język natychmiastowych alertów i wiadomości testowej.",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.": "Język, w którym jest pisany ten raport, niezależnie od ustawień interfejsu graficznego. Wybierz Język systemu, aby zamiast tego używać języka interfejsu graficznego. Zmiana języka alertów na karcie ustawień nie zmienia tego języka.",
+ "Allow access to the network report settings, previews and history": "Zezwól na dostęp do ustawień, podglądów i historii raportu sieci",
+ "Last report": "Ostatni raport",
+ "Mail": "Poczta",
+ "None yet": "Jeszcze żaden",
+ "enabled": "włączone",
+ "failed": "nieudane:",
+ "none failed": "brak nieudanych",
+ "not set": "nie ustawiono",
+ "Sections": "Sekcje"
 }
