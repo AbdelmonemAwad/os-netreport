@@ -950,8 +950,11 @@ def mail_settings(settings):
 def recipients_for(settings, sched, ms):
     rcpt = csv_list(sched.get('recipients')) if sched else []
     rcpt = rcpt or csv_list(settings.get('recipients'))
-    if not rcpt and '@' in ms['user']:
-        rcpt = [ms['user']]
+    # the mail account's own address: its username, or the sender address of a custom server
+    # that takes mail without signing in, which leaves no username
+    own = ms['user'] or (ms['sender'] if settings.get('mail_source') == 'custom' else '')
+    if not rcpt and '@' in own:
+        rcpt = [own]
     if not rcpt:
         raise RuntimeError('No recipients configured.')
     return rcpt
