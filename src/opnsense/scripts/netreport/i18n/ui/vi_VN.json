@@ -33,7 +33,6 @@
  "Internet interface": "Giao diện Internet",
  "Internet usage": "Sử dụng Internet",
  "Keep sent reports (days)": "Lưu báo cáo đã gửi (ngày)",
- "Language of the instant alerts and test messages. Every schedule has its own report language.": "Ngôn ngữ của cảnh báo tức thời và thư thử nghiệm. Mỗi lịch có ngôn ngữ báo cáo riêng.",
  "Last 24 hours": "24 giờ qua",
  "Last 30 days": "30 ngày qua",
  "Last 7 days": "7 ngày qua",
@@ -95,5 +94,16 @@
  "System language": "Ngôn ngữ hệ thống",
  "BSD-2-Clause licence": "Giấy phép BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Dự án độc lập, không liên kết với Deciso B.V.",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Đăng nhập vào máy chủ SMTP bằng tên người dùng và mật khẩu bên dưới. Tắt tùy chọn này với máy chủ nhận thư mà không cần đăng nhập."
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Đăng nhập vào máy chủ SMTP bằng tên người dùng và mật khẩu bên dưới. Tắt tùy chọn này với máy chủ nhận thư mà không cần đăng nhập.",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "Đây KHÔNG phải là ngôn ngữ của báo cáo. Mỗi lịch có ngôn ngữ riêng, hiển thị ở cột Ngôn ngữ trong thẻ Lịch, và báo cáo chỉ dùng ngôn ngữ hệ thống khi lịch đó được đặt là Ngôn ngữ hệ thống. Trường này quy định ngôn ngữ của cảnh báo tức thời và thư thử nghiệm.",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.": "Ngôn ngữ dùng để viết báo cáo này, bất kể giao diện web đang dùng ngôn ngữ nào. Chọn Ngôn ngữ hệ thống để dùng ngôn ngữ của giao diện web. Thay đổi ngôn ngữ cảnh báo trong thẻ Cài đặt không làm thay đổi ngôn ngữ này.",
+ "Allow access to the network report settings, previews and history": "Cho phép truy cập cài đặt, bản xem trước và lịch sử của báo cáo mạng",
+ "Last report": "Báo cáo gần nhất",
+ "Mail": "Thư",
+ "None yet": "Chưa có",
+ "enabled": "đang bật",
+ "failed": "thất bại:",
+ "none failed": "không có báo cáo nào thất bại",
+ "not set": "chưa đặt",
+ "Sections": "Các phần"
 }

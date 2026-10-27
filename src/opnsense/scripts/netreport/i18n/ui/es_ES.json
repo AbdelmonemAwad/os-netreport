@@ -33,7 +33,6 @@
  "Internet interface": "Interfaz de Internet",
  "Internet usage": "Uso de Internet",
  "Keep sent reports (days)": "Conservar informes enviados (días)",
- "Language of the instant alerts and test messages. Every schedule has its own report language.": "Idioma de las alertas instantáneas y los mensajes de prueba. Cada programación tiene su propio idioma de informe.",
  "Last 24 hours": "Últimas 24 horas",
  "Last 30 days": "Últimos 30 días",
  "Last 7 days": "Últimos 7 días",
@@ -95,5 +94,16 @@
  "System language": "Idioma del sistema",
  "BSD-2-Clause licence": "Licencia BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Proyecto independiente, sin relación con Deciso B.V.",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Iniciar sesión en el servidor SMTP con el usuario y la contraseña de abajo. Desactívala para un servidor que acepta correo sin iniciar sesión."
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Iniciar sesión en el servidor SMTP con el usuario y la contraseña de abajo. Desactívala para un servidor que acepta correo sin iniciar sesión.",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "Este NO es el idioma de los informes. Cada programación tiene el suyo, que se muestra en la columna Idioma de la pestaña de programaciones, y un informe solo sigue el idioma del sistema cuando esa programación tiene seleccionado Idioma del sistema. Este campo establece el idioma de las alertas instantáneas y del mensaje de prueba.",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.": "El idioma en que se redacta este informe, sea cual sea la configuración de la interfaz gráfica. Al elegir Idioma del sistema, el informe usa en su lugar el idioma de la interfaz gráfica. Cambiar el idioma de las alertas en la pestaña de ajustes no cambia este idioma.",
+ "Allow access to the network report settings, previews and history": "Permitir el acceso a los ajustes, las vistas previas y el historial del informe de red",
+ "Last report": "Último informe",
+ "Mail": "Correo",
+ "None yet": "Ninguno todavía",
+ "enabled": "activadas",
+ "failed": "fallidos:",
+ "none failed": "sin fallos",
+ "not set": "sin configurar",
+ "Sections": "Secciones"
 }

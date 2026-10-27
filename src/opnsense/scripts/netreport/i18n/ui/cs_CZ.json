@@ -33,7 +33,6 @@
  "Internet interface": "Internetové rozhraní",
  "Internet usage": "Využití internetu",
  "Keep sent reports (days)": "Uchovávat odeslané zprávy (dny)",
- "Language of the instant alerts and test messages. Every schedule has its own report language.": "Jazyk okamžitých upozornění a testovacích zpráv. Každý plán má vlastní jazyk zprávy.",
  "Last 24 hours": "Posledních 24 hodin",
  "Last 30 days": "Posledních 30 dní",
  "Last 7 days": "Posledních 7 dní",
@@ -95,5 +94,16 @@
  "System language": "Jazyk systému",
  "BSD-2-Clause licence": "Licence BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Nezávislý projekt, nijak nespojený se společností Deciso B.V.",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Přihlásit se k serveru SMTP pomocí uživatelského jména a hesla níže. Vypněte pro server, který přijímá poštu bez přihlášení."
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Přihlásit se k serveru SMTP pomocí uživatelského jména a hesla níže. Vypněte pro server, který přijímá poštu bez přihlášení.",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "Toto NENÍ jazyk zpráv. Každý plán má svůj vlastní, uvedený ve sloupci Jazyk na kartě plánů, a zpráva se řídí jazykem systému pouze tehdy, když je daný plán nastaven na Jazyk systému. Toto pole určuje jazyk okamžitých upozornění a testovací zprávy.",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.": "Jazyk, ve kterém je tato zpráva napsána, bez ohledu na nastavení grafického rozhraní. Chcete-li se místo toho řídit grafickým rozhraním, vyberte Jazyk systému. Změna jazyka upozornění na kartě nastavení tento jazyk nezmění.",
+ "Allow access to the network report settings, previews and history": "Povolit přístup k nastavení, náhledům a historii zprávy o síti",
+ "Last report": "Poslední zpráva",
+ "Mail": "Pošta",
+ "None yet": "Zatím žádná",
+ "enabled": "zapnuté",
+ "failed": "selhalo:",
+ "none failed": "nic neselhalo",
+ "not set": "nenastaveno",
+ "Sections": "Části"
 }

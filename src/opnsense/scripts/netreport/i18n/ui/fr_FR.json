@@ -33,7 +33,6 @@
  "Internet interface": "Interface Internet",
  "Internet usage": "Utilisation d'Internet",
  "Keep sent reports (days)": "Conserver les rapports envoyés (jours)",
- "Language of the instant alerts and test messages. Every schedule has its own report language.": "Langue des alertes instantanées et des messages de test. Chaque planification a sa propre langue de rapport.",
  "Last 24 hours": "Dernières 24 heures",
  "Last 30 days": "30 derniers jours",
  "Last 7 days": "7 derniers jours",
@@ -95,5 +94,16 @@
  "System language": "Langue du système",
  "BSD-2-Clause licence": "Licence BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Projet indépendant, sans lien avec Deciso B.V.",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Se connecter au serveur SMTP avec le nom d'utilisateur et le mot de passe ci-dessous. Désactivez-la pour un serveur qui accepte les e-mails sans connexion."
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Se connecter au serveur SMTP avec le nom d'utilisateur et le mot de passe ci-dessous. Désactivez-la pour un serveur qui accepte les e-mails sans connexion.",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "Ce n'est PAS la langue des rapports. Chaque planification a la sienne, affichée dans la colonne Langue de l'onglet planifications, et un rapport ne suit la langue du système que si cette planification est réglée sur Langue du système. Ce champ définit la langue des alertes instantanées et du message de test.",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.": "La langue dans laquelle ce rapport est rédigé, quel que soit le réglage de l'interface graphique. Choisissez Langue du système pour suivre plutôt l'interface graphique. Modifier la langue des alertes dans l'onglet paramètres ne modifie pas celle-ci.",
+ "Allow access to the network report settings, previews and history": "Autoriser l'accès aux paramètres, aux aperçus et à l'historique du rapport réseau",
+ "Last report": "Dernier rapport",
+ "Mail": "Messagerie",
+ "None yet": "Aucun pour l'instant",
+ "enabled": "activées",
+ "failed": "en échec :",
+ "none failed": "aucun échec",
+ "not set": "non défini",
+ "Sections": "Sections"
 }

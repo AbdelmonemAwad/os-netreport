@@ -55,4 +55,14 @@ for loc in LOCALES:
                 msgs.append(f'ui empty: {empty[:3]}')
     problems += len(msgs)
     print(f'{loc}: ' + ('ok' if not msgs else '; '.join(msgs)))
+# OPNsense looks a form's label and help up in the catalogue exactly as the XML holds them, line
+# breaks and indentation included, so a text spread over lines is never translated (the schedule's
+# Language help stayed English in every language until 2026-10-27).
+SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src')
+for path in sorted(glob.glob(os.path.join(SRC, '**', '*.xml'), recursive=True)):
+    text = open(path, encoding='utf-8').read()
+    for m in re.finditer(r'<(label|help|hint|description)>([^<]*\n[^<]*)</\1>', text):
+        problems += 1
+        print(f'{os.path.relpath(path, SRC)}: <{m.group(1)}> on more than one line, which no catalogue '
+              f'matches: {m.group(2)[:60]!r}')
 sys.exit(1 if problems else 0)

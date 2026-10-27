@@ -33,7 +33,6 @@
  "Internet interface": "رابط اینترنت",
  "Internet usage": "مصرف اینترنت",
  "Keep sent reports (days)": "نگهداری گزارش‌های ارسال‌شده (روز)",
- "Language of the instant alerts and test messages. Every schedule has its own report language.": "زبان هشدارهای فوری و پیام‌های آزمایشی. هر زمان‌بندی زبان گزارش مخصوص به خود را دارد.",
  "Last 24 hours": "24 ساعت گذشته",
  "Last 30 days": "30 روز گذشته",
  "Last 7 days": "7 روز گذشته",
@@ -95,5 +94,16 @@
  "System language": "زبان سیستم",
  "BSD-2-Clause licence": "مجوز BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "پروژه‌ای مستقل، بدون وابستگی به Deciso B.V.",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "ورود به سرور SMTP با نام کاربری و گذرواژه زیر. برای سروری که بدون ورود ایمیل را می‌پذیرد، این گزینه را خاموش کنید."
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "ورود به سرور SMTP با نام کاربری و گذرواژه زیر. برای سروری که بدون ورود ایمیل را می‌پذیرد، این گزینه را خاموش کنید.",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "توجه: این فیلد زبان گزارش‌ها نیست. هر زمان‌بندی زبان مخصوص به خود را دارد که در ستون زبان در زبانه زمان‌بندی‌ها نمایش داده می‌شود، و گزارش فقط زمانی از زبان سیستم پیروی می‌کند که آن زمان‌بندی روی زبان سیستم تنظیم شده باشد. این فیلد زبان هشدارهای فوری و پیام آزمایشی است.",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.": "زبانی که این گزارش به آن نوشته می‌شود، صرف‌نظر از زبان رابط وب. برای پیروی از رابط وب، زبان سیستم را انتخاب کنید. تغییر زبان هشدار در زبانه تنظیمات این زبان را تغییر نمی‌دهد.",
+ "Allow access to the network report settings, previews and history": "اجازه دسترسی به تنظیمات، پیش‌نمایش‌ها و تاریخچه گزارش شبکه",
+ "Last report": "آخرین گزارش",
+ "Mail": "ایمیل",
+ "None yet": "هنوز گزارشی نیست",
+ "enabled": "فعال",
+ "failed": "ناموفق:",
+ "none failed": "هیچ‌کدام ناموفق نبود",
+ "not set": "تنظیم نشده",
+ "Sections": "بخش‌ها"
 }

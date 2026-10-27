@@ -33,7 +33,6 @@
  "Internet interface": "Διεπαφή internet",
  "Internet usage": "Χρήση internet",
  "Keep sent reports (days)": "Διατήρηση απεσταλμένων αναφορών (ημέρες)",
- "Language of the instant alerts and test messages. Every schedule has its own report language.": "Γλώσσα των άμεσων ειδοποιήσεων και των δοκιμαστικών μηνυμάτων. Κάθε πρόγραμμα έχει τη δική του γλώσσα αναφοράς.",
  "Last 24 hours": "Τελευταίες 24 ώρες",
  "Last 30 days": "Τελευταίες 30 ημέρες",
  "Last 7 days": "Τελευταίες 7 ημέρες",
@@ -95,5 +94,16 @@
  "System language": "Γλώσσα συστήματος",
  "BSD-2-Clause licence": "Άδεια BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Ανεξάρτητο έργο, χωρίς σχέση με την Deciso B.V.",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Σύνδεση στον διακομιστή SMTP με το όνομα χρήστη και τον κωδικό πρόσβασης παρακάτω. Απενεργοποιήστε αυτήν την επιλογή για διακομιστή που δέχεται αλληλογραφία χωρίς σύνδεση."
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Σύνδεση στον διακομιστή SMTP με το όνομα χρήστη και τον κωδικό πρόσβασης παρακάτω. Απενεργοποιήστε αυτήν την επιλογή για διακομιστή που δέχεται αλληλογραφία χωρίς σύνδεση.",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "Αυτή ΔΕΝ είναι η γλώσσα των αναφορών. Κάθε πρόγραμμα έχει τη δική του, που εμφανίζεται στη στήλη Γλώσσα της καρτέλας προγραμμάτων, και μια αναφορά ακολουθεί τη γλώσσα του συστήματος μόνο όταν το πρόγραμμα αυτό έχει ρυθμιστεί σε Γλώσσα συστήματος. Αυτό το πεδίο ορίζει τη γλώσσα των άμεσων ειδοποιήσεων και του δοκιμαστικού μηνύματος.",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.": "Η γλώσσα στην οποία γράφεται αυτή η αναφορά, ανεξάρτητα από τη ρύθμιση του γραφικού περιβάλλοντος. Επιλέξτε Γλώσσα συστήματος για να ακολουθεί η αναφορά το γραφικό περιβάλλον. Η αλλαγή της γλώσσας ειδοποιήσεων στην καρτέλα ρυθμίσεων δεν αλλάζει αυτή τη γλώσσα.",
+ "Allow access to the network report settings, previews and history": "Παραχώρηση πρόσβασης στις ρυθμίσεις, τις προεπισκοπήσεις και το ιστορικό της αναφοράς δικτύου",
+ "Last report": "Τελευταία αναφορά",
+ "Mail": "Αλληλογραφία",
+ "None yet": "Καμία ακόμη",
+ "enabled": "ενεργοποιημένα",
+ "failed": "απέτυχαν:",
+ "none failed": "καμία δεν απέτυχε",
+ "not set": "δεν έχει οριστεί",
+ "Sections": "Τμήματα"
 }

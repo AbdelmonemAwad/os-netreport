@@ -33,7 +33,6 @@
  "Internet interface": "Інтерфейс інтернету",
  "Internet usage": "Використання інтернету",
  "Keep sent reports (days)": "Зберігати надіслані звіти (дні)",
- "Language of the instant alerts and test messages. Every schedule has its own report language.": "Мова миттєвих сповіщень і тестових повідомлень. Кожен розклад має власну мову звіту.",
  "Last 24 hours": "Останні 24 години",
  "Last 30 days": "Останні 30 днів",
  "Last 7 days": "Останні 7 днів",
@@ -95,5 +94,16 @@
  "System language": "Мова системи",
  "BSD-2-Clause licence": "Ліцензія BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Незалежний проєкт, не пов’язаний з Deciso B.V.",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Входити на SMTP-сервер з указаними нижче ім'ям користувача та паролем. Вимкніть для сервера, який приймає пошту без входу."
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Входити на SMTP-сервер з указаними нижче ім'ям користувача та паролем. Вимкніть для сервера, який приймає пошту без входу.",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "Це НЕ мова звітів. Кожен розклад має власну мову, вказану у стовпці мови на вкладці розкладів, і звіт використовує мову системи лише тоді, коли для цього розкладу вибрано мову системи. Це поле задає мову миттєвих сповіщень і тестового повідомлення.",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.": "Мова, якою складається цей звіт, незалежно від мови інтерфейсу. Щоб звіт використовував мову інтерфейсу, виберіть мову системи. Зміна мови сповіщень на вкладці налаштувань на цю мову не впливає.",
+ "Allow access to the network report settings, previews and history": "Дозволити доступ до налаштувань, попереднього перегляду та історії звіту про мережу",
+ "Last report": "Останній звіт",
+ "Mail": "Пошта",
+ "None yet": "Поки немає",
+ "enabled": "увімкнені",
+ "failed": "не вдалося:",
+ "none failed": "невдалих немає",
+ "not set": "не вказано",
+ "Sections": "Розділи"
 }

@@ -33,7 +33,6 @@
  "Internet interface",
  "Internet usage",
  "Keep sent reports (days)",
- "Language of the instant alerts and test messages. Every schedule has its own report language.",
  "Last 24 hours",
  "Last 30 days",
  "Last 7 days",
@@ -105,5 +104,6 @@
  "not set",
  "BSD-2-Clause licence",
  "An independent project, not affiliated with Deciso B.V.",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in."
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.",
+ "Sections"
 ]

@@ -33,7 +33,6 @@
  "Internet interface": "Internet-Schnittstelle",
  "Internet usage": "Internetnutzung",
  "Keep sent reports (days)": "Gesendete Berichte aufbewahren (Tage)",
- "Language of the instant alerts and test messages. Every schedule has its own report language.": "Sprache der Sofortbenachrichtigungen und Testnachrichten. Jeder Zeitplan hat seine eigene Berichtssprache.",
  "Last 24 hours": "Letzte 24 Stunden",
  "Last 30 days": "Letzte 30 Tage",
  "Last 7 days": "Letzte 7 Tage",
@@ -95,5 +94,16 @@
  "System language": "Systemsprache",
  "BSD-2-Clause licence": "Lizenz BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Ein unabhängiges Projekt, nicht mit Deciso B.V. verbunden",
- "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Mit dem Benutzernamen und Passwort unten beim SMTP-Server anmelden. Für einen Server, der E-Mails ohne Anmeldung annimmt, ausschalten."
+ "Sign in to the SMTP server with the username and password below. Turn this off for a server that accepts mail without signing in.": "Mit dem Benutzernamen und Passwort unten beim SMTP-Server anmelden. Für einen Server, der E-Mails ohne Anmeldung annimmt, ausschalten.",
+ "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.": "Dies ist NICHT die Sprache der Berichte. Jeder Zeitplan hat seine eigene, die in der Spalte Sprache im Zeitpläne-Tab angezeigt wird, und ein Bericht folgt der Systemsprache nur, wenn dieser Zeitplan auf Systemsprache eingestellt ist. Dieses Feld legt die Sprache der Sofortbenachrichtigungen und der Testnachricht fest.",
+ "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.": "Die Sprache, in der dieser Bericht verfasst wird, unabhängig davon, worauf die Oberfläche eingestellt ist. Wählen Sie Systemsprache, um stattdessen der Oberfläche zu folgen. Eine Änderung der Sprache der Benachrichtigungen im Einstellungen-Tab ändert diese Sprache nicht.",
+ "Allow access to the network report settings, previews and history": "Zugriff auf die Einstellungen, Vorschauen und den Verlauf des Netzwerkberichts erlauben",
+ "Last report": "Letzter Bericht",
+ "Mail": "E-Mail",
+ "None yet": "Noch keiner",
+ "enabled": "aktiviert",
+ "failed": "fehlgeschlagen:",
+ "none failed": "keiner fehlgeschlagen",
+ "not set": "nicht festgelegt",
+ "Sections": "Abschnitte"
 }
