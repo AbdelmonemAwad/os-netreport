@@ -44,7 +44,16 @@ on:
       - 'v*'
   # Run it by hand to find out whether the FreeBSD build still works without having to
   # spend a tag on the question. Off a tag it builds and inspects and publishes nothing.
+  # With a tag named it builds that tag and publishes it - attaching the files to its
+  # release when one is published already. That is how a release published by hand gets
+  # its package: v1.0.3 was, on 2026-10-28, and the run its tag started built the package,
+  # stopped at "a release with the same tag name already exists" and threw it away.
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'A tag to build and publish (its release, if published already, gets the files); empty: build only'
+        required: false
+        default: ''
 
 # The floor for every job in this file. The one job below raises it by exactly one thing.
 permissions:
@@ -65,27 +74,33 @@ jobs:
       # opnsense-version(8); a plain FreeBSD virtual machine has no such program, so the
       # answer is stated here and the built package is checked against it further down.
       PRODUCT_ABI: '26.7'
+      # The tag this run builds and publishes: the one pushed, or the one named when it
+      # is run by hand; empty when there is none, and then nothing is published.
+      TAG: ${{ inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name || '') }}
     steps:
       - name: This repository
         uses: actions/checkout@v7
         with:
+          # The tag's tree when there is one, so a run started by hand builds what it names.
+          ref: ${{ env.TAG || github.ref }}
           # The whole history and, below, the tags: the release notes are read out of the
           # annotated tag object by git, locally, so a shallow checkout has nothing to
           # read them from.
           fetch-depth: 0
 
       - name: The tag, the Makefile and main have to agree
-        if: startsWith(github.ref, 'refs/tags/')
+        if: env.TAG != ''
         run: |
           set -eu
           git fetch --force --tags --quiet origin
           git fetch --force --no-tags --quiet origin +refs/heads/main:refs/remotes/origin/main
+          SHA=$(git rev-parse "${TAG}^{commit}")
 
           # A tag on a commit that never went through main would publish code that the
           # branch protection - the required checks, the review - never saw. That is the
           # one way to get an unchecked file into a release, so close it here.
-          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/main; then
-            echo "${GITHUB_REF_NAME} points at ${GITHUB_SHA}, which is not on main."
+          if ! git merge-base --is-ancestor "${SHA}" origin/main; then
+            echo "${TAG} points at ${SHA}, which is not on main."
             echo "Everything published from here has to have gone through a pull request"
             echo "and the checks, because that is where the syntax, privacy and"
             echo "translation rules are enforced. Tag a commit that is on main."
@@ -96,19 +111,19 @@ jobs:
           # else would publish os-netreport-1.0.pkg under the heading v1.1.
           version=$(sed -n 's/^PLUGIN_VERSION[[:space:]]*=[[:space:]]*//p' Makefile |
               sed -e '1!d' -e 's/[[:space:]]*$//')
-          if [ "${GITHUB_REF_NAME#v}" != "${version}" ]; then
-            echo "the tag is ${GITHUB_REF_NAME} and the Makefile says PLUGIN_VERSION=${version}."
+          if [ "${TAG#v}" != "${version}" ]; then
+            echo "the tag is ${TAG} and the Makefile says PLUGIN_VERSION=${version}."
             echo "The package is named after the Makefile, so these two have to match."
             echo "Either move the tag or raise PLUGIN_VERSION and tag again."
             exit 1
           fi
-          echo "${GITHUB_REF_NAME} is on main and matches PLUGIN_VERSION=${version}"
+          echo "${TAG} is on main and matches PLUGIN_VERSION=${version}"
 
           # Not fatal: gh falls back to the commit message. But an annotated tag is where
           # the release notes are supposed to come from, so say when there are none.
-          if [ "$(git cat-file -t "${GITHUB_REF_NAME}")" != "tag" ]; then
-            echo "NOTE: ${GITHUB_REF_NAME} is a lightweight tag, so the release notes will"
-            echo "be the commit message. For notes of your own: git tag -a ${GITHUB_REF_NAME}"
+          if [ "$(git cat-file -t "${TAG}")" != "tag" ]; then
+            echo "NOTE: ${TAG} is a lightweight tag, so the release notes will"
+            echo "be the commit message. For notes of your own: git tag -a ${TAG}"
           fi
 
       - name: The builder is here and parses
@@ -195,7 +210,7 @@ jobs:
           sha256sum -- *.pkg > SHA256SUMS
           cat SHA256SUMS
           {
-            echo '### '"${GITHUB_REF_NAME}"
+            echo '### '"${TAG:-${GITHUB_REF_NAME}}"
             echo
             echo '```'
             cat SHA256SUMS
@@ -203,19 +218,28 @@ jobs:
           } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Publish the release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: env.TAG != ''
         env:
           # The job token, with the contents:write granted above and nothing else. There
           # is no secret of the owner's in this workflow.
           GH_TOKEN: ${{ github.token }}
         run: |
           set -eu
+          # A release published already - by hand, or by a run that stopped after
+          # publishing it - keeps its notes and gets the files built here; until
+          # 2026-10-28 this step stopped at "a release with the same tag name already
+          # exists", and the package it had built was thrown away.
+          if gh release view "${TAG}" > /dev/null 2>&1; then
+            gh release upload "${TAG}" --clobber dist/*.pkg dist/SHA256SUMS
+            echo "${TAG} was published already: its files attached to it"
+            exit 0
+          fi
           # --notes-from-tag is why the tag has to be annotated and why the checkout is
           # not shallow: gh reads the message out of the local tag object. It also means
           # --repo cannot be passed, which is fine - gh takes the repository from this
           # checkout's origin.
-          gh release create "${GITHUB_REF_NAME}" \
+          gh release create "${TAG}" \
             --verify-tag \
             --notes-from-tag \
-            --title "${GITHUB_REF_NAME}" \
+            --title "${TAG}" \
             dist/*.pkg dist/SHA256SUMS
