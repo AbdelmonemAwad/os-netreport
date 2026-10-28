@@ -11,6 +11,22 @@ joins the local network.
 Plugin Changelog
 ================
 
+1.0.3
+
+* An Authentication switch for a custom SMTP server, on by default: off,
+  mail is sent to a server that takes it without signing in, where a
+  saved password could not be emptied and every send signed in (#26)
+* Every GUI string in every one of the 19 languages - ten were in
+  English in all of them - and the check that keeps it so run in CI (#29)
+* The merge into OPNsense's catalogues remembers what it wrote, and
+  corrects its own text when a later release changes it, where it kept
+  the first wording on every firewall it had reached (#27, #30)
+* Ten words the page took from OPNsense's catalogues - Subject, Send,
+  Sent, Failed, Recipients, Schedules, Username, Language, Status and
+  General - carried by the plugin, filled where a catalogue lacks them
+  (#28, #31)
+* README: what an update does (#25)
+
 1.0.2
 
 * The page goes in the XGS section when os-xgs-npu is installed - among
