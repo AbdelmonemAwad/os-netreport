@@ -44,14 +44,17 @@ on:
       - 'v*'
   # Run it by hand to find out whether the FreeBSD build still works without having to
   # spend a tag on the question. Off a tag it builds and inspects and publishes nothing.
-  # With a tag named it builds that tag and publishes it - attaching the files to its
-  # release when one is published already. That is how a release published by hand gets
-  # its package: v1.0.3 was, on 2026-10-28, and the run its tag started built the package,
-  # stopped at "a release with the same tag name already exists" and threw it away.
+  # With a tag named it builds that tag and publishes it, when its release is not published
+  # yet - after a run its push started failed before publishing, say. A release that is
+  # published already cannot get its files: this repository's releases are immutable, and
+  # GitHub takes no file into one once it is published (measured 2026-10-28: v1.0.3,
+  # published by hand without its package, refused it with HTTP 422 "Cannot upload assets
+  # to an immutable release"). Its package comes with the next version, cut by pushing an
+  # annotated tag, as above.
   workflow_dispatch:
     inputs:
       tag:
-        description: 'A tag to build and publish (its release, if published already, gets the files); empty: build only'
+        description: 'A tag to build and publish, whose release is not published yet; empty: build only'
         required: false
         default: ''
 
@@ -225,11 +228,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -eu
-          # A release published already - by hand, or by a run that stopped after
-          # publishing it - keeps its notes and gets the files built here; until
-          # 2026-10-28 this step stopped at "a release with the same tag name already
-          # exists", and the package it had built was thrown away.
+          # A release published already - by hand, as v1.0.3 was on 2026-10-28 - is said
+          # plainly rather than as "a release with the same tag name already exists".
+          # This repository's releases are immutable, so no file goes into one once it is
+          # published; the files go to one that is not, for a repository without that
+          # setting.
           if gh release view "${TAG}" > /dev/null 2>&1; then
+            if [ "$(gh release view "${TAG}" --json isImmutable --jq .isImmutable)" = true ]; then
+              echo "${TAG} is published already, and immutable: GitHub takes no file into it."
+              echo "The package built here comes with the next version - raise PLUGIN_VERSION,"
+              echo "write its notes as the message of an annotated tag, and push the tag."
+              exit 1
+            fi
             gh release upload "${TAG}" --clobber dist/*.pkg dist/SHA256SUMS
             echo "${TAG} was published already: its files attached to it"
             exit 0
