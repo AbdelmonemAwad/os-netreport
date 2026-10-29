@@ -11,6 +11,15 @@ joins the local network.
 Plugin Changelog
 ================
 
+1.0.4
+
+* The package v1.0.3 was published without - os-netreport-1.0.4.pkg and
+  its SHA256SUMS, built from this tag by the release workflow. v1.0.3 was
+  published by hand, and its run stopped before attaching them. The
+  firewall gets the same files as with v1.0.3 (#34)
+* The release workflow says plainly when a release was published already
+  and cannot take its files, and builds a tag named by hand (#33, #35)
+
 1.0.3
 
 * An Authentication switch for a custom SMTP server, on by default: off,
