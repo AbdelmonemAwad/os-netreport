@@ -1,3 +1,18 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/banner-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/images/readme/banner-light.svg">
+  <img src="docs/images/readme/banner-light.svg" alt="os-netreport - A summary of the network by email, on a schedule" width="100%">
+</picture>
+
+<p align="center">
+  <a href="https://github.com/AbdelmonemAwad/os-netreport/releases/latest"><img alt="the newest release" src="https://img.shields.io/github/v/release/AbdelmonemAwad/os-netreport?sort=semver&amp;style=flat-square&amp;label=release&amp;color=8250df"></a>
+  <a href="https://github.com/AbdelmonemAwad/os-netreport/actions/workflows/checks.yml"><img alt="checks on main" src="https://img.shields.io/github/actions/workflow/status/AbdelmonemAwad/os-netreport/checks.yml?branch=main&amp;style=flat-square&amp;label=checks"></a>
+  <a href="LICENSE"><img alt="licence: BSD-2-Clause" src="https://img.shields.io/badge/licence-BSD--2--Clause-blue.svg?style=flat-square"></a>
+  <a href="#network-report-for-opnsense"><img alt="OPNsense 26.7" src="https://img.shields.io/badge/OPNsense-26.7-d94f00.svg?style=flat-square"></a>
+  <a href="https://github.com/AbdelmonemAwad/opnsense-arabic"><img alt="the page in English and in Arabic" src="https://img.shields.io/badge/GUI-English%20%C2%B7%20Arabic-2da44e.svg?style=flat-square"></a>
+  <a href="https://github.com/AbdelmonemAwad/os-xgs-npu"><img alt="part of os-xgs-npu" src="https://img.shields.io/badge/part%20of-os--xgs--npu-9a6700.svg?style=flat-square"></a>
+</p>
+
 # Network Report for OPNsense
 
 A plugin that emails a summary of your network on a schedule: how much data went through the
@@ -9,9 +24,11 @@ morning, so the report is a single HTML mail with the things that need attention
 
 Tested on OPNsense 26.7.
 
-![A daily report](docs/report-en_US.png)
+![A daily report](docs/images/report-en_US.png)
 
 *A daily report (sample data).*
+
+<p align="center"><b>Contents:</b> <a href="#what-is-in-a-report">What is in a report</a> &middot; <a href="#features">Features</a> &middot; <a href="#screenshots">Screenshots</a> &middot; <a href="#where-the-data-comes-from">Where the data comes from</a> &middot; <a href="#installation">Installation</a> &middot; <a href="#how-it-works">How it works</a> &middot; <a href="#translations">Translations</a> &middot; <a href="#known-limitations">Known limitations</a> &middot; <a href="#in-the-xgs-image">In the XGS image</a> &middot; <a href="#updates">Updates</a> &middot; <a href="#license">License</a></p>
 
 ## What is in a report
 
@@ -55,9 +72,9 @@ The GUI below is shown in Arabic, with the right-to-left layout from
 
 | Schedules | Editing a schedule |
 | --- | --- |
-| ![Schedules](docs/gui-schedules-ar.png) | ![Editing a schedule](docs/gui-dialog-ar.png) |
+| ![Schedules](docs/images/gui-schedules-ar.png) | ![Editing a schedule](docs/images/gui-dialog-ar.png) |
 
-The same report in Arabic: [docs/report-ar_SA.png](docs/report-ar_SA.png).
+The same report in Arabic: [docs/images/report-ar_SA.png](docs/images/report-ar_SA.png).
 
 ## Where the data comes from
 
