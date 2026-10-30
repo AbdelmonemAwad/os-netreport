@@ -11,6 +11,13 @@ joins the local network.
 Plugin Changelog
 ================
 
+1.0.5
+
+* The page's entry in the XGS section of the menu carries an icon, as
+  every page of that section does now, and its entry in its own section
+  the same icon, where the old Font Awesome 4 name drew none on OPNsense
+  26.7 (#37)
+
 1.0.4
 
 * The package v1.0.3 was published without - os-netreport-1.0.4.pkg and
