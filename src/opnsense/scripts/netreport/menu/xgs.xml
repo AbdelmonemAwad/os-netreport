@@ -12,6 +12,6 @@
         place-menu.sh chooses between this file and own.xml.
     -->
     <XGS VisibleName="XGS" cssClass="fa fa-microchip fa-fw" order="35">
-        <NetReport order="58" VisibleName="Network Report" url="/ui/netreport"/>
+        <NetReport order="58" VisibleName="Network Report" cssClass="fa fa-envelope fa-fw" url="/ui/netreport"/>
     </XGS>
 </menu>
