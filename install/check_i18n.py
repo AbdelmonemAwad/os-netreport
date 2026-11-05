@@ -14,6 +14,27 @@ LOCALES = ['en_US', 'ar_SA', 'zh_CN', 'zh_TW', 'cs_CZ', 'fr_FR', 'de_DE', 'el_GR
            'fa_IR', 'pl_PL', 'pt_BR', 'pt_PT', 'ru_RU', 'es_ES', 'tr_TR', 'uk_UA', 'vi_VN']
 PH = re.compile(r'\{[a-z_]*\}')
 
+# A contributor who does not write Arabic leaves it out (CONTRIBUTING.md). On a pull request from a
+# fork and on main, checks.yml sets ARABIC_LATER=1: a page string without Arabic in opnsense-arabic is
+# then a warning on the pull request and not a failure, and opnsense-arabic's "Strings waiting for
+# Arabic" lists it until its Arabic is there. A pull request from a branch of this repository still
+# fails on one. The other languages, and the report's own texts, are checked as before.
+LATER = os.environ.get('ARABIC_LATER') == '1'
+
+
+def later(keys):
+    """Each string without Arabic as a warning GitHub shows on the pull request, and in its summary."""
+    if not LATER:
+        return
+    for key in keys:
+        print('::warning title=Arabic to follow::' +
+              key.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))
+    summary = os.environ.get('GITHUB_STEP_SUMMARY')
+    if keys and summary:
+        with open(summary, 'a', encoding='utf-8') as handle:
+            handle.write('### Strings waiting for Arabic\n\n' + ''.join('- %s\n' % key for key in keys))
+
+
 en = json.load(open(os.path.join(BASE, 'en_US.json'), encoding='utf-8'))
 source = json.load(open(os.path.join(BASE, 'ui', 'source.json'), encoding='utf-8'))
 problems = 0
@@ -40,7 +61,9 @@ for loc in LOCALES:
         import arabic_catalogue
         ui = arabic_catalogue.catalogue()
         empty = [k for k in source if not (ui.get(k) or '').strip()]
-        if empty:
+        if empty and LATER:
+            later(empty)
+        elif empty:
             msgs.append(f'no GUI Arabic in opnsense-arabic: {empty[:3]}')
     elif loc != 'en_US':
         upath = os.path.join(BASE, 'ui', f'{loc}.json')
