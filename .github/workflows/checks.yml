@@ -143,6 +143,11 @@ jobs:
       # placeholders, nothing empty; and no form text spread over lines, which OPNsense looks up
       # as it stands and so never finds in a catalogue.
       - name: Every language has every string
+        # A contributor's pull request (from a fork) and main may carry a page string whose Arabic
+        # follows later (CONTRIBUTING.md): a warning there; on a branch of this repository a failure,
+        # as before. The other languages are wanted either way.
+        env:
+          ARABIC_LATER: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository) && '1' || '' }}
         run: python3 install/check_i18n.py
 
       # The merge writes a string only where a catalogue has none, so that OPNsense keeps its own
