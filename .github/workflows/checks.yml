@@ -19,6 +19,9 @@ name: checks
 #   * a corrected translation that never replaced the first one on a firewall that had
 #     merged it;
 #   * an address from the machine this was written on, left in an example.
+#
+# And one thing it does run, because it needs nothing of a firewall: self-update.py against
+# releases made and signed inside the test, with throwaway keys (since 2026-11-07).
 
 on:
   push:
@@ -30,6 +33,17 @@ permissions:
   contents: read
 
 jobs:
+  signed-releases:
+    name: signed releases
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # A release is installed only as its owner signed it (SIGNED RELEASES in self-update.py):
+      # what a check takes and refuses, and what an update installs. OpenSSL is the runner's.
+      - name: self-update.py takes a release only as signed
+        run: python3 tools/test-self-update.py
+
   syntax:
     name: syntax
     runs-on: ubuntu-latest

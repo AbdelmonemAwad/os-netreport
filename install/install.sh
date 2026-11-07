@@ -10,8 +10,12 @@
 set -e
 HERE=$(cd "$(dirname "$0")/.." && pwd)
 
-# plugin files: src/ maps to /usr/local
+# plugin files: src/ maps to /usr/local. The public keys a release must be signed with for
+# self-update.py to install it (its SIGNED RELEASES) are the set this tree holds and no other: the
+# installed ones go first, so a key the tree dropped goes with this install.
+rm -rf /usr/local/opnsense/scripts/netreport/release-keys
 cp -R "${HERE}/src/" /usr/local/
+chmod 644 /usr/local/opnsense/scripts/netreport/release-keys/*.pub
 chmod 755 /usr/local/opnsense/scripts/netreport/netreport.py
 chmod 755 /usr/local/opnsense/scripts/netreport/merge_ui_translations.py
 chmod 755 /usr/local/etc/rc.syshook.d/start/60-netreport
