@@ -26,7 +26,10 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-FOUND = [path for path in glob.glob(os.path.join(ROOT, 'src', '**', 'self-update.py'), recursive=True)]
+# The plugin's one self-update.py, wherever its repository keeps it - under src/, or at the top - and
+# not this test's own copies of anything.
+FOUND = [path for path in glob.glob(os.path.join(ROOT, '**', 'self-update.py'), recursive=True)
+         if os.path.relpath(path, ROOT).split(os.sep)[0] not in ('tools', 'docs')]
 OPENSSL = shutil.which('openssl')
 failures = 0
 
@@ -39,7 +42,7 @@ def check(name, got, want):
 
 
 if len(FOUND) != 1 or not OPENSSL:
-    print('FAIL this needs the one self-update.py under src/ (found %d) and openssl (%s)'
+    print('FAIL this needs the one self-update.py of the plugin (found %d) and openssl (%s)'
           % (len(FOUND), OPENSSL or 'none'))
     sys.exit(1)
 
