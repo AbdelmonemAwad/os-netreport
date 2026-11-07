@@ -11,6 +11,13 @@ joins the local network.
 Plugin Changelog
 ================
 
+1.0.6
+
+* Arabic may follow a contributor's change
+* Signed releases: a release is installed only as its owner signed it
+* self-update.py: the latest release's signature read by the tag its
+  manifest names
+
 1.0.5
 
 * The page's entry in the XGS section of the menu carries an icon, as
