@@ -118,5 +118,15 @@
  ],
  "list_sep": "، ",
  "test_alert_subject": "هشدار آزمایشی — {title}",
- "test_alert_text": "این یک هشدار آزمایشی از {host} است. اگر رسید، هشدارها از این کانال می‌رسند."
+ "test_alert_text": "این یک هشدار آزمایشی از {host} است. اگر رسید، هشدارها از این کانال می‌رسند.",
+ "dur_min": "{m} دقیقه",
+ "dur_hm": "{h} ساعت و {m} دقیقه",
+ "gw_down_subject": "دروازهٔ {name} قطع است — {title}",
+ "gw_down_text": "دروازهٔ {name} از {time} قطع است.",
+ "gw_back_subject": "دروازهٔ {name} برگشت — {title}",
+ "gw_back_text": "دروازهٔ {name} در {time} پس از {duration} قطعی برگشت.",
+ "gw_flap_subject": "دروازهٔ {name} پیاپی قطع و وصل می‌شود — {title}",
+ "gw_flap_text": "دروازهٔ {name} در ۱۵ دقیقه {n} بار وضعیتش را عوض کرد. تا ۱۵ دقیقه در یک وضعیت نماند هشدار دیگری دربارهٔ آن فرستاده نمی‌شود.",
+ "gw_steady_subject": "دروازهٔ {name} دوباره پایدار است — {title}",
+ "gw_steady_text": "دروازهٔ {name} از {time} بدون تغییر برقرار است."
 }

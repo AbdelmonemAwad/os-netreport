@@ -105,5 +105,15 @@
  "months": ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
  "list_sep": "、",
  "test_alert_subject": "测试警报 — {title}",
- "test_alert_text": "这是来自 {host} 的测试警报。若已收到，说明警报可以通过此渠道送达。"
+ "test_alert_text": "这是来自 {host} 的测试警报。若已收到，说明警报可以通过此渠道送达。",
+ "dur_min": "{m} 分钟",
+ "dur_hm": "{h} 小时 {m} 分钟",
+ "gw_down_subject": "网关 {name} 已断开 — {title}",
+ "gw_down_text": "网关 {name} 自 {time} 起断开。",
+ "gw_back_subject": "网关 {name} 已恢复 — {title}",
+ "gw_back_text": "网关 {name} 于 {time} 恢复，断开了 {duration}。",
+ "gw_flap_subject": "网关 {name} 反复断开又恢复 — {title}",
+ "gw_flap_text": "网关 {name} 在 15 分钟内状态变化了 {n} 次。在它保持同一状态 15 分钟之前，不再发送有关它的警报。",
+ "gw_steady_subject": "网关 {name} 已恢复稳定 — {title}",
+ "gw_steady_text": "网关 {name} 自 {time} 起一直正常。"
 }

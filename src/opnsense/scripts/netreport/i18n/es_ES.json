@@ -118,5 +118,15 @@
  ],
  "list_sep": ", ",
  "test_alert_subject": "Alerta de prueba — {title}",
- "test_alert_text": "Esta es una alerta de prueba de {host}. Si ha llegado, las alertas llegan por este canal."
+ "test_alert_text": "Esta es una alerta de prueba de {host}. Si ha llegado, las alertas llegan por este canal.",
+ "dur_min": "{m} min",
+ "dur_hm": "{h} h {m} min",
+ "gw_down_subject": "La puerta de enlace {name} está caída — {title}",
+ "gw_down_text": "La puerta de enlace {name} está caída desde {time}.",
+ "gw_back_subject": "La puerta de enlace {name} ha vuelto — {title}",
+ "gw_back_text": "La puerta de enlace {name} volvió a las {time}, tras {duration} caída.",
+ "gw_flap_subject": "La puerta de enlace {name} cae y vuelve una y otra vez — {title}",
+ "gw_flap_text": "La puerta de enlace {name} cambió de estado {n} veces en 15 minutos. No habrá más alertas sobre ella hasta que mantenga un estado durante 15 minutos.",
+ "gw_steady_subject": "La puerta de enlace {name} vuelve a estar estable — {title}",
+ "gw_steady_text": "La puerta de enlace {name} funciona sin cambios desde {time}."
 }

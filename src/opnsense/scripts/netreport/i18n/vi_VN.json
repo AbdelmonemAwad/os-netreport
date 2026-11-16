@@ -118,5 +118,15 @@
  ],
  "list_sep": ", ",
  "test_alert_subject": "Cảnh báo thử — {title}",
- "test_alert_text": "Đây là cảnh báo thử từ {host}. Nếu bạn nhận được, cảnh báo đến được kênh này."
+ "test_alert_text": "Đây là cảnh báo thử từ {host}. Nếu bạn nhận được, cảnh báo đến được kênh này.",
+ "dur_min": "{m} phút",
+ "dur_hm": "{h} giờ {m} phút",
+ "gw_down_subject": "Gateway {name} bị mất — {title}",
+ "gw_down_text": "Gateway {name} bị mất từ {time}.",
+ "gw_back_subject": "Gateway {name} đã có lại — {title}",
+ "gw_back_text": "Gateway {name} có lại lúc {time}, sau {duration} bị mất.",
+ "gw_flap_subject": "Gateway {name} liên tục mất rồi có lại — {title}",
+ "gw_flap_text": "Gateway {name} đổi trạng thái {n} lần trong 15 phút. Không có thêm cảnh báo nào về nó cho đến khi giữ một trạng thái trong 15 phút.",
+ "gw_steady_subject": "Gateway {name} đã ổn định trở lại — {title}",
+ "gw_steady_text": "Gateway {name} hoạt động không đổi từ {time}."
 }

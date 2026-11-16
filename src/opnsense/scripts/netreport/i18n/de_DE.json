@@ -118,5 +118,15 @@
  ],
  "list_sep": ", ",
  "test_alert_subject": "Testbenachrichtigung — {title}",
- "test_alert_text": "Dies ist eine Testbenachrichtigung von {host}. Ist sie angekommen, erreichen Benachrichtigungen diesen Kanal."
+ "test_alert_text": "Dies ist eine Testbenachrichtigung von {host}. Ist sie angekommen, erreichen Benachrichtigungen diesen Kanal.",
+ "dur_min": "{m} Min.",
+ "dur_hm": "{h} Std. {m} Min.",
+ "gw_down_subject": "Gateway {name} ist ausgefallen — {title}",
+ "gw_down_text": "Gateway {name} ist seit {time} ausgefallen.",
+ "gw_back_subject": "Gateway {name} ist zurück — {title}",
+ "gw_back_text": "Gateway {name} ist um {time} zurückgekommen, nach {duration} Ausfall.",
+ "gw_flap_subject": "Gateway {name} fällt immer wieder aus — {title}",
+ "gw_flap_text": "Gateway {name} hat in 15 Minuten {n}-mal den Zustand gewechselt. Keine weiteren Benachrichtigungen, bis es 15 Minuten in einem Zustand bleibt.",
+ "gw_steady_subject": "Gateway {name} ist wieder stabil — {title}",
+ "gw_steady_text": "Gateway {name} ist seit {time} ohne Unterbrechung erreichbar."
 }

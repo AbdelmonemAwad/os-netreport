@@ -105,5 +105,15 @@
  "months": ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
  "list_sep": "、",
  "test_alert_subject": "テストアラート — {title}",
- "test_alert_text": "{host} からのテストアラートです。届いていれば、アラートはこのチャネルに届きます。"
+ "test_alert_text": "{host} からのテストアラートです。届いていれば、アラートはこのチャネルに届きます。",
+ "dur_min": "{m} 分",
+ "dur_hm": "{h} 時間 {m} 分",
+ "gw_down_subject": "ゲートウェイ {name} がダウンしています — {title}",
+ "gw_down_text": "ゲートウェイ {name} は {time} からダウンしています。",
+ "gw_back_subject": "ゲートウェイ {name} が復旧しました — {title}",
+ "gw_back_text": "ゲートウェイ {name} は {duration} のダウンの後、{time} に復旧しました。",
+ "gw_flap_subject": "ゲートウェイ {name} がダウンと復旧を繰り返しています — {title}",
+ "gw_flap_text": "ゲートウェイ {name} は 15 分間に {n} 回状態が変わりました。15 分間同じ状態が続くまで、これ以上アラートは送りません。",
+ "gw_steady_subject": "ゲートウェイ {name} が安定しました — {title}",
+ "gw_steady_text": "ゲートウェイ {name} は {time} から変化なく稼働しています。"
 }

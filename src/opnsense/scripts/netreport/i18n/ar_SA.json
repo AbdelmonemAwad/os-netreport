@@ -118,5 +118,15 @@
  ],
  "list_sep": " ، ",
  "test_alert_subject": "تنبيه تجريبي — {title}",
- "test_alert_text": "هذا تنبيه تجريبي من {host}. إن وصلك فالتنبيهات تصل عبر هذه القناة."
+ "test_alert_text": "هذا تنبيه تجريبي من {host}. إن وصلك فالتنبيهات تصل عبر هذه القناة.",
+ "dur_min": "{m} دقيقة",
+ "dur_hm": "{h} ساعة و{m} دقيقة",
+ "gw_down_subject": "البوابة {name} متوقفة — {title}",
+ "gw_down_text": "البوابة {name} متوقفة منذ {time}.",
+ "gw_back_subject": "عادت البوابة {name} — {title}",
+ "gw_back_text": "عادت البوابة {name} في {time} بعد توقف دام {duration}.",
+ "gw_flap_subject": "البوابة {name} تتقطع وتعود مرارًا — {title}",
+ "gw_flap_text": "غيّرت البوابة {name} حالتها {n} مرات خلال 15 دقيقة. لن تُرسل تنبيهات أخرى عنها حتى تثبت على حالة واحدة 15 دقيقة.",
+ "gw_steady_subject": "استقرت البوابة {name} من جديد — {title}",
+ "gw_steady_text": "البوابة {name} تعمل دون تغيير منذ {time}."
 }

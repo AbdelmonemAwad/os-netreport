@@ -286,11 +286,121 @@ def subject_of(t, settings, key, **values):
     return t[key].format(title=settings.get('title') or 'OPNsense', **values)
 
 
+# ---------------------------------------------------------------- up and down: gateways and tunnels
+
+FLAP_WINDOW = 15 * 60           # a gateway that changes more than FLAP_CHANGES times in this is flapping,
+FLAP_CHANGES = 3                # and says nothing more until it has held one state this long
+
+
+def track(entries, key, read, now, flapping=False):
+    """Follow one thing that is 'up' or 'down', read once a minute; returns what to say, or None.
+
+    A new state counts once it has held on two reads in a row, so that one bad minute is not an
+    alert: ('down', first seen) or ('back', first seen, how long it was down). A thing is reported
+    down only after it has been up since it was first followed, and back only when its down was
+    reported. With flapping, more than FLAP_CHANGES changes within FLAP_WINDOW are ('flapping', n)
+    instead, once, and then nothing until one state has held for FLAP_WINDOW: then ('steady', since)
+    when it is up, or its down as above.
+    """
+    e = entries.get(key)
+    if not isinstance(e, dict):
+        entries[key] = {'state': read, 'since': now, 'last': read, 'changed': now, 'cand': None, 'cand_at': now,
+                        'changes': [], 'flapping': False, 'seen_up': read == 'up', 'reported': False}
+        return None
+    if read != e.get('last'):
+        e['changes'] = list(e.get('changes') or []) + [now]
+        e['changed'] = now
+        e['last'] = read
+    e['changes'] = [c for c in e.get('changes') or [] if now - c < FLAP_WINDOW]
+    if e.get('flapping'):
+        if now - e.get('changed', now) < FLAP_WINDOW:
+            return None
+        e.update(flapping=False, state=read, since=e['changed'], cand=None)
+        if read == 'up':
+            e.update(seen_up=True, reported=False)
+            return ('steady', e['changed'])
+        e['reported'] = bool(e.get('seen_up'))
+        return ('down', e['changed']) if e['reported'] else None
+    if flapping and len(e['changes']) > FLAP_CHANGES:
+        e.update(flapping=True, cand=None)
+        return ('flapping', len(e['changes']))
+    if read == e.get('state'):
+        e['cand'] = None
+        return None
+    if e.get('cand') != read:
+        e.update(cand=read, cand_at=now)
+        return None
+    first, down_since = e.get('cand_at', now), e.get('since', now)
+    e.update(state=read, since=first, cand=None)
+    if read == 'down':
+        if not e.get('seen_up'):
+            return None
+        e['reported'] = True
+        return ('down', first)
+    e['seen_up'] = True
+    if not e.get('reported'):
+        return None
+    e['reported'] = False
+    return ('back', first, first - down_since)
+
+
+def gateway_reads():
+    """{gateway: 'up' or 'down'} as dpinger reports it (System: Gateways); a gateway whose monitoring is
+    off - "none" with no delay measured - or that is forced down is left out"""
+    reads = {}
+    for g in nr.gateway_status():
+        name, status = g.get('name'), str(g.get('status', '')).lower()
+        if not name:
+            continue
+        if status == 'down':
+            reads[name] = 'down'
+        elif status in ('none', 'online', 'delay', 'loss', 'delay+loss') and g.get('delay') not in ('~', '', None):
+            reads[name] = 'up'
+    return reads
+
+
+def collect_gateways(settings, state, now):
+    first = state.first('gateway')
+    entries = state.get('gateway')
+    reads = gateway_reads()
+    if reads:
+        for gone in [name for name in entries if name not in reads]:
+            del entries[gone]
+    send = wanted(settings, 'gateway_alert') and not first
+    t = nr.texts(settings.get('language'))
+    for name, read in sorted(reads.items()):
+        said = track(entries, name, read, now, flapping=True)
+        if not said or not send:
+            continue
+        facts = {'gateway': name, 'state': said[0]}
+        if said[0] == 'down':
+            facts['since'] = iso_time(said[1])
+            notify(settings, state, 'gateway', f'{name}|down|{int(said[1])}', subject_of(t, settings, 'gw_down_subject', name=name),
+                   t['gw_down_text'].format(name=name, time=local_time(said[1])), facts, now=now, priority='high',
+                   tags=['warning'])
+        elif said[0] == 'back':
+            facts.update(at=iso_time(said[1]), down_seconds=int(said[2]))
+            notify(settings, state, 'gateway', f'{name}|back|{int(said[1])}', subject_of(t, settings, 'gw_back_subject', name=name),
+                   t['gw_back_text'].format(name=name, time=local_time(said[1]), duration=duration(said[2], t)), facts,
+                   now=now, tags=['white_check_mark'])
+        elif said[0] == 'flapping':
+            facts['changes'] = said[1]
+            notify(settings, state, 'gateway', f'{name}|flapping|{int(now)}', subject_of(t, settings, 'gw_flap_subject', name=name),
+                   t['gw_flap_text'].format(name=name, n=said[1]), facts, now=now, priority='high', tags=['warning'])
+        elif said[0] == 'steady':
+            facts['since'] = iso_time(said[1])
+            notify(settings, state, 'gateway', f'{name}|steady|{int(said[1])}', subject_of(t, settings, 'gw_steady_subject', name=name),
+                   t['gw_steady_text'].format(name=name, time=local_time(said[1])), facts, now=now,
+                   tags=['white_check_mark'])
+
+
 # ---------------------------------------------------------------- collectors
 
 # (name, function(settings, state, now)): run each minute by netreport.py's scheduler, each on its
 # own, so that one failing stops neither the others nor the reports
-COLLECTORS = []
+COLLECTORS = [
+    ('gateway', collect_gateways),
+]
 
 
 # ---------------------------------------------------------------- commands

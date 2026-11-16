@@ -118,5 +118,15 @@
  ],
  "list_sep": ", ",
  "test_alert_subject": "Alert testowy — {title}",
- "test_alert_text": "To jest alert testowy z {host}. Jeśli dotarł, alerty docierają tym kanałem."
+ "test_alert_text": "To jest alert testowy z {host}. Jeśli dotarł, alerty docierają tym kanałem.",
+ "dur_min": "{m} min",
+ "dur_hm": "{h} godz. {m} min",
+ "gw_down_subject": "Brama {name} nie działa — {title}",
+ "gw_down_text": "Brama {name} nie działa od {time}.",
+ "gw_back_subject": "Brama {name} znów działa — {title}",
+ "gw_back_text": "Brama {name} wróciła o {time}, po {duration} przerwy.",
+ "gw_flap_subject": "Brama {name} ciągle pada i wraca — {title}",
+ "gw_flap_text": "Brama {name} zmieniła stan {n} razy w ciągu 15 minut. Kolejne alerty dopiero, gdy przez 15 minut utrzyma jeden stan.",
+ "gw_steady_subject": "Brama {name} znów jest stabilna — {title}",
+ "gw_steady_text": "Brama {name} działa bez zmian od {time}."
 }

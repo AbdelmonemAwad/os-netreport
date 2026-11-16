@@ -118,5 +118,15 @@
  ],
  "list_sep": ", ",
  "test_alert_subject": "Zkušební upozornění — {title}",
- "test_alert_text": "Toto je zkušební upozornění z {host}. Pokud dorazilo, upozornění tímto kanálem procházejí."
+ "test_alert_text": "Toto je zkušební upozornění z {host}. Pokud dorazilo, upozornění tímto kanálem procházejí.",
+ "dur_min": "{m} min",
+ "dur_hm": "{h} h {m} min",
+ "gw_down_subject": "Brána {name} je mimo provoz — {title}",
+ "gw_down_text": "Brána {name} je mimo provoz od {time}.",
+ "gw_back_subject": "Brána {name} je zpět — {title}",
+ "gw_back_text": "Brána {name} se obnovila v {time} po {duration} výpadku.",
+ "gw_flap_subject": "Brána {name} opakovaně vypadává a obnovuje se — {title}",
+ "gw_flap_text": "Brána {name} změnila stav {n}× za 15 minut. Další upozornění na ni přijdou, až 15 minut setrvá v jednom stavu.",
+ "gw_steady_subject": "Brána {name} je opět stabilní — {title}",
+ "gw_steady_text": "Brána {name} je v provozu beze změny od {time}."
 }

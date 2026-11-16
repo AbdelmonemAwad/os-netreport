@@ -118,5 +118,15 @@
  ],
  "list_sep": ", ",
  "test_alert_subject": "Alerta de teste — {title}",
- "test_alert_text": "Este é um alerta de teste de {host}. Se chegou, os alertas chegam por este canal."
+ "test_alert_text": "Este é um alerta de teste de {host}. Se chegou, os alertas chegam por este canal.",
+ "dur_min": "{m} min",
+ "dur_hm": "{h} h {m} min",
+ "gw_down_subject": "O gateway {name} está em baixo — {title}",
+ "gw_down_text": "O gateway {name} está em baixo desde {time}.",
+ "gw_back_subject": "O gateway {name} voltou — {title}",
+ "gw_back_text": "O gateway {name} voltou às {time}, depois de {duration} em baixo.",
+ "gw_flap_subject": "O gateway {name} cai e volta repetidamente — {title}",
+ "gw_flap_text": "O gateway {name} mudou de estado {n} vezes em 15 minutos. Nenhum outro alerta sobre ele até manter um estado durante 15 minutos.",
+ "gw_steady_subject": "O gateway {name} está novamente estável — {title}",
+ "gw_steady_text": "O gateway {name} está ativo sem alterações desde {time}."
 }

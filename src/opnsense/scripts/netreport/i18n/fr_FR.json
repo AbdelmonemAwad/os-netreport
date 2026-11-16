@@ -118,5 +118,15 @@
  ],
  "list_sep": ", ",
  "test_alert_subject": "Alerte de test — {title}",
- "test_alert_text": "Ceci est une alerte de test de {host}. Si elle est arrivée, les alertes passent par ce canal."
+ "test_alert_text": "Ceci est une alerte de test de {host}. Si elle est arrivée, les alertes passent par ce canal.",
+ "dur_min": "{m} min",
+ "dur_hm": "{h} h {m} min",
+ "gw_down_subject": "La passerelle {name} est tombée — {title}",
+ "gw_down_text": "La passerelle {name} est tombée depuis {time}.",
+ "gw_back_subject": "La passerelle {name} est rétablie — {title}",
+ "gw_back_text": "La passerelle {name} est revenue à {time}, après {duration} d’interruption.",
+ "gw_flap_subject": "La passerelle {name} tombe et revient sans cesse — {title}",
+ "gw_flap_text": "La passerelle {name} a changé d’état {n} fois en 15 minutes. Plus d’alerte la concernant tant qu’elle n’a pas gardé un état pendant 15 minutes.",
+ "gw_steady_subject": "La passerelle {name} est de nouveau stable — {title}",
+ "gw_steady_text": "La passerelle {name} fonctionne sans changement depuis {time}."
 }

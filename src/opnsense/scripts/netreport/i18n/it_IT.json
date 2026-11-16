@@ -118,5 +118,15 @@
  ],
  "list_sep": ", ",
  "test_alert_subject": "Avviso di prova — {title}",
- "test_alert_text": "Questo è un avviso di prova da {host}. Se è arrivato, gli avvisi raggiungono questo canale."
+ "test_alert_text": "Questo è un avviso di prova da {host}. Se è arrivato, gli avvisi raggiungono questo canale.",
+ "dur_min": "{m} min",
+ "dur_hm": "{h} h {m} min",
+ "gw_down_subject": "Il gateway {name} non è raggiungibile — {title}",
+ "gw_down_text": "Il gateway {name} non è raggiungibile dalle {time}.",
+ "gw_back_subject": "Il gateway {name} è tornato — {title}",
+ "gw_back_text": "Il gateway {name} è tornato alle {time}, dopo {duration} di interruzione.",
+ "gw_flap_subject": "Il gateway {name} cade e torna di continuo — {title}",
+ "gw_flap_text": "Il gateway {name} ha cambiato stato {n} volte in 15 minuti. Nessun altro avviso finché non mantiene uno stato per 15 minuti.",
+ "gw_steady_subject": "Il gateway {name} è di nuovo stabile — {title}",
+ "gw_steady_text": "Il gateway {name} funziona senza cambiamenti dalle {time}."
 }

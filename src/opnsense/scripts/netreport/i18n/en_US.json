@@ -118,5 +118,15 @@
  ],
  "list_sep": ", ",
  "test_alert_subject": "Test alert — {title}",
- "test_alert_text": "This is a test alert from {host}. If it arrived, alerts reach this channel."
+ "test_alert_text": "This is a test alert from {host}. If it arrived, alerts reach this channel.",
+ "dur_min": "{m} min",
+ "dur_hm": "{h} h {m} min",
+ "gw_down_subject": "Gateway {name} is down — {title}",
+ "gw_down_text": "Gateway {name} has been down since {time}.",
+ "gw_back_subject": "Gateway {name} is back — {title}",
+ "gw_back_text": "Gateway {name} came back at {time}, after {duration} down.",
+ "gw_flap_subject": "Gateway {name} keeps going down and up — {title}",
+ "gw_flap_text": "Gateway {name} changed state {n} times in 15 minutes. No more alerts for it until it holds one state for 15 minutes.",
+ "gw_steady_subject": "Gateway {name} is steady again — {title}",
+ "gw_steady_text": "Gateway {name} has been up without a change since {time}."
 }

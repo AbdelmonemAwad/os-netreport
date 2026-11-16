@@ -118,5 +118,15 @@
  ],
  "list_sep": ", ",
  "test_alert_subject": "Testvarsel — {title}",
- "test_alert_text": "Dette er et testvarsel fra {host}. Kom det fram, når varslene denne kanalen."
+ "test_alert_text": "Dette er et testvarsel fra {host}. Kom det fram, når varslene denne kanalen.",
+ "dur_min": "{m} min",
+ "dur_hm": "{h} t {m} min",
+ "gw_down_subject": "Gateway {name} er nede — {title}",
+ "gw_down_text": "Gateway {name} har vært nede siden {time}.",
+ "gw_back_subject": "Gateway {name} er tilbake — {title}",
+ "gw_back_text": "Gateway {name} kom tilbake {time}, etter {duration} nede.",
+ "gw_flap_subject": "Gateway {name} går stadig ned og opp — {title}",
+ "gw_flap_text": "Gateway {name} skiftet tilstand {n} ganger på 15 minutter. Ingen flere varsler om den før den holder én tilstand i 15 minutter.",
+ "gw_steady_subject": "Gateway {name} er stabil igjen — {title}",
+ "gw_steady_text": "Gateway {name} har vært oppe uten endring siden {time}."
 }

@@ -105,5 +105,15 @@
  "months": ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
  "list_sep": "、",
  "test_alert_subject": "測試警報 — {title}",
- "test_alert_text": "這是來自 {host} 的測試警報。若已收到，表示警報可以透過此管道送達。"
+ "test_alert_text": "這是來自 {host} 的測試警報。若已收到，表示警報可以透過此管道送達。",
+ "dur_min": "{m} 分鐘",
+ "dur_hm": "{h} 小時 {m} 分鐘",
+ "gw_down_subject": "閘道 {name} 已中斷 — {title}",
+ "gw_down_text": "閘道 {name} 自 {time} 起中斷。",
+ "gw_back_subject": "閘道 {name} 已恢復 — {title}",
+ "gw_back_text": "閘道 {name} 於 {time} 恢復，中斷了 {duration}。",
+ "gw_flap_subject": "閘道 {name} 反覆中斷又恢復 — {title}",
+ "gw_flap_text": "閘道 {name} 在 15 分鐘內狀態變化了 {n} 次。在它保持同一狀態 15 分鐘之前，不再傳送有關它的警報。",
+ "gw_steady_subject": "閘道 {name} 已恢復穩定 — {title}",
+ "gw_steady_text": "閘道 {name} 自 {time} 起一直正常。"
 }

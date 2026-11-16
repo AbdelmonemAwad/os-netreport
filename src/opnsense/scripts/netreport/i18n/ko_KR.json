@@ -105,5 +105,15 @@
  "months": ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
  "list_sep": ", ",
  "test_alert_subject": "테스트 알림 — {title}",
- "test_alert_text": "{host}에서 보낸 테스트 알림입니다. 받았다면 알림이 이 채널로 전달됩니다."
+ "test_alert_text": "{host}에서 보낸 테스트 알림입니다. 받았다면 알림이 이 채널로 전달됩니다.",
+ "dur_min": "{m}분",
+ "dur_hm": "{h}시간 {m}분",
+ "gw_down_subject": "게이트웨이 {name} 다운 — {title}",
+ "gw_down_text": "게이트웨이 {name}이(가) {time}부터 다운 상태입니다.",
+ "gw_back_subject": "게이트웨이 {name} 복구 — {title}",
+ "gw_back_text": "게이트웨이 {name}이(가) {duration} 동안 다운된 뒤 {time}에 복구되었습니다.",
+ "gw_flap_subject": "게이트웨이 {name}이(가) 다운과 복구를 반복합니다 — {title}",
+ "gw_flap_text": "게이트웨이 {name}의 상태가 15분 동안 {n}번 바뀌었습니다. 15분 동안 한 상태를 유지할 때까지 더 알리지 않습니다.",
+ "gw_steady_subject": "게이트웨이 {name}이(가) 다시 안정되었습니다 — {title}",
+ "gw_steady_text": "게이트웨이 {name}이(가) {time}부터 변화 없이 정상입니다."
 }

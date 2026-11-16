@@ -210,6 +210,98 @@ check('new device: through the layer, to the webhook too', (hook['kind'], hook['
 check('new device: its own HTML mail', 'Example Corp' in MAILS[0]['html'] and '02:00:00:00:00:01' in MAILS[0]['html'], True)
 check('new device: and ntfy', len(posts('/ntfy/')), 1)
 
+# ---------------------------------------------------------------- 2. gateways
+
+GATEWAYS = {}
+nr.gateway_status = lambda: [{'name': n, 'status': s, 'delay': '~' if s == 'nomon' else '1.0 ms', 'loss': '0.0 %'}
+                             for n, s in GATEWAYS.items()]
+
+
+def minute(collect, n=1, **reads):
+    """n reads, a minute apart, of the given states; returns the webhook kinds/subjects sent"""
+    global CLOCK
+    sent = []
+    for _ in range(n):
+        CLOCK += 60
+        GATEWAYS.update(reads)
+        before = len(posts('/hook'))
+        state = alerts.State()
+        collect(config(), state, CLOCK)
+        state.save()
+        sent += [json.loads(p['body']) for p in posts('/hook')[before:]]
+    return sent
+
+
+CLOCK = NOW + 3600
+reset()
+GATEWAYS.clear()
+GATEWAYS.update({'WAN_DHCP': 'none', 'WAN2_GW': 'down', 'LINKLOCAL': 'nomon'})
+check('gateways: the first run sends nothing', minute(alerts.collect_gateways), [])
+check('gateways: one bad minute is not an alert', minute(alerts.collect_gateways, WAN_DHCP='down') +
+      minute(alerts.collect_gateways, WAN_DHCP='none'), [])
+minute(alerts.collect_gateways, 15, WAN_DHCP='none')     # the bad minute out of the flapping window
+down_at = CLOCK + 60
+sent = minute(alerts.collect_gateways, 2, WAN_DHCP='down')
+check('gateways: down on two reads in a row: one alert', [s['subject'] for s in sent],
+      ['Gateway WAN_DHCP is down — Example network'])
+check('gateways: down since the first read that saw it', sent[0]['text'],
+      'Gateway WAN_DHCP has been down since %s.' % alerts.local_time(down_at))
+check('gateways: down says so in its facts', (sent[0]['kind'], sent[0]['facts']['state']), ('gateway', 'down'))
+check('gateways: still down, nothing more', minute(alerts.collect_gateways, 3), [])
+back_at = CLOCK + 60
+sent = minute(alerts.collect_gateways, 2, WAN_DHCP='none')
+check('gateways: back, with how long it was down', [s['text'] for s in sent],
+      ['Gateway WAN_DHCP came back at %s, after 5 min down.' % alerts.local_time(back_at)])
+check('gateways: a gateway down when first seen is not reported back', minute(alerts.collect_gateways, 2, WAN2_GW='none'), [])
+check('gateways: ... but its next outage is', [s['facts']['gateway'] for s in minute(alerts.collect_gateways, 2, WAN2_GW='down')],
+      ['WAN2_GW'])
+minute(alerts.collect_gateways, 2, WAN2_GW='none')
+check('gateways: monitoring off is never an alert', [s for s in POSTS if b'LINKLOCAL' in s['body']], [])
+
+minute(alerts.collect_gateways, 15, WAN_DHCP='none')
+reset()
+sent = []
+for state_now in ['down', 'none', 'down', 'none', 'down', 'none', 'down', 'none']:
+    sent += minute(alerts.collect_gateways, WAN_DHCP=state_now)
+check('flapping: more than 3 changes in 15 minutes: one alert instead', [s['facts']['state'] for s in sent], ['flapping'])
+check('flapping: says how many changes', sent[0]['text'], 'Gateway WAN_DHCP changed state 4 times in 15 minutes. '
+      'No more alerts for it until it holds one state for 15 minutes.')
+check('flapping: nothing while it has not held a state for 15 minutes', minute(alerts.collect_gateways, 14, WAN_DHCP='none'), [])
+sent = minute(alerts.collect_gateways, 1, WAN_DHCP='none')
+check('flapping: steady again after 15 minutes in one state', [s['facts']['state'] for s in sent], ['steady'])
+check('flapping: then down and back as before', [s['facts']['state'] for s in minute(alerts.collect_gateways, 2, WAN_DHCP='down') +
+                                                 minute(alerts.collect_gateways, 2, WAN_DHCP='none')], ['down', 'back'])
+
+reset()
+minute(alerts.collect_gateways, 2, WAN_DHCP='down')
+GENERAL['gateway_alert'] = '0'
+check('gateways: with gateway_alert off, nothing', minute(alerts.collect_gateways, 2, WAN_DHCP='none'), [])
+GENERAL['gateway_alert'] = '1'
+GENERAL['alerts'] = '0'
+check('gateways: with the master switch off, nothing', minute(alerts.collect_gateways, 2, WAN_DHCP='down'), [])
+GENERAL['alerts'] = '1'
+check('gateways: turned on again, it goes on from where things are', minute(alerts.collect_gateways, 2, WAN_DHCP='down'), [])
+
+# One collector failing stops neither the others nor the reports: the scheduler with a collector that
+# raises before one that records.
+RAN = []
+
+
+def broken(settings, state, now):
+    raise RuntimeError('example failure')
+
+
+saved = alerts.COLLECTORS
+alerts.COLLECTORS = [('broken', broken), ('works', lambda settings, state, now: RAN.append(now))]
+nr.update_devices = lambda settings: ({}, [], {})
+del LOGGED[:]
+config()
+nr.scheduler()
+alerts.COLLECTORS = saved
+check('a collector that fails does not stop the next one', len(RAN), 1)
+check('... and is logged', LOGGED[:1], ['alert collector broken failed: example failure'])
+check('... and the reports still ran (their state written)', os.path.exists(nr.STATE_FILE), True)
+
 # ---------------------------------------------------------------- end
 
 SERVER.shutdown()

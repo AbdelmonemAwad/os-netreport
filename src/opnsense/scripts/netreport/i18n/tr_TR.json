@@ -118,5 +118,15 @@
  ],
  "list_sep": ", ",
  "test_alert_subject": "Test uyarısı — {title}",
- "test_alert_text": "Bu, {host} kaynaklı bir test uyarısıdır. Ulaştıysa uyarılar bu kanaldan geliyor demektir."
+ "test_alert_text": "Bu, {host} kaynaklı bir test uyarısıdır. Ulaştıysa uyarılar bu kanaldan geliyor demektir.",
+ "dur_min": "{m} dk",
+ "dur_hm": "{h} sa {m} dk",
+ "gw_down_subject": "{name} ağ geçidi kesildi — {title}",
+ "gw_down_text": "{name} ağ geçidi {time} itibarıyla kesik.",
+ "gw_back_subject": "{name} ağ geçidi geri geldi — {title}",
+ "gw_back_text": "{name} ağ geçidi {duration} kesintiden sonra {time} saatinde geri geldi.",
+ "gw_flap_subject": "{name} ağ geçidi sürekli kesilip geri geliyor — {title}",
+ "gw_flap_text": "{name} ağ geçidi 15 dakikada {n} kez durum değiştirdi. 15 dakika tek bir durumda kalana kadar onunla ilgili başka uyarı yok.",
+ "gw_steady_subject": "{name} ağ geçidi yeniden kararlı — {title}",
+ "gw_steady_text": "{name} ağ geçidi {time} itibarıyla değişmeden çalışıyor."
 }
