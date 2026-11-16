@@ -1287,6 +1287,22 @@ check('fold: right after its line, the minute after, it still counts',
       [(s['facts']['address'], s['facts']['count']) for s in run_pass([('login', alerts.collect_logins)])],
       [('203.0.113.27', 10)])
 
+# a fold at midnight: its line read the minute before, the fold at the end of the day's file, read
+# the minute the next day's file is begun
+reset()
+MIDNIGHT = datetime.datetime.combine(datetime.date.fromtimestamp(CLOCK) + datetime.timedelta(days=1),
+                                     datetime.time()).timestamp()
+CLOCK = MIDNIGHT - 180
+minute(alerts.collect_logins)
+append(alerts.day_file(alerts.AUDIT_LOG, MIDNIGHT - 60), syslog_line(MIDNIGHT - 70, 'audit',
+                                                                       gui_line('labuser', '203.0.113.28')))
+minute(alerts.collect_logins)
+append(alerts.day_file(alerts.AUDIT_LOG, MIDNIGHT - 60), syslog_line(MIDNIGHT - 5, 'audit', FOLD % (GUI_FAIL[:20], 4)))
+append(alerts.day_file(alerts.AUDIT_LOG, MIDNIGHT), syslog_line(MIDNIGHT + 1, 'sshd',
+                                                                  'Connection closed by 192.0.2.9 port 50002'))
+check('fold: one at the end of the day before, read after midnight, counts',
+      [(s['facts']['address'], s['facts']['count']) for s in minute(alerts.collect_logins)], [('203.0.113.28', 5)])
+
 # One collector failing stops neither the others nor the reports: the scheduler with a collector that
 # raises before one that records.
 RAN = []

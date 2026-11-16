@@ -659,20 +659,27 @@ def read_from(place, path, where=False):
     """the complete lines of path written since place = {"inode", "offset"}, which moves past them;
     a new inode (the file was rotated) or a shorter file starts again at 0. With where, each line
     comes as (line, file, start, end): the file as path|inode, and the byte offsets where the line
-    starts and where the next one does. A read that does not go on from where the last one ended
-    - a new file, a log grown past MAX_READ - forgets the line kept for unfolding."""
+    starts and where the next one does. A read of this file that does not go on from where the last
+    one ended - a new inode, a log grown past MAX_READ - forgets the line kept for unfolding, when
+    that line is this file's: one of the file read before (the day before's) stays, so that a fold
+    at the start of the rest of that file still finds it."""
     try:
         info = os.stat(path)
     except OSError:
         return []
     offset = place.get('offset', 0) if isinstance(place.get('offset'), int) else 0
+
+    def forget():
+        prev = place.get('prev')
+        if not isinstance(prev, dict) or str(prev.get('file', '')).startswith(path + '|'):
+            place.pop('prev', None)
     if place.get('inode') != info.st_ino or info.st_size < offset:
         place['inode'], offset = info.st_ino, 0
-        place.pop('prev', None)
+        forget()
     partial = info.st_size - offset > MAX_READ
     if partial:
         offset = info.st_size - MAX_READ
-        place.pop('prev', None)
+        forget()
     with open(path, 'rb') as fh:
         fh.seek(offset)
         data = fh.read(info.st_size - offset)
