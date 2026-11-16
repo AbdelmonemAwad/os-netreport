@@ -14,6 +14,7 @@ import ipaddress
 import json
 import os
 import shutil
+import signal
 import sys
 import tempfile
 import threading
@@ -89,6 +90,10 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.flush()
             time.sleep(3)
             return
+        if self.path.startswith('/stall'):
+            # a server that takes the request and does not answer for 3 s
+            time.sleep(3)
+            return
         if self.path.startswith('/drip'):
             # a server that sends its headers a line a second: no socket operation waits 10 s, the whole far longer
             try:
@@ -140,6 +145,7 @@ def fake_send_mail(ms, rcpt, subject, page, text, attach_name=None):
         MAIL.pop('during')()
 
 
+REAL_SEND_MAIL = nr.send_mail
 nr.mail_settings = fake_mail_settings
 nr.send_mail = fake_send_mail
 
@@ -274,64 +280,63 @@ started = time.monotonic()
 results = alerts.test_alert(settings)
 check('a server that trickles its reply does not hold the run (its body is not read)',
       (results['webhook'], time.monotonic() - started < 2), ('sent', True))
-reset()
-alerts.REQUEST_LIMIT = 3                                    # 15 in use; shorter here to keep the test quick
-settings = config(alert_webhook_url=BASE + '/drip', alert_ntfy_server='')
-started = time.monotonic()
-results = alerts.test_alert(settings)
-took = time.monotonic() - started
-alerts.REQUEST_LIMIT = 15
-check('a server that drips its headers is cut at the limit on the whole request',
-      (results['webhook'], took < 6, results['mail']), ('no answer within 3 s', True, 'sent'))
 
-# a name that takes long to look up: the request is cut at the limit and goes no further after it
+# the time limit on a channel's whole try: a real-time timer, where there is one (not on Windows)
 import socket  # noqa: E402
-saved_getaddrinfo = socket.getaddrinfo
 
 
-def slow_lookup(host, *args, **kwargs):
-    if host == 'slow.example.com':
-        time.sleep(4)
-        host = '127.0.0.1'
-    return saved_getaddrinfo(host, *args, **kwargs)
+def silent_server():
+    """a TCP server that accepts and never says a word; returns its port and the connections it took"""
+    listener = socket.socket()
+    listener.bind(('127.0.0.1', 0))
+    listener.listen(5)
+    taken = []
+
+    def accept():
+        while True:
+            conn, _ = listener.accept()
+            taken.append(conn)
+    threading.Thread(target=accept, daemon=True).start()
+    return listener.getsockname()[1], taken
 
 
-reset()
-socket.getaddrinfo = slow_lookup
-alerts.REQUEST_LIMIT = 2
-try:
+def timed(what, *args):
+    """what(*args) under the channel's limit: (its result or the error's text, the seconds it took)"""
     started = time.monotonic()
     try:
-        alerts.post(BASE.replace('127.0.0.1', 'slow.example.com') + '/late', b'{}', {})
-        late = 'sent'
+        got = alerts.limited(what, *args)
     except Exception as exc:
-        late = alerts.error_text(exc)
-    took = time.monotonic() - started
-    time.sleep(4)                                           # the lookup is over; the worker would go on
-finally:
-    socket.getaddrinfo = saved_getaddrinfo
-    alerts.REQUEST_LIMIT = 15
-check('a slow name lookup is cut at the limit, and the request is not sent after it',
-      (late, took < 4, posts('/late')), ('no answer within 2 s', True, []))
-saved_post_now = alerts.post_now
+        got = alerts.error_text(exc)
+    return got, time.monotonic() - started
 
 
-def post_now_just_late(request, sockets):
-    time.sleep(alerts.REQUEST_LIMIT + 0.3)
-    return 200
-
-
-alerts.post_now = post_now_just_late
-alerts.REQUEST_LIMIT = 1
-try:
+TIMES = {}
+if alerts.timer_usable():
+    SILENT_PORT, SILENT = silent_server()
+    alerts.REQUEST_LIMIT = 2                                # 15 in use; shorter here to keep the test quick
     try:
-        just = alerts.post(BASE + '/hook', b'{}', {})
-    except Exception as exc:
-        just = alerts.error_text(exc)
-finally:
-    alerts.post_now = saved_post_now
-    alerts.REQUEST_LIMIT = 15
-check('a status that comes in the second after the cut is kept', just, 200)
+        reset()
+        got, TIMES['http drip'] = timed(alerts.post, BASE + '/drip', b'{}', {})
+        check('time limit: a server that drips its headers is cut at the limit on the whole request',
+              (got, 1.9 < TIMES['http drip'] < 2.6), ('no answer within 2 s', True))
+        got, TIMES['tls handshake'] = timed(alerts.post, 'https://127.0.0.1:%d/hook' % SILENT_PORT, b'{}', {})
+        check('time limit: a TLS handshake that never ends is cut at the limit, no thread left',
+              (got, 1.9 < TIMES['tls handshake'] < 2.6, [t.name for t in threading.enumerate() if t.name == 'alert-post']),
+              ('no answer within 2 s', True, []))
+        ms = {'host': '127.0.0.1', 'port': SILENT_PORT, 'security': 'none', 'user': '', 'password': '',
+              'sender': 'fw@example.com'}
+        got, TIMES['smtp banner'] = timed(REAL_SEND_MAIL, ms, ['admin@example.com'], 'Example', '<p>x</p>', 'x')
+        check('time limit: a mail server that never sends its banner is cut at the limit',
+              (got, 1.9 < TIMES['smtp banner'] < 2.6), ('no answer within 2 s', True))
+        got, took = timed(alerts.post, BASE + '/hook', b'{}', {})
+        check('time limit: a request that ends in time is not touched, and no timer is left',
+              (got, took < 1, signal.getitimer(signal.ITIMER_REAL)[0], signal.getsignal(signal.SIGALRM)),
+              (200, True, 0.0, signal.SIG_DFL))
+    finally:
+        alerts.REQUEST_LIMIT = 15
+    print('time limit, measured: ' + ', '.join('%s %.2f s' % (k, v) for k, v in TIMES.items()))
+else:
+    print('skip: no real-time timer here (Windows): the time limit is tested where there is one')
 
 reset()
 settings = config()
@@ -1240,8 +1245,8 @@ MAIL['fail'] = None
 
 # a channel that timed out is not tried again in the same pass
 reset()
-GENERAL.update(alert_webhook_url=BASE + '/drip', alert_ntfy_server='')
-alerts.REQUEST_LIMIT = 1
+GENERAL.update(alert_webhook_url=BASE + '/stall', alert_ntfy_server='')
+alerts.REQUEST_LIMIT = alerts.HTTP_TIMEOUT = 1             # the timer, or where there is none the socket's timeout
 for i in range(3):
     outbox('s%02d.json' % i, subject='Example slow alert %d' % i)
 history_before = len(history())
@@ -1249,25 +1254,26 @@ started = time.monotonic()
 try:
     run_pass([('xgs', alerts.collect_xgs)])
 finally:
-    alerts.REQUEST_LIMIT = 15
+    alerts.REQUEST_LIMIT, alerts.HTTP_TIMEOUT = 15, 10
     GENERAL.update(alert_webhook_url=BASE + '/hook', alert_ntfy_server=BASE + '/ntfy/')
 took = time.monotonic() - started
 check('slow channel: once it timed out, skipped for the rest of the pass',
-      ([h['detail'] for h in reversed(history()[:len(history()) - history_before])], len(posts('/drip')), took < 4),
+      ([h['detail'].replace('webhook: timed out', 'webhook: no answer within 1 s')
+        for h in reversed(history()[:len(history()) - history_before])], len(posts('/stall')), took < 3),
       (['mail: sent; webhook: no answer within 1 s; ntfy: not set',
         'mail: sent; webhook: skipped: it did not answer earlier this minute; ntfy: not set',
         'mail: sent; webhook: skipped: it did not answer earlier this minute; ntfy: not set'], 1, True))
 for name in os.listdir(alerts.XGS_OUTBOX):
     os.unlink(os.path.join(alerts.XGS_OUTBOX, name))
 MAIL['fail'] = 'example mail failure'
-GENERAL.update(alert_webhook_url=BASE + '/drip', alert_ntfy_server='')
-alerts.REQUEST_LIMIT = 1
+GENERAL.update(alert_webhook_url=BASE + '/stall', alert_ntfy_server='')
+alerts.REQUEST_LIMIT = alerts.HTTP_TIMEOUT = 1
 outbox('s10.json', subject='Example slow alert 10')
 outbox('s11.json', subject='Example slow alert 11')
 try:
     run_pass([('xgs', alerts.collect_xgs)])
 finally:
-    alerts.REQUEST_LIMIT = 15
+    alerts.REQUEST_LIMIT, alerts.HTTP_TIMEOUT = 15, 10
     GENERAL.update(alert_webhook_url=BASE + '/hook', alert_ntfy_server=BASE + '/ntfy/')
     MAIL['fail'] = None
 check('slow channel: ... what is kept until sent stays kept', sorted(os.listdir(alerts.XGS_OUTBOX)), ['s10.json', 's11.json'])

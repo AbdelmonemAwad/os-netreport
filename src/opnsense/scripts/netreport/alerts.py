@@ -79,12 +79,12 @@ Taken from os-xgs-npu, when it is installed (neither existing is normal):
 
 import datetime
 import hashlib
-import http.client
 import ipaddress
 import json
 import math
 import os
 import re
+import signal
 import socket
 import stat
 import subprocess
@@ -105,7 +105,8 @@ QUIET_DEFAULT = 30 * 60
 QUIET = {}                      # kind -> seconds, where a kind wants other than QUIET_DEFAULT
 QUIET_KEEP = 2 * 86400          # how long a sent key is remembered at all
 HTTP_TIMEOUT = 10               # seconds, each socket operation of a request
-REQUEST_LIMIT = 15              # seconds, a whole request: connecting, sending, the reply's status
+REQUEST_LIMIT = 15              # seconds, a channel's whole try: connecting, sending, the reply (limited())
+TIMER_REPEAT = 0.5              # seconds, the timer again while a try past its limit unwinds
 NOT_SET = 'not set'
 SENT = 'sent'
 HELD = 'held'                   # past a collector's cap this run: in the history only, or left for the next minute
@@ -246,121 +247,70 @@ class RequestTimeout(Exception):
     pass
 
 
-class Sockets(list):
-    """the sockets of one request, each put here as it is made; cut says the caller has given up on it"""
-
-    def __init__(self):
-        super().__init__()
-        self.cut = threading.Event()
+def timer_usable():
+    """whether limited() can use a real-time timer: it exists here (not on Windows) and this is the
+    main thread (a signal handler runs only there)"""
+    return hasattr(signal, 'setitimer') and threading.current_thread() is threading.main_thread()
 
 
-def connector(sockets):
-    """socket.create_connection() as http.client calls it, but each socket goes into sockets when it is
-    made, before it connects, so that a cut can shut it whatever the request is doing (the TCP
-    connect, the TLS handshake); and a request already cut (its name took long to look up, its
-    connect long to answer) goes no further"""
-    cut = getattr(sockets, 'cut', None)
+def limited(what, *args):
+    """what(*args), a channel's whole try, with REQUEST_LIMIT seconds to end.
 
-    def given_up():
-        if cut is not None and cut.is_set():
-            raise RequestTimeout('the request was given up')
+    A real-time timer (SIGALRM) raises RequestTimeout in this thread when the time is up. A signal
+    handler's exception interrupts a blocking call (PEP 475): the connect, the TLS handshake, a send
+    or a recv - every step of HTTP, HTTPS and mail - and the code that was running goes no further,
+    so nothing of the try is sent after it was counted a failure. After the first, the timer goes
+    off again every TIMER_REPEAT seconds while the try is still unwinding, so that a step on the way
+    out (smtplib's QUIT to a server that does not answer) cannot hold it either. The previous
+    handler and timer are put back. One thing the timer cannot cut: the system's name lookup,
+    which goes on to its own resolver timeouts before the timer's exception is raised.
 
-    def create(address, timeout=None, source_address=None, *args, **kwargs):
-        host, port = address[0], address[1]
-        error = None
-        for family, kind, proto, _, where in socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM):
-            sock = socket.socket(family, kind, proto)
-            sockets.append(sock)
-            try:
-                given_up()
-                if isinstance(timeout, (int, float)):
-                    sock.settimeout(timeout)
-                if source_address:
-                    sock.bind(source_address)
-                sock.connect(where)
-                given_up()
-                return sock
-            except OSError as exc:
-                sock.close()
-                error = exc
-            except BaseException:
-                sock.close()
-                raise
-        raise error or OSError(f'no address found for {host}')
-    return create
+    Where there is no setitimer (Windows: the tests there) or this is not the main thread, what runs
+    without it: each socket operation then has its own timeout (HTTP_TIMEOUT, the mail's 60 s), but
+    not the whole try."""
+    if not timer_usable():
+        return what(*args)
+    live = [True]
 
+    def on_alarm(signum, frame):
+        if live[0]:
+            raise RequestTimeout(f'no answer within {REQUEST_LIMIT:g} s')
 
-def opener(sockets):
-    """urllib's opener, redirects not followed, that puts each socket it makes in sockets"""
-    def watched(cls):
-        class Watched(cls):
-            def __init__(self, *args, **kwargs):
-                super().__init__(*args, **kwargs)
-                self._create_connection = connector(sockets)
-        return Watched
-
-    class Http(urllib.request.HTTPHandler):
-        def http_open(self, req):
-            return self.do_open(watched(http.client.HTTPConnection), req)
-
-    class Https(urllib.request.HTTPSHandler):
-        def https_open(self, req):
-            more = {'check_hostname': self._check_hostname} if getattr(self, '_check_hostname', None) is not None else {}
-            return self.do_open(watched(http.client.HTTPSConnection), req, context=self._context, **more)
-
-    return urllib.request.build_opener(NoRedirect, Http, Https)
+    previous = signal.signal(signal.SIGALRM, on_alarm)
+    old_delay, old_interval = signal.setitimer(signal.ITIMER_REAL, REQUEST_LIMIT, TIMER_REPEAT)
+    started = time.monotonic()
+    try:
+        try:
+            return what(*args)
+        finally:
+            live[0] = False
+    finally:
+        live[0] = False
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous)
+        if old_delay:
+            signal.setitimer(signal.ITIMER_REAL, max(old_delay - (time.monotonic() - started), 0.001), old_interval)
 
 
 def post(url, body, headers):
-    """POST body; the HTTP status, or an exception. urllib's timeout is per socket operation, so a
-    server that answers a byte at a time could hold the run for long: the whole request has
-    REQUEST_LIMIT seconds, after which its sockets are shut (from the moment each is made: the
-    connect and the TLS handshake are cut too) and the try is a failure - unless it ends in the
-    second given to the worker after the cut, before its sockets are shut. A request cut while its
-    name was looked up goes no further once it has the address, so it cannot arrive after it was
-    counted a failure."""
+    """POST body; the HTTP status, or an exception. Redirects are not followed. TLS is verified: the
+    default context checks the certificate and the name. The reply's body is not read - the status
+    is enough - so a server that trickles it cannot hold the run. The time limit on the whole try is
+    limited()'s; HTTP_TIMEOUT is on each socket operation."""
     if not url.lower().startswith(('https://', 'http://')):
         raise ValueError('the address must start with https:// or http://')
     request = urllib.request.Request(url, data=body, headers=headers, method='POST')
-    sockets, box = Sockets(), {}
-
-    def run():
+    try:
+        response = urllib.request.build_opener(NoRedirect).open(request, timeout=HTTP_TIMEOUT)
+    except urllib.error.HTTPError as exc:
+        # an HTTPError holds the reply open, and the traceback a cycle that keeps it until the garbage
+        # collector closes it (http.client then printed "I/O operation on closed file"): its status
+        # and headers are kept, its body is not needed
         try:
-            box['status'] = post_now(request, sockets)
-        except BaseException as exc:                # handed to the caller
-            if isinstance(exc, urllib.error.HTTPError):
-                # an HTTPError holds the reply open, and the traceback a cycle that keeps it until
-                # the garbage collector closes it (http.client then printed "I/O operation on
-                # closed file"): its status and headers are kept, its body is not needed
-                try:
-                    exc.close()
-                except Exception:
-                    pass
-            box['error'] = exc
-    worker = threading.Thread(target=run, name='alert-post', daemon=True)
-    worker.start()
-    worker.join(REQUEST_LIMIT)
-    if worker.is_alive():
-        # no new connection from here; what is under way has one second more to end, then is shut
-        # (shut first, a reply cut short could read as whole: its status line and no more headers)
-        sockets.cut.set()
-        worker.join(1)
-        if worker.is_alive():
-            for sock in list(sockets):
-                try:
-                    sock.shutdown(socket.SHUT_RDWR)
-                except OSError:
-                    pass
-            raise RequestTimeout(f'no answer within {REQUEST_LIMIT} s')
-    if 'error' in box:
-        raise box.pop('error')
-    return box['status']
-
-
-def post_now(request, sockets):
-    # TLS is verified: the default context checks the certificate and the name. The reply's body is
-    # not read - the status is enough - so a server that trickles it cannot hold the run.
-    response = opener(sockets).open(request, timeout=HTTP_TIMEOUT)
+            exc.close()
+        except Exception:
+            pass
+        raise
     try:
         status = response.status
     finally:
@@ -484,9 +434,9 @@ def deliver(settings, alert, record=None, slow=None):
             continue
         try:
             if name == 'mail':
-                results[name], rcpt = channel(settings, alert)
+                results[name], rcpt = limited(channel, settings, alert)
             else:
-                results[name] = channel(settings, alert)
+                results[name] = limited(channel, settings, alert)
         except Exception as exc:
             results[name] = error_text(exc)
             if slow is not None and timed_out(exc):

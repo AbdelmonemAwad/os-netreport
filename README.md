@@ -122,16 +122,21 @@ Limits on each minute's pass, so that a storm or a pause does not flood the chan
   `{"source": "os-netreport", "host", "kind", "at", "subject", "text", "facts"}`, with one optional
   header line (`alert_webhook_header`, for example an `Authorization` header; kept on the
   firewall like a password, not shown again, and left as it is when the field is saved empty), a
-  10 second timeout on each step and 15 seconds for the whole request (as for ntfy: a server that
-  answers a byte at a time cannot hold the minute's pass), and the server's certificate checked.
-  The 15 seconds count from the start: the name lookup, the connect and the TLS handshake are cut
-  too, and a request cut while its name was still being looked up is not sent once it is found,
-  so an alert counted as failed does not arrive later (and twice, with its retry).
+  10 second timeout on each step and 15 seconds for the whole try (see below), and the server's
+  certificate checked.
 - **ntfy** (`alert_ntfy_server` and `alert_ntfy_topic`, both empty = off): the plain text POSTed to
   `<server>/<topic>` with ntfy's `Title`, `Priority` and `Tags` headers, and `alert_ntfy_token` as
   a bearer token when set. There is no default server, on purpose: a public server by default
   would send the firewall's events out by itself. On a public server anyone who knows the topic
   can read it.
+
+Each channel's try - the webhook's POST, ntfy's POST, the mail - has 15 seconds in all, whatever
+it is doing: the connect, the TLS handshake, sending, or waiting for the reply or the mail
+server's greeting. A real-time timer in the cron process ends it at 15 seconds, so a server that
+answers a byte at a time, or never, cannot hold the minute's pass, and a try that ran out goes no
+further: an alert counted as failed does not arrive later (and twice, with its retry). Its result
+is "no answer within 15 s". The system's name lookup is the one step the timer cannot cut: it
+ends at the resolver's own timeouts.
 
 A webhook or ntfy server that answers with a redirect is not followed (the header or the token
 would go along to whatever host it names): any 3xx is a failure, "the server answered with a
