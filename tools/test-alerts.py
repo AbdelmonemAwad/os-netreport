@@ -1154,6 +1154,12 @@ check('cap: retries cannot crowd out a new file: it goes first, and is sent', ([
       (['Example new alert'], False))
 check('cap: ... the retries after it, within the cap', len(sent), 10)
 check('cap: ... and the retries are kept', len(os.listdir(alerts.XGS_OUTBOX)), 10)
+LAST_ID = nr.load_json(alerts.STATE_FILE, {})['xgs']['last_id']
+anomalies((LAST_ID + 1, stamp(CLOCK)))
+sent = run_pass([('xgs', alerts.collect_xgs)])
+check('cap: retries cannot crowd out a new anomaly either: it goes before them', ([s['facts'].get('id') for s in sent][:1],
+                                                                                nr.load_json(alerts.STATE_FILE, {})['xgs'].get('pending')),
+      ([LAST_ID + 1], []))
 for name in os.listdir(alerts.XGS_OUTBOX):
     os.unlink(os.path.join(alerts.XGS_OUTBOX, name))
 GENERAL.update(alert_ntfy_server=BASE + '/ntfy/')

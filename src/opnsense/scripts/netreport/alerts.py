@@ -1400,20 +1400,28 @@ def remove_same(path, info):
         return False
 
 
-def collect_xgs_outbox(settings, state, now, send):
-    """(a) one JSON file per alert - {"source", "kind", "at", "subject", "text", "facts"} - taken and
-    removed once a channel has it; kept while every channel fails and tried again each minute,
-    silently, and dropped after 24 hours. A file is removed only when it was sent or is 24 hours
-    old: one held at the collector's cap waits for the next minute. New files go first and the
-    retries after them, each only while the cap leaves room, so that retries cannot crowd them out."""
+def outbox_files(state):
+    """(the new files, the failing ones) of the outbox, by name; the failing ones are kept in the state"""
     st = state.get('xgs')
     failing = st.get('outbox_failing') if isinstance(st.get('outbox_failing'), dict) else {}
     if not os.path.isdir(XGS_OUTBOX):
         st.pop('outbox_failing', None)
-        return
+        return [], []
     names = sorted(n for n in os.listdir(XGS_OUTBOX) if n.endswith('.json'))
-    failing = {n: t for n, t in failing.items() if n in names}
-    for name in [n for n in names if n not in failing] + [n for n in names if n in failing]:
+    st['outbox_failing'] = failing = {n: t for n, t in failing.items() if n in names}
+    return [n for n in names if n not in failing], [n for n in names if n in failing]
+
+
+def collect_xgs_outbox(settings, state, now, send, names):
+    """(a) one JSON file per alert - {"source", "kind", "at", "subject", "text", "facts"} - taken and
+    removed once a channel has it; kept while every channel fails and tried again each minute,
+    silently, and dropped after 24 hours. A file is removed only when it was sent or is 24 hours
+    old: one held at the collector's cap waits for the next minute. A retry is tried only while the
+    cap leaves room (collect_xgs() runs the new files and the retries apart)."""
+    if not names:
+        return
+    failing = state.get('xgs').setdefault('outbox_failing', {})
+    for name in names:
         path = os.path.join(XGS_OUTBOX, name)
         item, info = read_outbox(path)
         if info is None:
@@ -1439,7 +1447,6 @@ def collect_xgs_outbox(settings, state, now, send):
             if remove_same(path, info):
                 dropped(str(item.get('subject') or name) if isinstance(item, dict) else name,
                         f'{XGS_OUTBOX}/{name} dropped: not sent within 24 hours')
-    st['outbox_failing'] = failing
 
 
 PENDING_MAX = 1000              # anomalies kept for a retry at most
@@ -1478,8 +1485,8 @@ def collect_xgs_anomaly(settings, state, now, send, first):
     """(b) one JSON object a line - {"id", "at", "host", "kind", "message", "source"} - "id" counting up
     from 1: what is above the last id sent is sent; a file whose ids are all below it was started again.
     An anomaly not sent - no channel took it, or the collector's cap held it - is kept pending and tried
-    again each minute (a failed one silently, as the outbox's files are), and dropped after 24 hours.
-    New anomalies go first and the pending ones after them, while the cap leaves room.
+    again each minute (a failed one silently, as the outbox's files are; retry_anomalies()), and
+    dropped after 24 hours. Returns the anomalies pending before this run, for retry_anomalies().
 
     The last id moves, and the anomaly goes into the pending list, one anomaly at a time and before
     it is sent; it leaves the list once sent. Every alert sent saves the state, so a record that
@@ -1525,6 +1532,12 @@ def collect_xgs_anomaly(settings, state, now, send, first):
                     state.save()
                 else:
                     entry['failed'] = result != HELD
+    return old
+
+
+def retry_anomalies(settings, state, now, send, old):
+    """the anomalies pending before this run, tried again while the cap leaves room"""
+    pending = state.get('xgs').setdefault('pending', [])
     for p in old:
         if send and channels_set(settings) and room(state):
             result = try_anomaly(settings, state, p, now, p.get('failed', True))
@@ -1544,8 +1557,13 @@ def collect_xgs(settings, state, now):
     first = state.first('xgs')
     state.get('xgs')
     send = wanted(settings, 'xgs_alert')
-    collect_xgs_outbox(settings, state, now, send)
-    collect_xgs_anomaly(settings, state, now, send, first)
+    # what is new before any retry, so that retries that keep failing cannot take the cap every
+    # minute: the new files, the new anomalies, then the files and the anomalies tried again
+    new_files, failing_files = outbox_files(state)
+    collect_xgs_outbox(settings, state, now, send, new_files)
+    old = collect_xgs_anomaly(settings, state, now, send, first)
+    collect_xgs_outbox(settings, state, now, send, failing_files)
+    retry_anomalies(settings, state, now, send, old)
 
 
 # ---------------------------------------------------------------- collectors

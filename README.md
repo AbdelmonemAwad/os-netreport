@@ -100,8 +100,8 @@ Limits on each minute's pass, so that a storm or a pause does not flood the chan
   cannot push the rest of the history (its last 500 lines) out; and one more alert says how many:
   "N more alerts of the same kind", see the history. os-xgs-npu's alert files and
   anomalies (below) are not dropped at the cap: those past it wait for the next minute, with no
-  history line, and new ones go before the retries of ones that failed, so the retries cannot
-  crowd them out.
+  history line. New alert files and new anomalies go first, and the retries of files and
+  anomalies that failed after both, so the retries cannot crowd out what is new.
 - The whole pass has 45 seconds. Collectors not yet run by then wait for the next minute; their
   places in the logs do not move, so nothing is lost.
 - When the last pass is more than 10 minutes old (the plugin was off, the firewall was down), the
