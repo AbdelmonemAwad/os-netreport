@@ -1220,6 +1220,24 @@ check('anomaly: a run killed half way has kept the last id of what it sent', (ke
       (FIRST + 5, []))
 check('anomaly: ... and the next sends the rest', [s['facts']['id'] for s in run_pass([('xgs', alerts.collect_xgs)])],
       [FIRST + 6, FIRST + 7, FIRST + 8])
+# an anomaly carrying a lone surrogate (a \ud800 escape in its line): the state is saved all the same
+FIRST += 10
+with open(alerts.XGS_ANOMALY, 'w', encoding='utf-8', newline='\n') as fh:
+    fh.write('{"id": %d, "at": %d, "host": "fw.example.com", "kind": "scan", "message": "Example \\ud800 name.", '
+             '"source": "os-xgs-npu"}\n' % (FIRST, int(CLOCK)))
+try:
+    run_pass([('xgs', alerts.collect_xgs)])
+    ended = 'ok'
+except Exception as exc:
+    ended = type(exc).__name__
+kept = nr.load_json(alerts.STATE_FILE, {})
+check('anomaly: one carrying a lone surrogate is sent, and the state saved with it',
+      (ended, kept['xgs']['last_id'], kept['last_pass'], [h['detail'][:10] for h in history()[:1]]),
+      ('ok', FIRST, CLOCK, ['mail: sent']))
+anomalies((FIRST + 1, stamp(CLOCK)))
+check('anomaly: ... and the next one goes, its id kept', ([s['facts']['id'] for s in run_pass([('xgs', alerts.collect_xgs)])],
+                                                          nr.load_json(alerts.STATE_FILE, {})['xgs']['last_id']),
+      ([FIRST + 1], FIRST + 1))
 GENERAL.update(alert_ntfy_server='')
 MAIL['fail'] = 'example mail failure'
 for i in range(10):

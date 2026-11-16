@@ -150,7 +150,9 @@ def save_json(path, data):
     fd, tmp = tempfile.mkstemp(dir=folder, prefix='.' + os.path.basename(path) + '.')
     try:
         with os.fdopen(fd, 'w', encoding='utf-8') as fh:
-            json.dump(data, fh, indent=1, ensure_ascii=False)
+            # ASCII: a lone surrogate (a \ud800 escape in a record read) stays an escape; in UTF-8
+            # it could not be written, and the file would never be saved again
+            json.dump(data, fh, indent=1, ensure_ascii=True)
         os.chmod(tmp, 0o644)
         os.replace(tmp, path)
     except BaseException:
