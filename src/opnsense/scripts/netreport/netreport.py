@@ -1050,10 +1050,19 @@ def send_mail(ms, rcpt, subject, page, text, attach_name=None):
         server = smtplib.SMTP(ms['host'], ms['port'], timeout=60)
         if ms['security'] == 'starttls':
             server.starttls(context=context)
-    with server:
+    try:
         if ms['user'] and ms['password']:
             server.login(ms['user'], ms['password'])
         server.sendmail(ms['sender'], rcpt, msg.as_string())
+    except BaseException:
+        server.close()
+        raise
+    # the server has the message: a QUIT that fails or is slow does not make it a failure (it would be
+    # mailed again with its retry)
+    try:
+        server.quit()
+    except Exception:
+        server.close()
 
 
 # ---------------------------------------------------------------- history and archive

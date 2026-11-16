@@ -106,6 +106,10 @@ QUIET = {}                      # kind -> seconds, where a kind wants other than
 QUIET_KEEP = 2 * 86400          # how long a sent key is remembered at all
 HTTP_TIMEOUT = 10               # seconds, each socket operation of a request
 REQUEST_LIMIT = 15              # seconds, a channel's whole try: connecting, sending, the reply (limited())
+MAIL_LIMIT = 60                 # seconds, the mail's whole try: smtplib's own socket timeout, so a server that
+                                # is slow to say 250 after the message is not cut while it holds it
+SLOW_LIMIT = 3                  # seconds, a channel that already ran out of time in this pass, for an alert
+                                # that is not kept until sent (one that is skips it: deliver())
 TIMER_REPEAT = 0.5              # seconds, the timer again while a try past its limit unwinds
 NOT_SET = 'not set'
 SENT = 'sent'
@@ -255,8 +259,8 @@ def timer_usable():
     return hasattr(signal, 'setitimer') and threading.current_thread() is threading.main_thread()
 
 
-def limited(what, *args):
-    """what(*args), a channel's whole try, with REQUEST_LIMIT seconds to end.
+def limited(what, *args, limit=None):
+    """what(*args), a channel's whole try, with limit seconds to end (REQUEST_LIMIT when not given).
 
     A real-time timer (SIGALRM) raises RequestTimeout in this thread when the time is up. A signal
     handler's exception interrupts a blocking call (PEP 475): the connect, the TLS handshake, a send
@@ -270,16 +274,17 @@ def limited(what, *args):
     Where there is no setitimer (Windows: the tests there) or this is not the main thread, what runs
     without it: each socket operation then has its own timeout (HTTP_TIMEOUT, the mail's 60 s), but
     not the whole try."""
+    limit = REQUEST_LIMIT if limit is None else limit
     if not timer_usable():
         return what(*args)
     live = [True]
 
     def on_alarm(signum, frame):
         if live[0]:
-            raise RequestTimeout(f'no answer within {REQUEST_LIMIT:g} s')
+            raise RequestTimeout(f'no answer within {limit:g} s')
 
     previous = signal.signal(signal.SIGALRM, on_alarm)
-    old_delay, old_interval = signal.setitimer(signal.ITIMER_REAL, REQUEST_LIMIT, TIMER_REPEAT)
+    old_delay, old_interval = signal.setitimer(signal.ITIMER_REAL, limit, TIMER_REPEAT)
     started = time.monotonic()
     try:
         try:
@@ -441,17 +446,22 @@ def deliver(settings, alert, record=None, slow=None, kept=False):
     outbox file, an anomaly) is not tried in that pass on a channel in it (SKIPPED_SLOW, a failure:
     it stays kept for the next pass), so that ten of them to a server that does not answer cannot
     take ten times REQUEST_LIMIT. Any other alert - a gateway down, failed logins... - would be lost
-    by a skip: it is tried on every channel, each try ending within REQUEST_LIMIT."""
+    by a skip: it is tried on every channel, but on a channel in slow with SLOW_LIMIT seconds, so a
+    server that does not answer costs each of them seconds, not REQUEST_LIMIT. The mail has
+    MAIL_LIMIT (a mail server may take long to say 250 after the message, while it holds it)."""
     results, rcpt = {}, []
     for name, channel in (('mail', by_mail), ('webhook', by_webhook), ('ntfy', by_ntfy)):
-        if kept and slow is not None and name in slow:
-            results[name] = SKIPPED_SLOW
-            continue
+        limit = MAIL_LIMIT if name == 'mail' else REQUEST_LIMIT
+        if slow is not None and name in slow:
+            if kept:
+                results[name] = SKIPPED_SLOW
+                continue
+            limit = min(limit, SLOW_LIMIT)
         try:
             if name == 'mail':
-                results[name], rcpt = limited(channel, settings, alert)
+                results[name], rcpt = limited(channel, settings, alert, limit=limit)
             else:
-                results[name] = limited(channel, settings, alert)
+                results[name] = limited(channel, settings, alert, limit=limit)
         except Exception as exc:
             results[name] = error_text(exc)
             if slow is not None and timed_out(exc):
@@ -498,6 +508,11 @@ def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=
     alert = {'kind': kind, 'key': str(key), 'at': now if at is None else at, 'subject': subject, 'text': text,
              'html': page, 'facts': facts or {}, 'priority': priority, 'tags': list(tags)}
     if state is not None and state.running:
+        past = getattr(state, 'past_deadline', None)
+        if defer and callable(past) and past():
+            # the pass is past PASS_DEADLINE: what is kept until sent waits for the next minute, with no
+            # history line; any other alert is still tried (with SLOW_LIMIT on a slow channel)
+            return {name: HELD for name in ('mail', 'webhook', 'ntfy')}
         if state.handed >= COLLECTOR_CAP:
             if defer:
                 return {name: HELD for name in ('mail', 'webhook', 'ntfy')}
@@ -511,7 +526,12 @@ def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=
     results = deliver(settings, alert, record, getattr(state, 'slow', None), kept=defer)
     if state is not None:
         sent[mark] = now
-        state.save()
+        try:
+            state.save()
+        except Exception as exc:
+            # the alert went out (or did not) all the same: a full disk must not make every caller
+            # take it for a failure and send it again each minute
+            nr.log(f'alert "{subject}": the alert state could not be saved: {exc}')
     return results
 
 
@@ -1669,6 +1689,7 @@ def run_collectors(settings, state, now, clock=time.monotonic):
                 st['log'].pop('path', None)
     started = clock()
     state.slow = set()
+    state.past_deadline = lambda: clock() - started > PASS_DEADLINE
     t = nr.texts(settings.get('language'))
     for name, collect in COLLECTORS:
         if clock() - started > PASS_DEADLINE:
@@ -1688,6 +1709,7 @@ def run_collectors(settings, state, now, clock=time.monotonic):
                        quiet=0, priority='high', tags=['warning'])
             except Exception as exc:
                 nr.log(f'alert collector {name}: the summary alert failed: {exc}')
+    state.past_deadline = None
     state.data['last_pass'] = now
     state.save()
 

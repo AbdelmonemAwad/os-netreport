@@ -393,6 +393,8 @@ def smtp_server(mode='ok', delay=0):
                         time.sleep(delay)
                     say('250 queued')
                 elif cmd == 'QUIT':
+                    if mode == 'quit-close':
+                        return
                     if mode == 'slow-quit':
                         time.sleep(delay)
                     say('221 bye')
@@ -1479,6 +1481,84 @@ finally:
 check('slow channel: an alert not kept until sent (a gateway down...) is tried all the same; one kept is skipped',
       ([MIXED[k]['webhook'] == alerts.SKIPPED_SLOW for k in 'abcd'], len(posts('/stall')), [MIXED[k]['mail'] for k in 'abcd']),
       ([False, False, True, False], 3, ['sent'] * 4))
+
+# the limits each channel's try is given: the mail its own, a channel that timed out in the pass a short one for
+# what is not kept until sent (what is kept skips it)
+SEEN_LIMITS = []
+REAL_LIMITED = alerts.limited
+
+
+def spy_limited(what, *args, limit=None):
+    SEEN_LIMITS.append((what.__name__, limit))
+    return REAL_LIMITED(what, *args, limit=limit)
+
+
+reset()
+GENERAL.update(alert_webhook_url=BASE + '/stall', alert_ntfy_server='')
+alerts.limited = spy_limited
+saved_limits = alerts.REQUEST_LIMIT, alerts.HTTP_TIMEOUT, alerts.SLOW_LIMIT
+alerts.REQUEST_LIMIT, alerts.HTTP_TIMEOUT, alerts.SLOW_LIMIT = 5, 1, 1
+try:
+    run_pass([('mixed', mixed)])
+finally:
+    alerts.limited = REAL_LIMITED
+    alerts.REQUEST_LIMIT, alerts.HTTP_TIMEOUT, alerts.SLOW_LIMIT = saved_limits
+    GENERAL.update(alert_webhook_url=BASE + '/hook', alert_ntfy_server=BASE + '/ntfy/')
+check('limits: the mail has MAIL_LIMIT; the webhook its limit, then SLOW_LIMIT once it timed out',
+      ([lim for name, lim in SEEN_LIMITS if name == 'by_mail'], [lim for name, lim in SEEN_LIMITS if name == 'by_webhook']),
+      ([alerts.MAIL_LIMIT] * 4, [5, 1, 1]))
+
+# a mail server that took the message: a QUIT that is slow past the limit, or that closes without an answer, is
+# not a failure (the message would be mailed again with its retry)
+if alerts.timer_usable():
+    for mode in ('slow-quit', 'quit-close'):
+        del SMTP_GOT[:]
+        port = smtp_server(mode, delay=3)
+        started = time.monotonic()
+        try:
+            got = alerts.limited(REAL_SEND_MAIL, smtp_settings(port), ['admin@example.com'], 'Example', '<p>x</p>',
+                                 'x', limit=1)
+        except Exception as exc:
+            got = alerts.error_text(exc)
+        check('mail: a QUIT that is ' + ('slow past the limit' if mode == 'slow-quit' else 'closed unanswered')
+              + ' after the server took the message: no failure',
+              (got, [m for m, _ in SMTP_GOT], time.monotonic() - started < 2.5), (None, [mode], True))
+else:
+    print('skip: no real-time timer here (Windows): the QUIT under the limit is tested where there is one')
+
+# past the pass deadline: what is kept until sent waits for the next minute; any other alert is still sent
+TICK3 = [0.0]
+DEAD = {}
+
+
+def late(settings, state, now):
+    TICK3[0] += 50
+    DEAD['kept'] = alerts.notify(settings, state, 'example', 'late|kept', 'Example late kept', 'Example text.',
+                                 now=now, quiet=0, defer=True)
+    DEAD['other'] = alerts.notify(settings, state, 'example', 'late|other', 'Example late other', 'Example text.',
+                                  now=now, quiet=0)
+
+
+reset()
+history_before = len(history())
+run_pass([('late', late)], clock=lambda: TICK3[0])
+check('deadline: past it, an alert kept until sent is left for the next minute (held, no history line); another is sent',
+      (DEAD['kept']['mail'], DEAD['other']['mail'], [h['subject'] for h in history()[:len(history()) - history_before]]),
+      (alerts.HELD, 'sent', ['Example late other']))
+
+# a state that cannot be saved after a delivery: the delivery's result stands, and the failure is logged
+BROKEN = alerts.State()
+
+
+def broken_save():
+    raise OSError(28, 'No space left on device')
+
+
+BROKEN.save = broken_save
+del LOGGED[:]
+got = alerts.notify(config(), BROKEN, 'example', 'save|x', 'Example save', 'Example text.', quiet=0)
+check('a state that cannot be saved after a delivery: the result stands, and it is logged',
+      (got['mail'], [line for line in LOGGED if 'could not be saved' in line] != []), ('sent', True))
 
 TICK = [0.0]
 RAN2 = []
