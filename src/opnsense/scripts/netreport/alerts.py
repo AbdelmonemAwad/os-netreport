@@ -1369,16 +1369,17 @@ def time_of(value, default):
     seconds is the year 5138), and a time that is not one - or none a date can hold - is default"""
     if isinstance(value, bool):
         return default
-    if isinstance(value, (int, float)):
-        ts = float(value)
-    else:
-        try:
-            ts = datetime.datetime.fromisoformat(str(value).replace('Z', '+00:00')).timestamp()
-        except (TypeError, ValueError, OverflowError, OSError):
+    try:
+        # float() of an integer too large for a float (400 digits) raises OverflowError
+        if isinstance(value, (int, float)):
+            ts = float(value)
+        else:
             try:
+                ts = datetime.datetime.fromisoformat(str(value).replace('Z', '+00:00')).timestamp()
+            except (TypeError, ValueError, OverflowError, OSError):
                 ts = float(str(value).strip())
-            except ValueError:
-                return default
+    except (TypeError, ValueError, OverflowError):
+        return default
     if not math.isfinite(ts):
         return default
     if abs(ts) >= 1e11:
@@ -1481,12 +1482,18 @@ def collect_xgs_outbox(settings, state, now, send, names):
         usable = isinstance(item, dict) and bool(item.get('subject') or item.get('text'))
         retry = name in failing
         if usable and send and channels_set(settings) and (not retry or room(state)):
-            facts = item.get('facts') if isinstance(item.get('facts'), dict) else {}
-            facts = dict(facts, source=str(item.get('source') or ''))
-            results = notify(settings, state, str(item.get('kind') or 'xgs'), name,
-                             str(item.get('subject') or item.get('text'))[:300], str(item.get('text') or item.get('subject')),
-                             facts, at=time_of(item.get('at'), mtime), now=now, quiet=0, priority='high', tags=['warning'],
-                             record=retried(retry), defer=True)
+            # each file on its own, as each anomaly is: one that raises (its record is not what it
+            # should be) is kept, as a failure, and stops neither the files after it nor the collector
+            try:
+                facts = item.get('facts') if isinstance(item.get('facts'), dict) else {}
+                facts = dict(facts, source=str(item.get('source') or ''))
+                results = notify(settings, state, str(item.get('kind') or 'xgs'), name,
+                                 str(item.get('subject') or item.get('text'))[:300], str(item.get('text') or item.get('subject')),
+                                 facts, at=time_of(item.get('at'), mtime), now=now, quiet=0, priority='high',
+                                 tags=['warning'], record=retried(retry), defer=True)
+            except Exception as exc:
+                nr.log(f'{XGS_OUTBOX}/{name} could not be sent: {exc}')
+                results = None
             if was_sent(results):
                 failing.pop(name, None)
                 remove_same(path, info)

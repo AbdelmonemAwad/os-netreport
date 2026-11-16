@@ -1251,6 +1251,41 @@ anomalies((FIRST + 1, stamp(CLOCK)))
 check('anomaly: ... and the next one goes, its id kept', ([s['facts']['id'] for s in run_pass([('xgs', alerts.collect_xgs)])],
                                                           nr.load_json(alerts.STATE_FILE, {})['xgs']['last_id']),
       ([FIRST + 1], FIRST + 1))
+# a time too large for a float (a 400-digit integer) is the time the item was read; none stops another
+BIG = 10 ** 400
+outbox('big1.json', subject='Example big 1', at=BIG)
+outbox('big2.json', subject='Example big 2')
+with open(alerts.XGS_ANOMALY, 'w', encoding='utf-8', newline='\n') as fh:
+    fh.write(json.dumps({'id': FIRST + 2, 'at': BIG, 'host': 'fw.example.com', 'kind': 'scan', 'message': 'Example big.',
+                         'source': 'os-xgs-npu'}) + '\n')
+sent = run_pass([('xgs', alerts.collect_xgs)])
+check('a time of 400 digits: the file and the anomaly are sent, at the time they were read, and the file after them',
+      ([s['facts'].get('id', s['subject']) for s in sent], [alerts.local_time(CLOCK) in s['text'] for s in sent[2:]],
+       sorted(n for n in os.listdir(alerts.XGS_OUTBOX) if n.startswith('big')),
+       nr.load_json(alerts.STATE_FILE, {})['xgs'].get('pending')),
+      (['Example big 1', 'Example big 2', FIRST + 2], [True], [], []))
+saved_time_of = alerts.time_of
+
+
+def time_of_raising(value, default):
+    if value == 'example-raise':
+        raise RuntimeError('example: this file cannot be read')
+    return saved_time_of(value, default)
+
+
+alerts.time_of = time_of_raising
+outbox('raise1.json', subject='Example raising', at='example-raise')
+outbox('raise2.json', subject='Example after the raising one')
+try:
+    sent = run_pass([('xgs', alerts.collect_xgs)])
+finally:
+    alerts.time_of = saved_time_of
+check('outbox: a file that raises stops none after it, is kept and logged',
+      ([s['subject'] for s in sent], sorted(n for n in os.listdir(alerts.XGS_OUTBOX) if n.startswith('raise')),
+       [line for line in LOGGED if 'raise1.json' in line][-1:]),
+      (['Example after the raising one'], ['raise1.json'],
+       ['%s/raise1.json could not be sent: example: this file cannot be read' % alerts.XGS_OUTBOX]))
+os.unlink(os.path.join(alerts.XGS_OUTBOX, 'raise1.json'))
 GENERAL.update(alert_ntfy_server='')
 MAIL['fail'] = 'example mail failure'
 for i in range(10):

@@ -165,7 +165,10 @@ otherwise above. What the layer remembers - quiet times, log offsets, states - i
     and one when the file is dropped. Only regular files are taken: a symbolic link is not
     followed (nor sent, nor removed), and a file is removed only if it is still the one that was
     read (the same inode and size), so an alert written over it in the meantime goes the next
-    minute.
+    minute. Each file is taken on its own: one that cannot be sent (its record is not what it
+    should be) is kept, as a failure, and logged, and stops none of the files after it. `at` is
+    read as the anomalies' below; a file with a time that is not one is sent with the file's
+    time.
   - `/var/db/os-xgs-npu/anomaly/alerts.jsonl`, one `{"id", "at", "host", "kind", "message",
     "source"}` a line, `id` counting up from 1: what is above the last id sent is sent; ids all
     below it mean the file was started again, and it is read from the start. An anomaly no
@@ -174,7 +177,8 @@ otherwise above. What the layer remembers - quiet times, log offsets, states - i
     dropped, and one line in the history and the system log says how many. The last id moves one anomaly at a time, as each is
     taken, so one that cannot be sent (it stays pending) or a run stopped half way loses none
     after it. `at` is ISO 8601 or Unix seconds (milliseconds are recognised); an anomaly with a
-    time that is not one is sent with the time it was read.
+    time that is not one, or none a date can hold (a number of hundreds of digits), is sent with
+    the time it was read.
 - **Written for os-portguard**: `/var/db/netreport/infected.json`,
   `{"<address>": {"first", "last", "count", "list", "mac", "name"}}` - the addresses of the
   firewall's own networks that os-blocklists blocked on their way to a command-and-control list
