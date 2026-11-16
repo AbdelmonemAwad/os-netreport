@@ -1050,6 +1050,21 @@ minute(alerts.collect_xgs)
 check('XGS: ... and dropped after 24 hours, with a line', (nr.load_json(alerts.STATE_FILE, {})['xgs'].get('pending'),
                                                            history()[0]['detail']),
       ([], '%s id 4 dropped: not sent within 24 hours' % alerts.XGS_ANOMALY))
+alerts.PENDING_MAX = 3                                      # 1000 in use
+del LOGGED[:]
+history_before = len(history())
+anomaly(1, 2, 3, 4, 5, 6, 7, 8, 9)
+minute(alerts.collect_xgs)
+alerts.PENDING_MAX = 1000
+dropped_lines = [h['detail'] for h in history()[:len(history()) - history_before] if 'dropped' in h['detail']]
+check('XGS: anomalies above the pending maximum: the oldest dropped, said once with how many',
+      ([p['rec']['id'] for p in nr.load_json(alerts.STATE_FILE, {})['xgs'].get('pending')], dropped_lines,
+       [line for line in LOGGED if 'dropped' in line]),
+      ([7, 8, 9], ['%s: 2 anomalies dropped unsent, the oldest: more than 3 were waiting' % alerts.XGS_ANOMALY],
+       ['%s: 2 anomalies dropped unsent, the oldest: more than 3 were waiting' % alerts.XGS_ANOMALY]))
+state = alerts.State()
+state.data['xgs']['pending'] = []
+state.save()
 GENERAL.update(alert_webhook_url=BASE + '/hook', alert_ntfy_server=BASE + '/ntfy/')
 reset()
 GENERAL['xgs_alert'] = '0'

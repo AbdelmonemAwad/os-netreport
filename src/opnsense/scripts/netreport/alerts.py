@@ -1611,7 +1611,13 @@ def retry_anomalies(settings, state, now, send, old):
             without(pending, p)
             dropped(f'{XGS_ANOMALY} id {p["rec"].get("id")}', f'{XGS_ANOMALY} id {p["rec"].get("id")} dropped: '
                     'not sent within 24 hours')
-    pending[:] = pending[-PENDING_MAX:]
+    over = len(pending) - PENDING_MAX
+    if over > 0:
+        # the oldest go: said once, with how many, in the system log and the history
+        del pending[:over]
+        detail = f'{XGS_ANOMALY}: {over} anomalies dropped unsent, the oldest: more than {PENDING_MAX} were waiting'
+        nr.log(detail)
+        dropped(f'{XGS_ANOMALY}: {over} anomalies dropped', detail)
 
 
 def collect_xgs(settings, state, now):
