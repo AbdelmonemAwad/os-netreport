@@ -338,6 +338,19 @@ if alerts.timer_usable():
 else:
     print('skip: no real-time timer here (Windows): the time limit is tested where there is one')
 
+# smtplib says a read that timed out is a disconnection; the timeout is its context
+import smtplib  # noqa: E402
+STALL_PORT, _ = silent_server()
+STALLED = []
+for connect in (smtplib.SMTP, smtplib.SMTP_SSL):
+    try:
+        connect('127.0.0.1', STALL_PORT, timeout=1)
+        STALLED.append('connected')
+    except Exception as exc:
+        STALLED.append((type(exc).__name__, alerts.timed_out(exc)))
+check('a mail server that never answers (plain, TLS) is a timeout for the slow channels', STALLED,
+      [('SMTPServerDisconnected', True), ('TimeoutError', True)])
+
 reset()
 settings = config()
 saved_history = nr.add_history

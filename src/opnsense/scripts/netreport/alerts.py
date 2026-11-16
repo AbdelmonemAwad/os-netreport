@@ -414,10 +414,21 @@ def held_line(subject, held, subjects):
 
 
 def timed_out(exc):
-    """whether a channel's error is that it did not answer in time"""
-    if isinstance(exc, urllib.error.URLError) and not isinstance(exc, urllib.error.HTTPError):
-        exc = exc.reason
-    return isinstance(exc, (RequestTimeout, socket.timeout, TimeoutError))
+    """whether a channel's error is that it did not answer in time: the error itself, a URLError's
+    reason, or what it was raised from or while handling (smtplib says a read that timed out is
+    SMTPServerDisconnected, the timeout its context)"""
+    seen, todo = set(), [exc]
+    while todo:
+        exc = todo.pop()
+        if not isinstance(exc, BaseException) or id(exc) in seen:
+            continue
+        seen.add(id(exc))
+        if isinstance(exc, (RequestTimeout, socket.timeout, TimeoutError)):
+            return True
+        if isinstance(exc, urllib.error.URLError) and not isinstance(exc, urllib.error.HTTPError):
+            todo.append(exc.reason)
+        todo += [exc.__cause__, exc.__context__]
+    return False
 
 
 def deliver(settings, alert, record=None, slow=None, kept=False):
