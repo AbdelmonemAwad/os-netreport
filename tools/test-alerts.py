@@ -1037,6 +1037,27 @@ append(alerts.day_file(alerts.FILTER_LOG, CLOCK + 60), syslog_line(
     'S,1,,64240,,mss' % ('1' * 32)))
 check('backlog: a command-and-control line older than 10 minutes is not alerted', run_pass([('c2', alerts.collect_c2)]), [])
 
+# a fold is given back only right after its line, in the same file: never a line read long before
+reset()
+run_pass([('login', alerts.collect_logins)])
+append(audit(), syslog_line(CLOCK + 30, 'audit', gui_line('labuser', '203.0.113.25')))
+run_pass([('login', alerts.collect_logins)])
+CLOCK += 20 * 60                                            # a pause: the reader starts again at the end
+run_pass([('login', alerts.collect_logins)])
+append(audit(), syslog_line(CLOCK + 30, 'audit', FOLD % (GUI_FAIL[:20], 9)))
+check('fold: after the reader restarted, a fold does not replay the line read before', run_pass([('login', alerts.collect_logins)]),
+      [])
+append(audit(), syslog_line(CLOCK + 30, 'audit', gui_line('labuser', '203.0.113.26')) +
+       syslog_line(CLOCK + 31, 'sshd', 'Connection closed by 192.0.2.9 port 50001') +
+       syslog_line(CLOCK + 32, 'audit', FOLD % (GUI_FAIL[:20], 9)))
+check('fold: nor one with another line between it and its line', run_pass([('login', alerts.collect_logins)]), [])
+append(audit(), syslog_line(CLOCK + 30, 'audit', gui_line('labuser', '203.0.113.27')))
+run_pass([('login', alerts.collect_logins)])
+append(audit(), syslog_line(CLOCK + 30, 'audit', FOLD % (GUI_FAIL[:20], 9)))
+check('fold: right after its line, the minute after, it still counts',
+      [(s['facts']['address'], s['facts']['count']) for s in run_pass([('login', alerts.collect_logins)])],
+      [('203.0.113.27', 10)])
+
 # One collector failing stops neither the others nor the reports: the scheduler with a collector that
 # raises before one that records.
 RAN = []

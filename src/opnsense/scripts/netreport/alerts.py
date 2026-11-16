@@ -521,9 +521,12 @@ def day_file(pattern, now):
     return pattern.format(day=datetime.datetime.fromtimestamp(now).strftime('%Y%m%d'))
 
 
-def read_from(place, path):
+def read_from(place, path, where=False):
     """the complete lines of path written since place = {"inode", "offset"}, which moves past them;
-    a new inode (the file was rotated) or a shorter file starts again at 0"""
+    a new inode (the file was rotated) or a shorter file starts again at 0. With where, each line
+    comes as (line, file, start, end): the file as path|inode, and the byte offsets where the line
+    starts and where the next one does. A read that does not go on from where the last one ended
+    - a new file, a log grown past MAX_READ - forgets the line kept for unfolding."""
     try:
         info = os.stat(path)
     except OSError:
@@ -531,9 +534,11 @@ def read_from(place, path):
     offset = place.get('offset', 0) if isinstance(place.get('offset'), int) else 0
     if place.get('inode') != info.st_ino or info.st_size < offset:
         place['inode'], offset = info.st_ino, 0
+        place.pop('prev', None)
     partial = info.st_size - offset > MAX_READ
     if partial:
         offset = info.st_size - MAX_READ
+        place.pop('prev', None)
     with open(path, 'rb') as fh:
         fh.seek(offset)
         data = fh.read(info.st_size - offset)
@@ -542,10 +547,13 @@ def read_from(place, path):
         place['offset'] = offset
         return []
     place['offset'] = offset + end + 1
-    lines = data[:end].decode('utf-8', 'replace').split('\n')
+    lines, at, src = [], offset, f'{path}|{info.st_ino}'
+    for raw in data[:end].split(b'\n'):
+        lines.append((raw.decode('utf-8', 'replace'), src, at, at + len(raw) + 1))
+        at += len(raw) + 1
     if partial:
         lines = lines[1:]           # the first line read from the middle is not a whole one
-    return lines
+    return lines if where else [line[0] for line in lines]
 
 
 def follow(place, path, unfold=False):
@@ -554,6 +562,7 @@ def follow(place, path, unfold=False):
     unfold, the lines syslog-ng folded into "Last message '...' repeated N times" are given back
     (see unfolded())."""
     if 'path' not in place:
+        place.pop('prev', None)
         try:
             info = os.stat(path)
             place.update(path=path, inode=info.st_ino, offset=info.st_size)
@@ -562,10 +571,10 @@ def follow(place, path, unfold=False):
         return []
     lines = []
     if place['path'] != path:
-        lines += read_from(place, place['path'])
+        lines += read_from(place, place['path'], where=True)
         place.update(path=path, inode=None, offset=0)
-    lines += read_from(place, path)
-    return unfolded(place, lines) if unfold else lines
+    lines += read_from(place, path, where=True)
+    return unfolded(place, lines) if unfold else [line[0] for line in lines]
 
 
 def rfc5424(line):
@@ -615,30 +624,36 @@ def without_key(line):
 
 
 def unfolded(place, lines):
-    """The lines with each one syslog-ng folded given back: a "Last message '...' repeated N times" line
-    stands for N more of the program's previous line, when the quoted part begins that line's message;
-    it carries the time of the fold. The previous line of each program is kept in place["prev"], so a
-    fold read the minute after its line is given back too."""
-    prev = place.get('prev') if isinstance(place.get('prev'), dict) else {}
+    """The lines, given as (line, file, start, end) by read_from(), with each one syslog-ng folded
+    given back: a "Last message '...' repeated N times" line stands for N more of the line just
+    before it in the same file - its program's, and the quoted part beginning its message - and
+    carries the time of the fold. syslog-ng writes the fold right after the line it folds, so a fold
+    that does not start where that line ended (another line between, another file, a read that
+    restarted or skipped) gives back nothing: it cannot multiply a line read long before. The last
+    line is kept in place["prev"] with its file and where it ended, so a fold read the minute after
+    its line is given back too."""
+    prev = place.get('prev') if isinstance(place.get('prev'), dict) and 'end' in place['prev'] else None
     out = []
-    for line in lines:
+    for line, src, start, end in lines:
         parsed = rfc5424(line)
-        if not parsed:
-            out.append(line)
-            continue
-        stamp, program, msg = parsed
-        folded = FOLDED.match(msg)
+        folded = FOLDED.match(parsed[2]) if parsed else None
         if not folded:
-            prev[program] = line
             out.append(line)
+            prev = {'line': line, 'file': src, 'end': end}
             continue
-        earlier = prev.get(program)
-        if not earlier or not message_of(earlier).startswith(folded.group('prefix')):
+        earlier, prev = prev, None
+        if not earlier or earlier.get('file') != src or earlier.get('end') != start:
             continue
-        head, _, rest = earlier.partition(' ')
-        again = ' '.join([head, stamp, rest.partition(' ')[2]])
+        before = rfc5424(earlier['line'])
+        if not before or before[1] != parsed[1] or not before[2].startswith(folded.group('prefix')):
+            continue
+        head, _, rest = earlier['line'].partition(' ')
+        again = ' '.join([head, parsed[0], rest.partition(' ')[2]])
         out += [again] * min(int(folded.group('n')), UNFOLD_MAX)
-    place['prev'] = {p: without_key(line)[:4096] for p, line in prev.items()}
+    if prev:
+        place['prev'] = dict(prev, line=without_key(prev['line'])[:4096])
+    else:
+        place.pop('prev', None)
     return out
 
 
