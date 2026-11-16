@@ -82,6 +82,7 @@ import hashlib
 import http.client
 import ipaddress
 import json
+import math
 import os
 import re
 import socket
@@ -1306,13 +1307,29 @@ OUTBOX_MAX_AGE = 86400
 
 
 def time_of(value, default):
-    """an ISO 8601 time or Unix seconds, as Unix seconds"""
-    if isinstance(value, (int, float)) and not isinstance(value, bool):
-        return float(value)
-    try:
-        return datetime.datetime.fromisoformat(str(value).replace('Z', '+00:00')).timestamp()
-    except (TypeError, ValueError):
+    """an ISO 8601 time or Unix seconds, as Unix seconds; a number this large is milliseconds (1e11
+    seconds is the year 5138), and a time that is not one - or none a date can hold - is default"""
+    if isinstance(value, bool):
         return default
+    if isinstance(value, (int, float)):
+        ts = float(value)
+    else:
+        try:
+            ts = datetime.datetime.fromisoformat(str(value).replace('Z', '+00:00')).timestamp()
+        except (TypeError, ValueError, OverflowError, OSError):
+            try:
+                ts = float(str(value).strip())
+            except ValueError:
+                return default
+    if not math.isfinite(ts):
+        return default
+    if abs(ts) >= 1e11:
+        ts /= 1000
+    try:
+        datetime.datetime.fromtimestamp(ts)
+    except (OverflowError, OSError, ValueError):
+        return default
+    return ts
 
 
 def channels_set(settings):
@@ -1435,15 +1452,35 @@ def send_anomaly(settings, state, rec, now, was_failing):
     return SENT if was_sent(results) else HELD if waits(results) else 'failed'
 
 
+def without(items, item):
+    """items without this one (the very object: two anomalies may be equal)"""
+    items[:] = [x for x in items if x is not item]
+
+
+def try_anomaly(settings, state, entry, now, was_failing):
+    """send_anomaly() for one pending entry; an anomaly that raises (its record is not what it should
+    be) stays pending, as a failure, and stops neither the others nor the collector"""
+    try:
+        return send_anomaly(settings, state, entry['rec'], now, was_failing)
+    except Exception as exc:
+        nr.log(f'anomaly {entry["rec"].get("id")} could not be sent: {exc}')
+        return 'failed'
+
+
 def collect_xgs_anomaly(settings, state, now, send, first):
     """(b) one JSON object a line - {"id", "at", "host", "kind", "message", "source"} - "id" counting up
     from 1: what is above the last id sent is sent; a file whose ids are all below it was started again.
     An anomaly not sent - no channel took it, or the collector's cap held it - is kept pending and tried
     again each minute (a failed one silently, as the outbox's files are), and dropped after 24 hours.
-    New anomalies go first and the pending ones after them, while the cap leaves room."""
+    New anomalies go first and the pending ones after them, while the cap leaves room.
+
+    The last id moves, and the anomaly goes into the pending list, one anomaly at a time and before
+    it is sent; it leaves the list once sent. Every alert sent saves the state, so a record that
+    cannot be sent, or a run killed half way, loses none of the anomalies after it."""
     st = state.get('xgs')
     pending = [p for p in st.get('pending') or [] if isinstance(p, dict) and isinstance(p.get('rec'), dict)]
-    new = []
+    st['pending'] = pending
+    old = list(pending)
     try:
         with open(XGS_ANOMALY, encoding='utf-8', errors='replace') as fh:
             lines = fh.read().splitlines()
@@ -1461,35 +1498,39 @@ def collect_xgs_anomaly(settings, state, now, send, first):
         top = max((r['id'] for r in records), default=0)
         last = st.get('last_id')
         if first:
-            last = top
+            st['last_id'] = top
         else:
             last = last if isinstance(last, int) else 0
             if top < last:
                 last = 0                    # the file was started again
+            st['last_id'] = last
             for rec in sorted(records, key=lambda r: r['id']):
-                if rec['id'] <= last:
+                if rec['id'] <= st['last_id']:
                     continue
-                last = rec['id']
-                if send:
-                    new.append(rec)
-        st['last_id'] = last
-    kept_new, kept_old = [], []
-    for rec in new:
-        result = send_anomaly(settings, state, rec, now, False)
-        if result != SENT:
-            kept_new.append({'rec': rec, 'since': now, 'failed': result != HELD})
-    for p in pending:
+                st['last_id'] = rec['id']
+                if not send:
+                    continue
+                entry = {'rec': rec, 'since': now, 'failed': False}
+                pending.append(entry)
+                result = try_anomaly(settings, state, entry, now, False)
+                if result == SENT:
+                    without(pending, entry)
+                    state.save()
+                else:
+                    entry['failed'] = result != HELD
+    for p in old:
         if send and channels_set(settings) and room(state):
-            result = send_anomaly(settings, state, p['rec'], now, p.get('failed', True))
+            result = try_anomaly(settings, state, p, now, p.get('failed', True))
             if result == SENT:
+                without(pending, p)
+                state.save()
                 continue
             p['failed'] = p.get('failed', True) or result != HELD
         if now - (p.get('since') or now) >= OUTBOX_MAX_AGE:
+            without(pending, p)
             dropped(f'{XGS_ANOMALY} id {p["rec"].get("id")}', f'{XGS_ANOMALY} id {p["rec"].get("id")} dropped: '
                     'not sent within 24 hours')
-            continue
-        kept_old.append(p)
-    st['pending'] = (kept_old + kept_new)[-PENDING_MAX:]
+    pending[:] = pending[-PENDING_MAX:]
 
 
 def collect_xgs(settings, state, now):

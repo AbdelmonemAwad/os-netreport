@@ -1076,6 +1076,59 @@ check('cap: 10 anomalies sent, 3 kept for the next minute', (len(sent), [p['rec'
     alerts.STATE_FILE, {})['xgs'].get('pending') or []]), (10, [LAST_ID + 11, LAST_ID + 12, LAST_ID + 13]))
 check('cap: ... and sent then', [s['facts']['id'] for s in run_pass([('xgs', alerts.collect_xgs)])],
       [LAST_ID + 11, LAST_ID + 12, LAST_ID + 13])
+
+
+def anomalies(*recs):
+    """the anomaly file with these (id, at) records"""
+    with open(alerts.XGS_ANOMALY, 'w', encoding='utf-8', newline='\n') as fh:
+        for i, at in recs:
+            fh.write(json.dumps({'id': i, 'at': at, 'host': 'fw.example.com', 'kind': 'traffic spike',
+                                 'message': 'Example message %d.' % i, 'source': 'os-xgs-npu'}) + '\n')
+
+
+# one anomaly whose time is in milliseconds, or is no time at all, loses none after it
+FIRST = LAST_ID + 14
+anomalies((FIRST, stamp(CLOCK)), (FIRST + 1, int(CLOCK) * 1000), (FIRST + 2, 1e30), (FIRST + 3, 'not a time'),
+          (FIRST + 4, stamp(CLOCK)))
+sent = run_pass([('xgs', alerts.collect_xgs)])
+check('anomaly: a time in milliseconds is read as such, a bad one is the time it was read; none is lost',
+      [(s['facts']['id'], s['text'].split(' at ')[1][:16]) for s in sent],
+      [(FIRST, alerts.local_time(CLOCK - 60)), (FIRST + 1, alerts.local_time(CLOCK - 60)),
+       (FIRST + 2, alerts.local_time(CLOCK)), (FIRST + 3, alerts.local_time(CLOCK)), (FIRST + 4, alerts.local_time(CLOCK - 60))])
+saved_send_anomaly = alerts.send_anomaly
+
+
+def send_raising(settings, state, rec, now, was_failing, what=RuntimeError):
+    if rec['id'] == FIRST + 6:
+        raise what('example: this record cannot be sent')
+    return saved_send_anomaly(settings, state, rec, now, was_failing)
+
+
+alerts.send_anomaly = send_raising
+anomalies(*[(FIRST + i, stamp(CLOCK)) for i in range(5, 9)])
+try:
+    sent = run_pass([('xgs', alerts.collect_xgs)])
+finally:
+    alerts.send_anomaly = saved_send_anomaly
+check('anomaly: one that raises stops none after it, and is kept pending',
+      ([s['facts']['id'] for s in sent], [p['rec']['id'] for p in nr.load_json(alerts.STATE_FILE, {})['xgs'].get('pending')]),
+      ([FIRST + 5, FIRST + 7, FIRST + 8], [FIRST + 6]))
+check('anomaly: ... and goes the minute after', [s['facts']['id'] for s in run_pass([('xgs', alerts.collect_xgs)])],
+      [FIRST + 6])
+FIRST += 10
+alerts.send_anomaly = lambda *args: send_raising(*args, what=KeyboardInterrupt)    # a run killed half way
+anomalies(*[(FIRST + i, stamp(CLOCK)) for i in range(5, 9)])
+try:
+    run_pass([('xgs', alerts.collect_xgs)])
+except KeyboardInterrupt:
+    pass
+finally:
+    alerts.send_anomaly = saved_send_anomaly
+kept = nr.load_json(alerts.STATE_FILE, {})['xgs']
+check('anomaly: a run killed half way has kept the last id of what it sent', (kept['last_id'], kept.get('pending')),
+      (FIRST + 5, []))
+check('anomaly: ... and the next sends the rest', [s['facts']['id'] for s in run_pass([('xgs', alerts.collect_xgs)])],
+      [FIRST + 6, FIRST + 7, FIRST + 8])
 GENERAL.update(alert_ntfy_server='')
 MAIL['fail'] = 'example mail failure'
 for i in range(10):

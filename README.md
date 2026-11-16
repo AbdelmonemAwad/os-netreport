@@ -155,7 +155,10 @@ otherwise above. What the layer remembers - quiet times, log offsets, states - i
     "source"}` a line, `id` counting up from 1: what is above the last id sent is sent; ids all
     below it mean the file was started again, and it is read from the start. An anomaly no
     channel took is kept and tried again each minute like the files above (the same history
-    lines), and dropped after 24 hours.
+    lines), and dropped after 24 hours. The last id moves one anomaly at a time, as each is
+    taken, so one that cannot be sent (it stays pending) or a run stopped half way loses none
+    after it. `at` is ISO 8601 or Unix seconds (milliseconds are recognised); an anomaly with a
+    time that is not one is sent with the time it was read.
 - **Written for os-portguard**: `/var/db/netreport/infected.json`,
   `{"<address>": {"first", "last", "count", "list", "mac", "name"}}` - the addresses of the
   firewall's own networks that os-blocklists blocked on their way to a command-and-control list
