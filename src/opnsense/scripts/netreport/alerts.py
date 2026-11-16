@@ -915,9 +915,9 @@ def ipsec_up(conn):
 
 
 def vpn_reads(settings, entries, now):
-    """({key: (name, 'up' or 'down')} of every connection this read could see, the key prefixes of the
-    sources that answered, and the prefixes to leave as they are - a server that did not answer)"""
-    reads, answered, keep = {}, [], []
+    """({key: (name, 'up' or 'down')} of every connection this read could see, and the key prefixes of
+    the sources that answered)"""
+    reads, answered = {}, []
     ipsec = configctl('ipsec', 'list', 'status')
     if isinstance(ipsec, dict):
         answered.append('ipsec|')
@@ -943,45 +943,81 @@ def vpn_reads(settings, entries, now):
     ovpn = configctl('openvpn', 'connections', 'client,server')
     if isinstance(ovpn, dict):
         answered.append('ovpn|')
-        for iid, inst in (ovpn.get('client') or {}).items():
-            if not isinstance(inst, dict):
-                continue
-            name = description(settings, iid) or iid
-            if inst.get('status') != 'failed' or f'ovpn|c|{iid}' in entries:
-                reads[f'ovpn|c|{iid}'] = ('OpenVPN ' + name, 'up' if inst.get('status') == 'connected' else 'down')
-        for sid, srv in (ovpn.get('server') or {}).items():
-            if not isinstance(srv, dict) or srv.get('status') == 'failed':
-                # An instance whose management socket refuses: ovpn_status.py cannot tell a client from
-                # a server then and lists it under "server" as {"status": "failed"}. Both its keys are
-                # kept; one followed as a client, or a peer-to-peer instance, is down (its process is
-                # gone), so its "down" is reported and its "back" follows. A server's clients stay as
-                # they were.
-                keep += [f'ovpn|s|{sid}|', f'ovpn|c|{sid}']
-                for key in (f'ovpn|c|{sid}', f'ovpn|s|{sid}|'):
-                    if key in entries and key not in reads:
-                        reads[key] = (entries[key].get('name') or 'OpenVPN ' + (description(settings, sid) or sid), 'down')
-                continue
-            name = description(settings, sid) or sid
-            if 'client_list' not in srv and 'timestamp' in srv:
-                # a peer-to-peer instance: its own state
-                reads[f'ovpn|s|{sid}|'] = ('OpenVPN ' + name, 'up' if srv.get('status') == 'connected' else 'down')
-                continue
-            for client in srv.get('client_list') or []:
-                cn = client.get('common_name') or client.get('username') or client.get('real_address') or '?'
-                reads[f'ovpn|s|{sid}|{cn}'] = (f'OpenVPN {name}: {cn}', 'up')
-            # a client that has left the server's list is down
+        reads.update(openvpn_reads(settings, entries, ovpn))
+    return reads, answered
+
+
+def openvpn_instances(settings):
+    """{id: (role, description)} of the OpenVPN instances configured and enabled in config.xml, by the
+    id `configctl openvpn connections` (ovpn_status.py) gives them: an instance of OPNsense's OpenVPN
+    model (OPNsense/OpenVPN/Instances/Instance, socket instance-<uuid>.sock) by its uuid, a legacy
+    server or client (openvpn/openvpn-server, openvpn/openvpn-client, socket server<vpnid>.sock or
+    client<vpnid>.sock) by its vpnid"""
+    found = {}
+    for inst in settings.root.findall('./OPNsense/OpenVPN/Instances/Instance'):
+        uuid = inst.get('uuid')
+        if uuid and (inst.findtext('enabled') or '').strip() == '1':
+            role = 'client' if (inst.findtext('role') or '').strip() == 'client' else 'server'
+            found[uuid] = (role, (inst.findtext('description') or '').strip())
+    for tag, role in (('openvpn-server', 'server'), ('openvpn-client', 'client')):
+        for item in settings.root.findall(f'./openvpn/{tag}'):
+            vpnid = (item.findtext('vpnid') or '').strip()
+            if vpnid and item.find('disable') is None:
+                found[vpnid] = (role, (item.findtext('description') or '').strip())
+    return found
+
+
+def openvpn_reads(settings, entries, ovpn):
+    """{key: (name, 'up' or 'down')} of the OpenVPN instances: those configured and enabled in
+    config.xml, and those ovpn_status.py lists. An instance that is configured and enabled but
+    missing (it exited, and took its management socket with it) or failed (its socket refuses) is
+    down; so are a failed server's clients. An instance neither configured nor listed has been
+    removed: it gets no read, and collect_vpn() forgets it."""
+    reads = {}
+    clients = ovpn.get('client') if isinstance(ovpn.get('client'), dict) else {}
+    servers = ovpn.get('server') if isinstance(ovpn.get('server'), dict) else {}
+    configured = openvpn_instances(settings)
+    for iid in sorted(set(clients) | set(servers) | set(configured)):
+        role, descr = configured.get(iid, (None, ''))
+        name = 'OpenVPN ' + (descr or description(settings, iid) or iid)
+        inst = clients.get(iid) if isinstance(clients.get(iid), dict) else servers.get(iid)
+        # missing: configured and enabled, but not running; failed: ovpn_status.py could not ask it (it
+        # cannot tell a client from a server then and lists it under "server")
+        failed = not isinstance(inst, dict) or inst.get('status') == 'failed'
+        if role is None:
+            role = 'client' if iid in clients else 'server' if not failed or f'ovpn|c|{iid}' not in entries else 'client'
+        if role == 'client':
+            reads[f'ovpn|c|{iid}'] = (name, 'up' if not failed and inst.get('status') == 'connected' else 'down')
+            continue
+        own = f'ovpn|s|{iid}|'
+        if failed:
+            reads[own] = (name, 'down')
             for key, entry in entries.items():
-                if key.startswith(f'ovpn|s|{sid}|') and key != f'ovpn|s|{sid}|' and key not in reads:
+                if key.startswith(own) and key != own:
                     reads[key] = (entry.get('name') or key, 'down')
-    return reads, answered, keep
+            continue
+        if 'client_list' not in inst and 'timestamp' in inst:
+            # a peer-to-peer instance: its own state
+            reads[own] = (name, 'up' if inst.get('status') == 'connected' else 'down')
+            continue
+        reads[own] = (name, 'up')
+        for client in inst.get('client_list') or []:
+            if isinstance(client, dict):
+                cn = client.get('common_name') or client.get('username') or client.get('real_address') or '?'
+                reads[f'{own}{cn}'] = (f'{name}: {cn}', 'up')
+        # a client that has left the server's list is down
+        for key, entry in entries.items():
+            if key.startswith(own) and key != own and key not in reads:
+                reads[key] = (entry.get('name') or key, 'down')
+    return reads
 
 
 def collect_vpn(settings, state, now):
     first = state.first('vpn')
     entries = state.get('vpn')
-    reads, answered, keep = vpn_reads(settings, entries, now)
+    reads, answered = vpn_reads(settings, entries, now)
     for key in list(entries):
-        if key in reads or any(key == p or (p.endswith('|') and key.startswith(p)) for p in keep):
+        if key in reads:
             continue
         if any(key.startswith(p) for p in answered):
             del entries[key]            # gone from what answered: removed from the configuration

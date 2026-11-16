@@ -145,7 +145,7 @@ def config(**changes):
         fh.write('<?xml version="1.0"?><opnsense><system><hostname>fw</hostname><domain>example.com</domain>'
                  '</system><OPNsense><NetReport><general>%s</general><schedules/></NetReport>%s</OPNsense>'
                  '<interfaces><lan><if>em1</if><ipaddr>192.0.2.1</ipaddr><subnet>24</subnet></lan></interfaces>'
-                 '</opnsense>' % (fields, EXTRA['xml']))
+                 '%s</opnsense>' % (fields, EXTRA['xml'], EXTRA.get('root', '')))
     return nr.Settings()
 
 
@@ -671,7 +671,57 @@ check('VPN: an OpenVPN client whose socket refuses is down, not forgotten',
 ovpn_client('connected')
 check('VPN: ... and its back follows', [(s['facts']['connection'], s['facts']['state']) for s in sent_by(alerts.collect_vpn, 2)],
       [('OpenVPN cli1', 'back')])
+
+# OpenVPN: what is configured and enabled in config.xml decides what is followed, not what answers
+CLIENT_ID, SERVER_ID, OFF_ID = ('00000000-0000-4000-8000-0000000000%02d' % i for i in (11, 12, 13))
+EXTRA['xml'] += ''.join('<OpenVPN><Instances>%s</Instances></OpenVPN>' % ''.join(
+    '<Instance uuid="%s"><vpnid>%d</vpnid><enabled>%s</enabled><role>%s</role><description>%s</description></Instance>'
+    % (uuid, n, on, role, descr) for uuid, n, on, role, descr in (
+        (CLIENT_ID, 11, '1', 'client', 'Branch link'), (SERVER_ID, 12, '1', 'server', 'Road warriors'),
+        (OFF_ID, 13, '0', 'client', 'Switched off'))))
+EXTRA['root'] = ('<openvpn><openvpn-client><vpnid>3</vpnid><description>Legacy link</description></openvpn-client>'
+                 '<openvpn-client><vpnid>4</vpnid><disable>1</disable><description>Legacy off</description></openvpn-client>'
+                 '</openvpn>')
+
+
+def ovpn(client=True, server='ok', legacy=True):
+    """ovpn_status.py's answer: an instance that exited is missing, one whose socket refuses is "failed\""""
+    vpn()
+    answer = ANSWERS['openvpn'] = {'client': {}, 'server': {}}
+    if client:
+        answer['client'][CLIENT_ID] = {'status': 'connected', 'timestamp': 1}
+    if legacy:
+        answer['client']['3'] = {'status': 'connected', 'timestamp': 1}
+    if server == 'ok':
+        answer['server'][SERVER_ID] = {'status': 'ok', 'client_list': [{'common_name': 'bob'}]}
+    elif server == 'failed':
+        answer['server'][SERVER_ID] = {'status': 'failed', 'socket': '/var/etc/openvpn/instance-%s.sock' % SERVER_ID}
+
+
+def openvpn_sent(n=2):
+    return sorted((s['facts']['connection'], s['facts']['state']) for s in sent_by(alerts.collect_vpn, n))
+
+
+ovpn()
+openvpn_sent()
+ovpn(client=False, legacy=False)
+check('VPN: an OpenVPN instance configured and enabled that exited (no socket left) is down, not forgotten',
+      openvpn_sent(), [('OpenVPN Branch link', 'down'), ('OpenVPN Legacy link', 'down')])
+ovpn()
+check('VPN: ... and back when it runs again', openvpn_sent(), [('OpenVPN Branch link', 'back'), ('OpenVPN Legacy link', 'back')])
+ovpn(server='failed')
+check('VPN: a server whose socket refuses is down, and so are its clients',
+      openvpn_sent(), [('OpenVPN Road warriors', 'down'), ('OpenVPN Road warriors: bob', 'down')])
+ovpn()
+check('VPN: ... and back with them', openvpn_sent(), [('OpenVPN Road warriors', 'back'), ('OpenVPN Road warriors: bob', 'back')])
+followed = sorted(k for k in alerts.State().get('vpn') if k.startswith('ovpn|'))
+check('VPN: an instance switched off, legacy or not, is not followed', [k for k in followed if OFF_ID in k or k == 'ovpn|c|4'], [])
+EXTRA['xml'] = EXTRA['xml'].replace('<enabled>1</enabled><role>client</role>', '<enabled>0</enabled><role>client</role>')
+ovpn(client=False)
+check('VPN: one switched off in the configuration (and stopped) is forgotten, with no alert',
+      (openvpn_sent(), 'ovpn|c|' + CLIENT_ID in alerts.State().get('vpn')), ([], False))
 EXTRA['xml'] = ''
+EXTRA.pop('root')
 
 # watchdog
 alerts.RESET_REASON = os.path.join(TOP, 'reset-reason.json')
