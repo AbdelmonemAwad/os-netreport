@@ -124,7 +124,9 @@ Limits on each minute's pass, so that a storm or a pause does not flood the chan
 
 A webhook or ntfy server that answers with a redirect is not followed (the header or the token
 would go along to whatever host it names): any 3xx is a failure, "the server answered with a
-redirect to ...". Only the reply's status is read, not its body.
+redirect to ...", which names only the scheme and host it points to (`https://host`): its path
+and any user name or password are left out of the history and the system log, since a webhook's
+address may carry its secret in the path. Only the reply's status is read, not its body.
 
 *Send a test alert* on the Settings tab sends one to every channel that is set and shows what each
 one answered (`configctl netreport testalert` does the same from a shell).

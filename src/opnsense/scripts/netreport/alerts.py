@@ -182,10 +182,24 @@ def duration(seconds, t):
     return t['dur_min'].format(m=max(1, minutes))
 
 
+def site_of(url, base=''):
+    """scheme://host[:port] of a URL (relative to base), or '': a path may carry a secret (a webhook's
+    token), and user:password@ is never shown"""
+    try:
+        parts = urllib.parse.urlsplit(urllib.parse.urljoin(base or '', url or ''))
+        if not parts.scheme or not parts.hostname:
+            return ''
+        host = f'[{parts.hostname}]' if ':' in parts.hostname else parts.hostname
+        return f'{parts.scheme}://{host}' + (f':{parts.port}' if parts.port else '')
+    except ValueError:
+        return ''
+
+
 def error_text(exc):
     if isinstance(exc, urllib.error.HTTPError):
         if 300 <= exc.code < 400:
-            where = exc.headers.get('Location', '') if exc.headers else ''
+            # where it pointed, as scheme://host only: the history and the system log keep this text
+            where = site_of(exc.headers.get('Location', ''), exc.filename) if exc.headers else ''
             return f'the server answered with a redirect to {where or "(no address)"} (HTTP {exc.code})'
         return f'HTTP {exc.code} {exc.reason}'.strip()
     if isinstance(exc, urllib.error.URLError):

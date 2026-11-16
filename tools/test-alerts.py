@@ -75,7 +75,8 @@ class Handler(BaseHTTPRequestHandler):
         POSTS.append({'path': self.path, 'headers': dict(self.headers), 'body': body})
         if self.path.startswith('/redirect'):
             self.send_response(302)
-            self.send_header('Location', BASE + '/elsewhere')
+            self.send_header('Location', BASE.replace('://', '://user:example-password@') + '/elsewhere/example-secret-token'
+                             if self.path.startswith('/redirect-full') else '/elsewhere/example-secret-token')
             self.send_header('Content-Length', '0')
             self.end_headers()
             return
@@ -238,11 +239,13 @@ check('new device: its own HTML mail', 'Example Corp' in MAILS[0]['html'] and '0
 check('new device: and ntfy', len(posts('/ntfy/')), 1)
 
 reset()
-settings = config(alert_webhook_url=BASE + '/redirect', alert_ntfy_server=BASE + '/redirect/')
+settings = config(alert_webhook_url=BASE + '/redirect', alert_ntfy_server=BASE + '/redirect-full/')
 results = alerts.test_alert(settings)
-check('a redirect is a failure, not followed', (results['webhook'], results['ntfy']),
-      ('the server answered with a redirect to %s/elsewhere (HTTP 302)' % BASE,) * 2)
+check('a redirect is a failure, not followed; where it points is only scheme://host', (results['webhook'], results['ntfy']),
+      ('the server answered with a redirect to %s (HTTP 302)' % BASE,) * 2)
 check('... so neither the header nor the token goes to the host it names', posts('/elsewhere'), [])
+check('... and the path (a secret) and a user:password are in no history line',
+      [h['detail'] for h in history()[:1] if 'example-secret-token' in h['detail'] or 'example-password' in h['detail']], [])
 reset()
 settings = config(alert_webhook_url=BASE + '/slow', alert_ntfy_server='')
 started = time.monotonic()
