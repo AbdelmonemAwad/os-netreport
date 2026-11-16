@@ -150,5 +150,7 @@
  "blocklist": "القائمة",
  "last_seen": "آخر ظهور",
  "xgs_anomaly_subject": "حركة غير معتادة من {host} — {title}",
- "xgs_anomaly_text": "أبلغ {source} في {time}: {message}"
+ "xgs_anomaly_text": "أبلغ {source} في {time}: {message}",
+ "more_subject": "{n} تنبيهات أخرى من النوع نفسه — {title}",
+ "more_text": "وردت في هذه الدقيقة أكثر من {max} تنبيهات من النوع نفسه، ولم يُرسل {n} منها. راجع السجل."
 }

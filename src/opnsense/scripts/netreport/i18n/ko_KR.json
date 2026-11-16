@@ -137,5 +137,7 @@
  "blocklist": "목록",
  "last_seen": "마지막 확인",
  "xgs_anomaly_subject": "{host}에서 비정상적인 트래픽 — {title}",
- "xgs_anomaly_text": "{source}이(가) {time}에 보고: {message}"
+ "xgs_anomaly_text": "{source}이(가) {time}에 보고: {message}",
+ "more_subject": "같은 종류의 경고 {n}건 더 — {title}",
+ "more_text": "이번 1분 동안 같은 종류의 경고가 {max}건을 넘었습니다. 나머지 {n}건은 보내지 않았습니다. 기록을 확인하세요."
 }

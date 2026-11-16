@@ -150,5 +150,7 @@
  "blocklist": "Danh sách",
  "last_seen": "Lần cuối thấy",
  "xgs_anomaly_subject": "Lưu lượng bất thường từ {host} — {title}",
- "xgs_anomaly_text": "{source} báo lúc {time}: {message}"
+ "xgs_anomaly_text": "{source} báo lúc {time}: {message}",
+ "more_subject": "Thêm {n} cảnh báo cùng loại — {title}",
+ "more_text": "Trong phút này có hơn {max} cảnh báo cùng loại: {n} cảnh báo còn lại không được gửi. Xem lịch sử."
 }

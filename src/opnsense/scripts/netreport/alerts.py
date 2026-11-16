@@ -46,6 +46,8 @@ The collectors, run each minute by netreport.py's scheduler: gateways down and b
 failed logins, Suricata alerts, VPN tunnels down and back, a reset the hardware watchdog caused,
 a device reaching a command-and-control list, and the alerts other XGS plugins leave for this one.
 Each one's first run only records where things are, so an install does not alert on old history.
+run_collectors() caps each at 10 alerts a run, gives the pass 45 seconds, and after a pause of
+more than 10 minutes starts the log readers again from the end of their logs.
 
 /var/db/netreport/infected.json - written here, read by os-portguard to isolate a device:
 
@@ -64,8 +66,10 @@ Each one's first run only records where things are, so an install does not alert
 Taken from os-xgs-npu, when it is installed (neither existing is normal):
 
     /var/db/os-xgs-npu/alerts/*.json - one alert a file, {"source", "kind", "at", "subject", "text",
-    "facts"}: sent, then removed; kept while every channel fails and tried again the next minute,
-    and removed with a line in the history after 24 hours.
+    "facts"}: sent, then removed; kept while every channel fails and tried again each minute
+    (silently: a history line at the first failure, on the send that succeeds, and when it is
+    dropped), and removed after 24 hours. Only regular files are taken (a symbolic link is not
+    followed), and one is removed only while it is still the file that was read.
 
     /var/db/os-xgs-npu/anomaly/alerts.jsonl - one {"id", "at", "host", "kind", "message", "source"} a
     line, "id" counting up from 1 and never reused: what is above the last id sent is sent; ids all
@@ -79,6 +83,7 @@ import json
 import os
 import re
 import socket
+import stat
 import subprocess
 import sys
 import tempfile
@@ -98,6 +103,11 @@ QUIET_KEEP = 2 * 86400          # how long a sent key is remembered at all
 HTTP_TIMEOUT = 10
 NOT_SET = 'not set'
 SENT = 'sent'
+HELD = 'held'                   # past a collector's cap this run: in the history only
+COLLECTOR_CAP = 10              # alerts one collector sends in one run; the rest are summed up in one more
+PASS_DEADLINE = 45              # seconds: collectors not yet run by then wait for the next minute
+STALE_AFTER = 10 * 60           # a pass older than this, or a log line older than this, is not alerted on
+LOG_READERS = ('login', 'ips', 'c2')
 
 # ntfy's priorities by name; https://docs.ntfy.sh/publish/#message-priority
 PRIORITIES = ('min', 'low', 'default', 'high', 'urgent')
@@ -130,6 +140,8 @@ class State:
         self.path = path or STATE_FILE
         data = nr.load_json(self.path, {})
         self.data = data if isinstance(data, dict) else {}
+        # this run only: the collector running, how many alerts it has handed on, and how many held
+        self.running, self.handed, self.held = None, 0, 0
 
     def first(self, name):
         """whether this collector has never run: its first run only records where things are"""
@@ -292,6 +304,20 @@ def was_sent(results):
     return bool(results) and SENT in results.values()
 
 
+def taken(results):
+    """whether the alert is done with: a channel took it, or it was held past its collector's cap"""
+    return was_sent(results) or (bool(results) and HELD in results.values())
+
+
+def hold(alert):
+    """the history line of an alert held past its collector's cap"""
+    try:
+        nr.add_history({'schedule': alert['subject'], 'subject': alert['subject'], 'recipients': '', 'archive': '',
+                        'status': 'skipped', 'detail': f'held: more than {COLLECTOR_CAP} alerts of this kind this minute'})
+    except Exception as exc:
+        nr.log(f'alert "{alert["subject"]}": the history could not be written: {exc}')
+
+
 def deliver(settings, alert, record=None):
     """Hand one alert to every channel; returns {"mail": ..., "webhook": ..., "ntfy": ...}.
 
@@ -343,6 +369,15 @@ def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=
         return None
     alert = {'kind': kind, 'key': str(key), 'at': now if at is None else at, 'subject': subject, 'text': text,
              'html': page, 'facts': facts or {}, 'priority': priority, 'tags': list(tags)}
+    if state is not None and state.running:
+        state.handed += 1
+        if state.handed > COLLECTOR_CAP:
+            # an alert storm: past the cap, an alert is a line in the history only, and the collector's
+            # summary alert says how many (run_collectors)
+            state.held += 1
+            sent[mark] = now
+            hold(alert)
+            return {name: HELD for name in ('mail', 'webhook', 'ntfy')}
     results = deliver(settings, alert, record)
     if state is not None:
         sent[mark] = now
@@ -761,6 +796,12 @@ def collect_ips(settings, state, now):
             continue
         if ev.get('event_type') != 'alert' or severity > worst:
             continue
+        try:
+            stamp = datetime.datetime.fromisoformat(re.sub(r'([+-]\d\d)(\d\d)$', r'\1:\2', ev['timestamp'])).timestamp()
+        except (KeyError, ValueError, TypeError):
+            stamp = now
+        if now - stamp > STALE_AFTER:
+            continue                    # an old event (a backlog): not alerted
         signature = str(alert.get('signature') or alert.get('signature_id') or '?')
         source = str(ev.get('src_ip') or '?')
         g = groups.setdefault((str(alert.get('signature_id') or signature), source),
@@ -770,10 +811,6 @@ def collect_ips(settings, state, now):
         g['dst'][str(ev.get('dest_ip') or '?')] += 1
         g['actions'].add('blocked' if alert.get('action') == 'blocked' else 'allowed')
         g['severity'] = min(g['severity'], severity)
-        try:
-            stamp = datetime.datetime.fromisoformat(re.sub(r'([+-]\d\d)(\d\d)$', r'\1:\2', ev['timestamp'])).timestamp()
-        except (KeyError, ValueError, TypeError):
-            stamp = now
         g['first'] = stamp if g['first'] is None else min(g['first'], stamp)
     t = nr.texts(settings.get('language'))
     sep = t.get('list_sep', ', ')
@@ -1094,6 +1131,8 @@ def collect_c2(settings, state, now):
         if source in own or not nr.started_inside(source, nets):
             continue
         stamp = nr.line_time(line) or now
+        if now - stamp > STALE_AFTER:
+            continue                    # an old line (a backlog): neither alerted nor counted
         hit = hits.setdefault(source, {'count': 0, 'first': stamp, 'last': stamp})
         hit['count'] += 1
         hit.update(last=max(hit['last'], stamp), first=min(hit['first'], stamp), list=found.group(1), dst=rec.get('dst', ''))
@@ -1157,6 +1196,47 @@ def retried(was_failing):
     return lambda results: was_sent(results) or not was_failing
 
 
+OUTBOX_FILE_MAX = 1024 * 1024  # bytes read of one alert file at most
+
+
+def read_outbox(path):
+    """(the JSON, the file's stat) of one alert file, or (None, None) when it is not a regular file of
+    its own: a symlink is not followed (lstat, and O_NOFOLLOW where the system has it), and what is
+    opened must be what was looked at. The JSON is None when the file does not hold any."""
+    try:
+        info = os.lstat(path)
+    except OSError:
+        return None, None
+    if not stat.S_ISREG(info.st_mode):
+        return None, None
+    flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
+    try:
+        fd = os.open(path, flags)
+    except OSError:
+        return None, None
+    with os.fdopen(fd, 'rb') as fh:
+        opened = os.fstat(fh.fileno())
+        if not stat.S_ISREG(opened.st_mode) or (opened.st_ino, opened.st_dev) != (info.st_ino, info.st_dev):
+            return None, None
+        data = fh.read(OUTBOX_FILE_MAX)
+    try:
+        return json.loads(data.decode('utf-8')), opened
+    except ValueError:
+        return None, opened
+
+
+def remove_same(path, info):
+    """remove path if it is still the file that was read (the same inode and size); whether it was"""
+    try:
+        now = os.lstat(path)
+        if not stat.S_ISREG(now.st_mode) or (now.st_ino, now.st_dev, now.st_size) != (info.st_ino, info.st_dev, info.st_size):
+            return False
+        os.unlink(path)
+        return True
+    except OSError:
+        return False
+
+
 def collect_xgs_outbox(settings, state, now, send):
     """(a) one JSON file per alert - {"source", "kind", "at", "subject", "text", "facts"} - taken and
     removed once a channel has it; kept while every channel fails and tried again each minute,
@@ -1170,13 +1250,12 @@ def collect_xgs_outbox(settings, state, now, send):
     failing = {n: t for n, t in failing.items() if n in names}
     for name in names:
         path = os.path.join(XGS_OUTBOX, name)
-        if not name.endswith('.json') or not os.path.isfile(path):
+        if not name.endswith('.json'):
             continue
-        try:
-            mtime = os.stat(path).st_mtime
-        except OSError:
+        item, info = read_outbox(path)
+        if info is None:
             continue
-        item = nr.load_json(path, None)
+        mtime = info.st_mtime
         usable = isinstance(item, dict) and bool(item.get('subject') or item.get('text'))
         if usable and send and channels_set(settings):
             facts = item.get('facts') if isinstance(item.get('facts'), dict) else {}
@@ -1185,16 +1264,16 @@ def collect_xgs_outbox(settings, state, now, send):
                              str(item.get('subject') or item.get('text'))[:300], str(item.get('text') or item.get('subject')),
                              facts, at=time_of(item.get('at'), mtime), now=now, quiet=0, priority='high', tags=['warning'],
                              record=retried(name in failing))
-            if was_sent(results):
+            if taken(results):
                 failing.pop(name, None)
-                os.unlink(path)
+                remove_same(path, info)
                 continue
             failing.setdefault(name, now)
         if now - mtime >= OUTBOX_MAX_AGE:
-            os.unlink(path)
             failing.pop(name, None)
-            dropped(str(item.get('subject') or name) if isinstance(item, dict) else name,
-                    f'{XGS_OUTBOX}/{name} dropped: not sent within 24 hours')
+            if remove_same(path, info):
+                dropped(str(item.get('subject') or name) if isinstance(item, dict) else name,
+                        f'{XGS_OUTBOX}/{name} dropped: not sent within 24 hours')
     st['outbox_failing'] = failing
 
 
@@ -1211,7 +1290,7 @@ def send_anomaly(settings, state, rec, now, was_failing):
                      t['xgs_anomaly_text'].format(source=source, time=local_time(at), message=str(rec.get('message') or '')),
                      {'id': rec['id'], 'kind': kind, 'host': host, 'source': source}, at=at, now=now, quiet=0,
                      priority='high', tags=['warning'], record=retried(was_failing))
-    return was_sent(results)
+    return taken(results)
 
 
 def collect_xgs_anomaly(settings, state, now, send, first):
@@ -1286,6 +1365,46 @@ COLLECTORS = [
     ('c2', collect_c2),
     ('xgs', collect_xgs),
 ]
+
+
+def run_collectors(settings, state, now, clock=time.monotonic):
+    """One pass of the collectors, each on its own.
+
+    - A pass more than STALE_AFTER after the last one (the plugin was off, the firewall was down):
+      the log readers start again from the end of their logs, as on a first run, so a backlog is not
+      sent; and each reads only lines of the last STALE_AFTER seconds anyway.
+    - A collector hands on at most COLLECTOR_CAP alerts a run; the rest are lines in the history,
+      and one more alert says how many.
+    - Past PASS_DEADLINE seconds, the collectors not yet run wait for the next minute (their places
+      do not move).
+    """
+    last = state.data.get('last_pass')
+    if isinstance(last, (int, float)) and now - last > STALE_AFTER:
+        for name in LOG_READERS:
+            st = state.data.get(name)
+            if isinstance(st, dict) and isinstance(st.get('log'), dict):
+                st['log'].pop('path', None)
+    started = clock()
+    t = nr.texts(settings.get('language'))
+    for name, collect in COLLECTORS:
+        if clock() - started > PASS_DEADLINE:
+            nr.log(f'alert collectors took more than {PASS_DEADLINE} s: {name} and the ones after it wait for the next minute')
+            break
+        state.running, state.handed, state.held = name, 0, 0
+        try:
+            collect(settings, state, now)
+        except Exception as exc:
+            nr.log(f'alert collector {name} failed: {exc}')
+        held, state.running = state.held, None
+        if held:
+            try:
+                notify(settings, state, name, f'more|{int(now)}', subject_of(t, settings, 'more_subject', n=held),
+                       t['more_text'].format(n=held, max=COLLECTOR_CAP), {'collector': name, 'held': held}, now=now,
+                       quiet=0, priority='high', tags=['warning'])
+            except Exception as exc:
+                nr.log(f'alert collector {name}: the summary alert failed: {exc}')
+    state.data['last_pass'] = now
+    state.save()
 
 
 # ---------------------------------------------------------------- commands

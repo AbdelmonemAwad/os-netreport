@@ -150,5 +150,7 @@
  "blocklist": "Lista",
  "last_seen": "Ostatnio widziane",
  "xgs_anomaly_subject": "Nietypowy ruch z {host} — {title}",
- "xgs_anomaly_text": "{source} zgłosił o {time}: {message}"
+ "xgs_anomaly_text": "{source} zgłosił o {time}: {message}",
+ "more_subject": "Kolejne alerty tego samego rodzaju: {n} — {title}",
+ "more_text": "W tej minucie przyszło ponad {max} alertów tego samego rodzaju: kolejnych {n} nie wysłano. Zobacz historię."
 }

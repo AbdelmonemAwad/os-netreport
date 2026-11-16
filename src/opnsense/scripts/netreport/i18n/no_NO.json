@@ -150,5 +150,7 @@
  "blocklist": "Liste",
  "last_seen": "Sist sett",
  "xgs_anomaly_subject": "Uvanlig trafikk fra {host} — {title}",
- "xgs_anomaly_text": "{source} meldte {time}: {message}"
+ "xgs_anomaly_text": "{source} meldte {time}: {message}",
+ "more_subject": "{n} flere varsler av samme slag — {title}",
+ "more_text": "Mer enn {max} varsler av samme slag kom dette minuttet: {n} til ble ikke sendt. Se historikken."
 }

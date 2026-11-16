@@ -150,5 +150,7 @@
  "blocklist": "Liste",
  "last_seen": "Son görülme",
  "xgs_anomaly_subject": "{host} kaynaklı olağandışı trafik — {title}",
- "xgs_anomaly_text": "{source} {time} saatinde bildirdi: {message}"
+ "xgs_anomaly_text": "{source} {time} saatinde bildirdi: {message}",
+ "more_subject": "Aynı türden {n} uyarı daha — {title}",
+ "more_text": "Bu dakika içinde aynı türden {max} uyarıdan fazlası geldi: {n} uyarı daha gönderilmedi. Geçmişe bakın."
 }

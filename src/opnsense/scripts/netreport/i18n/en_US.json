@@ -150,5 +150,7 @@
  "blocklist": "List",
  "last_seen": "Last seen",
  "xgs_anomaly_subject": "Unusual traffic from {host} — {title}",
- "xgs_anomaly_text": "{source} reported at {time}: {message}"
+ "xgs_anomaly_text": "{source} reported at {time}: {message}",
+ "more_subject": "{n} more alerts of the same kind — {title}",
+ "more_text": "More than {max} alerts of the same kind came in this minute: {n} more were not sent. See the history."
 }

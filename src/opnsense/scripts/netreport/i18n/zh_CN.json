@@ -137,5 +137,7 @@
  "blocklist": "列表",
  "last_seen": "最后出现",
  "xgs_anomaly_subject": "来自 {host} 的异常流量 — {title}",
- "xgs_anomaly_text": "{source} 于 {time} 报告：{message}"
+ "xgs_anomaly_text": "{source} 于 {time} 报告：{message}",
+ "more_subject": "另有 {n} 条同类警报 — {title}",
+ "more_text": "这一分钟内同类警报超过 {max} 条：另有 {n} 条未发送。请查看历史记录。"
 }

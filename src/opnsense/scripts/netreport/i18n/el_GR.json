@@ -150,5 +150,7 @@
  "blocklist": "Λίστα",
  "last_seen": "Τελευταία εμφάνιση",
  "xgs_anomaly_subject": "Ασυνήθιστη κίνηση από {host} — {title}",
- "xgs_anomaly_text": "Το {source} ανέφερε στις {time}: {message}"
+ "xgs_anomaly_text": "Το {source} ανέφερε στις {time}: {message}",
+ "more_subject": "{n} ακόμη ειδοποιήσεις του ίδιου είδους — {title}",
+ "more_text": "Σε αυτό το λεπτό ήρθαν περισσότερες από {max} ειδοποιήσεις του ίδιου είδους: {n} ακόμη δεν στάλθηκαν. Δείτε το ιστορικό."
 }

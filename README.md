@@ -91,6 +91,18 @@ Each collector's first run only records where things are (log offsets, states, t
 installing the plugin does not alert on old history; with an alert off its collector still keeps
 its place, so turning it on does not send the backlog.
 
+Limits on each minute's pass, so that a storm or a pause does not flood the channels:
+
+- One collector sends at most 10 alerts a minute. Past that, the rest are lines in the history
+  only ("Skipped", "held: more than 10 alerts of this kind this minute"), and one more alert says
+  how many: "N more alerts of the same kind", see the history.
+- The whole pass has 45 seconds. Collectors not yet run by then wait for the next minute; their
+  places in the logs do not move, so nothing is lost.
+- When the last pass is more than 10 minutes old (the plugin was off, the firewall was down), the
+  log readers - failed logins, intrusion alerts, command-and-control - start again from the end of
+  their logs, as on a first run. And whatever they read, a log line whose own time is more than 10
+  minutes old is not alerted.
+
 ### Channels
 
 - **Mail** (`alert_mail`, on): the report's own mail server (Monit's or the custom one) and default
@@ -124,7 +136,9 @@ otherwise above. What the layer remembers - quiet times, log offsets, states - i
     (`{"source", "kind", "at", "subject", "text", "facts"}`): sent, then removed; kept while every
     channel fails and tried again each minute, and removed after 24 hours. A retry is silent: the
     history has one line at the first failure, one when a send succeeds, and one when the file is
-    dropped.
+    dropped. Only regular files are taken: a symbolic link is not followed (nor sent, nor removed),
+    and a file is removed only if it is still the one that was read (the same inode and size), so
+    an alert written over it in the meantime goes the next minute.
   - `/var/db/os-xgs-npu/anomaly/alerts.jsonl`, one `{"id", "at", "host", "kind", "message",
     "source"}` a line, `id` counting up from 1: what is above the last id sent is sent; ids all
     below it mean the file was started again, and it is read from the start. An anomaly no

@@ -150,5 +150,7 @@
  "blocklist": "فهرست",
  "last_seen": "آخرین بار",
  "xgs_anomaly_subject": "ترافیک غیرعادی از {host} — {title}",
- "xgs_anomaly_text": "{source} در {time} گزارش داد: {message}"
+ "xgs_anomaly_text": "{source} در {time} گزارش داد: {message}",
+ "more_subject": "{n} هشدار دیگر از همین نوع — {title}",
+ "more_text": "در این دقیقه بیش از {max} هشدار از همین نوع رسید: {n} هشدار دیگر فرستاده نشد. تاریخچه را ببینید."
 }

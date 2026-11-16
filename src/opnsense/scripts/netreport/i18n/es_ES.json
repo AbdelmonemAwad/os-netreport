@@ -150,5 +150,7 @@
  "blocklist": "Lista",
  "last_seen": "Visto por última vez",
  "xgs_anomaly_subject": "Tráfico inusual desde {host} — {title}",
- "xgs_anomaly_text": "{source} informó a las {time}: {message}"
+ "xgs_anomaly_text": "{source} informó a las {time}: {message}",
+ "more_subject": "{n} alertas más del mismo tipo — {title}",
+ "more_text": "En este minuto llegaron más de {max} alertas del mismo tipo: otras {n} no se enviaron. Consulte el historial."
 }

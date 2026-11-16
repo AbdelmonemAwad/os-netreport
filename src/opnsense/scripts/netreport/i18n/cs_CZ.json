@@ -150,5 +150,7 @@
  "blocklist": "Seznam",
  "last_seen": "Naposledy",
  "xgs_anomaly_subject": "Neobvyklý provoz z {host} — {title}",
- "xgs_anomaly_text": "{source} ohlásil v {time}: {message}"
+ "xgs_anomaly_text": "{source} ohlásil v {time}: {message}",
+ "more_subject": "Dalších {n} upozornění stejného druhu — {title}",
+ "more_text": "Během této minuty přišlo více než {max} upozornění stejného druhu: dalších {n} nebylo odesláno. Podívejte se do historie."
 }

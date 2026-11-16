@@ -122,6 +122,8 @@ def fake_mail_settings(settings):
 
 def fake_send_mail(ms, rcpt, subject, page, text, attach_name=None):
     MAILS.append({'to': rcpt, 'subject': subject, 'html': page, 'text': text})
+    if MAIL.get('during'):
+        MAIL.pop('during')()
 
 
 nr.mail_settings = fake_mail_settings
@@ -864,6 +866,90 @@ check('XGS: ... the file waits, and the anomaly id moves on', (os.listdir(alerts
 GENERAL['xgs_alert'] = '1'
 check('XGS: on again, the waiting file goes', ([s['kind'] for s in sent_by(alerts.collect_xgs)], os.listdir(alerts.XGS_OUTBOX)),
       (['npu_fault'], []))
+
+# an outbox file is read as a regular file of its own, and removed only if it is still the one read
+reset()
+target = os.path.join(TOP, 'elsewhere.json')
+alerts.save_json(target, {'source': 'os-xgs-npu', 'kind': 'npu_fault', 'subject': 'Example linked alert', 'text': 'x'})
+try:
+    os.symlink(target, os.path.join(alerts.XGS_OUTBOX, 'link.json'))
+    linked = True
+except (OSError, NotImplementedError):
+    linked = False
+    print('skip: this system does not let the test make a symbolic link')
+if linked:
+    sent = sent_by(alerts.collect_xgs)
+    check('XGS: a symbolic link in the outbox is not followed, sent or removed',
+          ([s['subject'] for s in sent], os.path.lexists(os.path.join(alerts.XGS_OUTBOX, 'link.json'))), ([], True))
+    os.unlink(os.path.join(alerts.XGS_OUTBOX, 'link.json'))
+outbox('0005.json', subject='Example first alert')
+MAIL['during'] = lambda: outbox('0005.json', subject='Example second alert, written while the first was sent')
+sent = sent_by(alerts.collect_xgs)
+check('XGS: a file replaced while it was sent is not removed', ([s['subject'] for s in sent],
+                                                                os.listdir(alerts.XGS_OUTBOX)), (['Example first alert'], ['0005.json']))
+check('XGS: ... and the new one goes the next minute', ([s['subject'] for s in sent_by(alerts.collect_xgs)],
+                                                       os.listdir(alerts.XGS_OUTBOX)),
+      (['Example second alert, written while the first was sent'], []))
+
+# the pass: a cap per collector, a deadline, and no backlog after a pause
+
+
+def run_pass(collectors, clock=None):
+    """one pass of these collectors, a minute on; returns the webhook posts"""
+    global CLOCK
+    CLOCK += 60
+    before = len(posts('/hook'))
+    saved_collectors, alerts.COLLECTORS = alerts.COLLECTORS, collectors
+    try:
+        state = alerts.State()
+        if hasattr(alerts, 'run_collectors'):
+            alerts.run_collectors(config(), state, CLOCK, **({'clock': clock} if clock else {}))
+        else:                                               # the code before the pass had one
+            for _, collect in collectors:
+                collect(config(), state, CLOCK)
+            state.save()
+    finally:
+        alerts.COLLECTORS = saved_collectors
+    return [json.loads(p['body']) for p in posts('/hook')[before:]]
+
+
+reset()
+history_before = len(history())
+append(alerts.EVE_LOG, ''.join(eve('ET EXAMPLE storm %d' % i, src='203.0.113.%d' % (100 + i), sid=5000 + i) for i in range(13)))
+sent = run_pass([('ips', alerts.collect_ips)])
+check('cap: 10 alerts from one collector, then one that says how many more',
+      (len(sent), sent[-1]['subject'] if sent else None, sent[-1]['facts'] if sent else None),
+      (11, '3 more alerts of the same kind — Example network', {'collector': 'ips', 'held': 3}))
+check('cap: ... the rest are in the history only', [h['status'] for h in history()[:len(history()) - history_before]].count('skipped'),
+      3)
+
+TICK = [0.0]
+RAN2 = []
+
+
+def long_collector(settings, state, now):
+    TICK[0] += 50
+    RAN2.append('long')
+
+
+del LOGGED[:]
+run_pass([('long', long_collector), ('next', lambda settings, state, now: RAN2.append('next'))], clock=lambda: TICK[0])
+check('deadline: past 45 seconds, the collectors not yet run wait for the next minute', (RAN2, LOGGED),
+      (['long'], ['alert collectors took more than 45 s: next and the ones after it wait for the next minute']))
+
+reset()
+run_pass([('ips', alerts.collect_ips)])
+CLOCK += 20 * 60                                            # the plugin was off for 20 minutes
+append(alerts.EVE_LOG, eve('ET EXAMPLE during the pause', sid=6001))
+check('backlog: after a pause of more than 10 minutes the logs are read from their end', run_pass([('ips', alerts.collect_ips)]), [])
+old_event = json.loads(eve('ET EXAMPLE old event', sid=6002))
+old_event['timestamp'] = stamp(CLOCK - 15 * 60)
+append(alerts.EVE_LOG, json.dumps(old_event) + '\n')
+check('backlog: an IPS event older than 10 minutes is not alerted', run_pass([('ips', alerts.collect_ips)]), [])
+append(alerts.day_file(alerts.FILTER_LOG, CLOCK + 60), syslog_line(
+    CLOCK - 15 * 60, 'filterlog', '85,,,%s,igb0,match,block,out,4,0x0,,63,0,0,DF,6,tcp,60,192.0.2.95,198.51.100.66,51515,443,0,'
+    'S,1,,64240,,mss' % ('1' * 32)))
+check('backlog: a command-and-control line older than 10 minutes is not alerted', run_pass([('c2', alerts.collect_c2)]), [])
 
 # One collector failing stops neither the others nor the reports: the scheduler with a collector that
 # raises before one that records.

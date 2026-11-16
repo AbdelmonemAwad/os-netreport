@@ -150,5 +150,7 @@
  "blocklist": "Список",
  "last_seen": "Последний раз",
  "xgs_anomaly_subject": "Необычный трафик от {host} — {title}",
- "xgs_anomaly_text": "{source} сообщил в {time}: {message}"
+ "xgs_anomaly_text": "{source} сообщил в {time}: {message}",
+ "more_subject": "Ещё оповещений того же вида: {n} — {title}",
+ "more_text": "За эту минуту пришло больше {max} оповещений того же вида: ещё {n} не отправлено. См. историю."
 }

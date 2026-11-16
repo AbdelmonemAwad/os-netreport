@@ -150,5 +150,7 @@
  "blocklist": "Liste",
  "last_seen": "Zuletzt gesehen",
  "xgs_anomaly_subject": "Ungewöhnlicher Datenverkehr von {host} — {title}",
- "xgs_anomaly_text": "{source} meldete um {time}: {message}"
+ "xgs_anomaly_text": "{source} meldete um {time}: {message}",
+ "more_subject": "{n} weitere Warnungen derselben Art — {title}",
+ "more_text": "In dieser Minute kamen mehr als {max} Warnungen derselben Art: {n} weitere wurden nicht gesendet. Siehe den Verlauf."
 }

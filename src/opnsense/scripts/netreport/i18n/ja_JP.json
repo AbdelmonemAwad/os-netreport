@@ -137,5 +137,7 @@
  "blocklist": "リスト",
  "last_seen": "最終確認",
  "xgs_anomaly_subject": "{host} からの通常と異なる通信 — {title}",
- "xgs_anomaly_text": "{source} が {time} に報告: {message}"
+ "xgs_anomaly_text": "{source} が {time} に報告: {message}",
+ "more_subject": "同じ種類のアラートがさらに {n} 件 — {title}",
+ "more_text": "この 1 分間に同じ種類のアラートが {max} 件を超えました。残りの {n} 件は送信されていません。履歴を確認してください。"
 }

@@ -1130,16 +1130,10 @@ def scheduler():
     now = datetime.datetime.now()
 
     # The alert collectors first, so that a report being built does not hold an alert back; each in
-    # its own try, so that one failing stops neither the others nor the reports.
+    # its own try, so that one failing stops neither the others nor the reports (alerts.run_collectors).
     try:
         import alerts
-        alert_state = alerts.State()
-        for name, collect in alerts.COLLECTORS:
-            try:
-                collect(settings, alert_state, time.time())
-            except Exception as exc:
-                log(f'alert collector {name} failed: {exc}')
-        alert_state.save()
+        alerts.run_collectors(settings, alerts.State(), time.time())
     except Exception as exc:
         log(f'alerts failed: {exc}')
 
