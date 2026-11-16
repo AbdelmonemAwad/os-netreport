@@ -518,7 +518,7 @@ check('IPS: count, action, source and destinations', (sent[0]['facts']['count'],
                                                       sent[0]['facts']['src'], sent[0]['facts']['dst']),
       (3, ['blocked', 'allowed'], '203.0.113.40', ['192.0.2.10', '192.0.2.11']))
 check('IPS: the text', sent[0]['text'], '“ET EXAMPLE probe” (severity 1) from 203.0.113.40 to 192.0.2.10, 192.0.2.11: '
-      '3 times, first at %s. Action: blocked, allowed (alert only).' % alerts.local_time(CLOCK - 30))
+      '3 in this minute, the first at %s. Action: blocked, allowed (alert only).' % alerts.local_time(CLOCK - 30))
 append(alerts.EVE_LOG, eve('ET EXAMPLE probe'))
 check('IPS: the same pair is quiet for 30 minutes', sent_by(alerts.collect_ips), [])
 append(alerts.EVE_LOG, eve('ET EXAMPLE probe', src='203.0.113.41'))

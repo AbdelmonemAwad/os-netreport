@@ -134,7 +134,7 @@
  "login_api_key": "API key {key}…",
  "login_names": "{n} (the first two characters of up to three: {names})",
  "ips_subject": "Intrusion alert: {signature} — {title}",
- "ips_text": "“{signature}” (severity {severity}) from {src} to {dst}: {n} times, first at {time}. Action: {action}.",
+ "ips_text": "“{signature}” (severity {severity}) from {src} to {dst}: {n} in this minute, the first at {time}. Action: {action}.",
  "ips_allowed": "allowed (alert only)",
  "ips_blocked": "blocked",
  "vpn_down_subject": "VPN {name} is down — {title}",
