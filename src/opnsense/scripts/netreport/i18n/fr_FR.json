@@ -128,5 +128,18 @@
  "gw_flap_subject": "La passerelle {name} tombe et revient sans cesse — {title}",
  "gw_flap_text": "La passerelle {name} a changé d’état {n} fois en 15 minutes. Plus d’alerte la concernant tant qu’elle n’a pas gardé un état pendant 15 minutes.",
  "gw_steady_subject": "La passerelle {name} est de nouveau stable — {title}",
- "gw_steady_text": "La passerelle {name} fonctionne sans changement depuis {time}."
+ "gw_steady_text": "La passerelle {name} fonctionne sans changement depuis {time}.",
+ "login_subject": "Échecs de connexion répétés depuis {address} — {title}",
+ "login_text": "{n} échecs de connexion depuis {address} en 10 minutes, le dernier à {time}. Services : {services}. Noms d’utilisateur essayés : {users}.",
+ "login_api_key": "clé d’API {key}…",
+ "ips_subject": "Alerte d’intrusion : {signature} — {title}",
+ "ips_text": "« {signature} » (gravité {severity}) de {src} vers {dst} : {n} fois, la première à {time}. Action : {action}.",
+ "ips_allowed": "autorisé (alerte seulement)",
+ "ips_blocked": "bloqué",
+ "vpn_down_subject": "Le VPN {name} est tombé — {title}",
+ "vpn_down_text": "La connexion VPN {name} est coupée depuis {time}.",
+ "vpn_back_subject": "Le VPN {name} est rétabli — {title}",
+ "vpn_back_text": "La connexion VPN {name} est revenue à {time}, après {duration} de coupure.",
+ "wd_subject": "Le chien de garde matériel a redémarré le pare-feu — {title}",
+ "wd_text": "Le pare-feu a été redémarré par son chien de garde matériel (enregistrement de {time}). Raisons notées par le matériel : {reasons}."
 }

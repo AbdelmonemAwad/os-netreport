@@ -115,5 +115,18 @@
  "gw_flap_subject": "閘道 {name} 反覆中斷又恢復 — {title}",
  "gw_flap_text": "閘道 {name} 在 15 分鐘內狀態變化了 {n} 次。在它保持同一狀態 15 分鐘之前，不再傳送有關它的警報。",
  "gw_steady_subject": "閘道 {name} 已恢復穩定 — {title}",
- "gw_steady_text": "閘道 {name} 自 {time} 起一直正常。"
+ "gw_steady_text": "閘道 {name} 自 {time} 起一直正常。",
+ "login_subject": "來自 {address} 的多次登入失敗 — {title}",
+ "login_text": "{address} 在 10 分鐘內登入失敗 {n} 次，最後一次在 {time}。服務：{services}。嘗試過的使用者名稱：{users}。",
+ "login_api_key": "API 金鑰 {key}…",
+ "ips_subject": "入侵警報：{signature} — {title}",
+ "ips_text": "「{signature}」（嚴重等級 {severity}）從 {src} 到 {dst}：{n} 次，首次在 {time}。處理：{action}。",
+ "ips_allowed": "已放行（僅告警）",
+ "ips_blocked": "已封鎖",
+ "vpn_down_subject": "VPN {name} 已中斷 — {title}",
+ "vpn_down_text": "VPN 連線 {name} 自 {time} 起中斷。",
+ "vpn_back_subject": "VPN {name} 已恢復 — {title}",
+ "vpn_back_text": "VPN 連線 {name} 於 {time} 恢復，中斷了 {duration}。",
+ "wd_subject": "硬體看門狗重新啟動了防火牆 — {title}",
+ "wd_text": "防火牆被硬體看門狗重新啟動（{time} 的紀錄）。硬體記錄的原因：{reasons}。"
 }

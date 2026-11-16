@@ -115,5 +115,18 @@
  "gw_flap_subject": "게이트웨이 {name}이(가) 다운과 복구를 반복합니다 — {title}",
  "gw_flap_text": "게이트웨이 {name}의 상태가 15분 동안 {n}번 바뀌었습니다. 15분 동안 한 상태를 유지할 때까지 더 알리지 않습니다.",
  "gw_steady_subject": "게이트웨이 {name}이(가) 다시 안정되었습니다 — {title}",
- "gw_steady_text": "게이트웨이 {name}이(가) {time}부터 변화 없이 정상입니다."
+ "gw_steady_text": "게이트웨이 {name}이(가) {time}부터 변화 없이 정상입니다.",
+ "login_subject": "{address}에서 반복된 로그인 실패 — {title}",
+ "login_text": "10분 안에 {address}에서 로그인 실패 {n}회, 마지막은 {time}. 서비스: {services}. 시도된 사용자 이름: {users}.",
+ "login_api_key": "API 키 {key}…",
+ "ips_subject": "침입 알림: {signature} — {title}",
+ "ips_text": "\"{signature}\"(심각도 {severity}) {src}에서 {dst}(으)로: {n}회, 처음은 {time}. 조치: {action}.",
+ "ips_allowed": "허용(알림만)",
+ "ips_blocked": "차단됨",
+ "vpn_down_subject": "VPN {name} 끊김 — {title}",
+ "vpn_down_text": "VPN 연결 {name}이(가) {time}부터 끊겨 있습니다.",
+ "vpn_back_subject": "VPN {name} 복구 — {title}",
+ "vpn_back_text": "VPN 연결 {name}이(가) {duration} 동안 끊긴 뒤 {time}에 복구되었습니다.",
+ "wd_subject": "하드웨어 워치독이 방화벽을 재시작했습니다 — {title}",
+ "wd_text": "방화벽이 하드웨어 워치독에 의해 재시작되었습니다({time} 기록). 하드웨어가 기록한 원인: {reasons}."
 }

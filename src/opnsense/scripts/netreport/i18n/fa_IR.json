@@ -128,5 +128,18 @@
  "gw_flap_subject": "دروازهٔ {name} پیاپی قطع و وصل می‌شود — {title}",
  "gw_flap_text": "دروازهٔ {name} در ۱۵ دقیقه {n} بار وضعیتش را عوض کرد. تا ۱۵ دقیقه در یک وضعیت نماند هشدار دیگری دربارهٔ آن فرستاده نمی‌شود.",
  "gw_steady_subject": "دروازهٔ {name} دوباره پایدار است — {title}",
- "gw_steady_text": "دروازهٔ {name} از {time} بدون تغییر برقرار است."
+ "gw_steady_text": "دروازهٔ {name} از {time} بدون تغییر برقرار است.",
+ "login_subject": "ورودهای ناموفق پیاپی از {address} — {title}",
+ "login_text": "{n} ورود ناموفق از {address} در ۱۰ دقیقه، آخرینش در {time}. سرویس‌ها: {services}. نام‌های کاربری آزموده‌شده: {users}.",
+ "login_api_key": "کلید API ‏{key}…",
+ "ips_subject": "هشدار نفوذ: {signature} — {title}",
+ "ips_text": "«{signature}» (شدت {severity}) از {src} به {dst}: {n} بار، نخستین در {time}. اقدام: {action}.",
+ "ips_allowed": "مجاز (فقط هشدار)",
+ "ips_blocked": "مسدود شد",
+ "vpn_down_subject": "VPN ‏{name} قطع است — {title}",
+ "vpn_down_text": "اتصال VPN ‏{name} از {time} قطع است.",
+ "vpn_back_subject": "VPN ‏{name} برگشت — {title}",
+ "vpn_back_text": "اتصال VPN ‏{name} در {time} پس از {duration} قطعی برگشت.",
+ "wd_subject": "watchdog سخت‌افزاری فایروال را دوباره راه‌اندازی کرد — {title}",
+ "wd_text": "فایروال را watchdog سخت‌افزاری‌اش دوباره راه‌اندازی کرد (ثبت {time}). دلیل‌هایی که سخت‌افزار ثبت کرد: {reasons}."
 }

@@ -115,5 +115,18 @@
  "gw_flap_subject": "ゲートウェイ {name} がダウンと復旧を繰り返しています — {title}",
  "gw_flap_text": "ゲートウェイ {name} は 15 分間に {n} 回状態が変わりました。15 分間同じ状態が続くまで、これ以上アラートは送りません。",
  "gw_steady_subject": "ゲートウェイ {name} が安定しました — {title}",
- "gw_steady_text": "ゲートウェイ {name} は {time} から変化なく稼働しています。"
+ "gw_steady_text": "ゲートウェイ {name} は {time} から変化なく稼働しています。",
+ "login_subject": "{address} からのログイン失敗の繰り返し — {title}",
+ "login_text": "{address} から 10 分以内に {n} 回のログイン失敗。最後は {time}。サービス: {services}。試されたユーザー名: {users}。",
+ "login_api_key": "API キー {key}…",
+ "ips_subject": "侵入アラート: {signature} — {title}",
+ "ips_text": "「{signature}」（重大度 {severity}）{src} から {dst} へ: {n} 回、最初は {time}。処置: {action}。",
+ "ips_allowed": "許可（アラートのみ）",
+ "ips_blocked": "ブロック",
+ "vpn_down_subject": "VPN {name} がダウンしています — {title}",
+ "vpn_down_text": "VPN 接続 {name} は {time} からダウンしています。",
+ "vpn_back_subject": "VPN {name} が復旧しました — {title}",
+ "vpn_back_text": "VPN 接続 {name} は {duration} のダウンの後、{time} に復旧しました。",
+ "wd_subject": "ハードウェアウォッチドッグがファイアウォールを再起動しました — {title}",
+ "wd_text": "ファイアウォールはハードウェアウォッチドッグにより再起動されました（{time} の記録）。ハードウェアが記録した理由: {reasons}。"
 }

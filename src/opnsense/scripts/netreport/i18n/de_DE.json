@@ -128,5 +128,18 @@
  "gw_flap_subject": "Gateway {name} fällt immer wieder aus — {title}",
  "gw_flap_text": "Gateway {name} hat in 15 Minuten {n}-mal den Zustand gewechselt. Keine weiteren Benachrichtigungen, bis es 15 Minuten in einem Zustand bleibt.",
  "gw_steady_subject": "Gateway {name} ist wieder stabil — {title}",
- "gw_steady_text": "Gateway {name} ist seit {time} ohne Unterbrechung erreichbar."
+ "gw_steady_text": "Gateway {name} ist seit {time} ohne Unterbrechung erreichbar.",
+ "login_subject": "Wiederholt fehlgeschlagene Anmeldungen von {address} — {title}",
+ "login_text": "{n} fehlgeschlagene Anmeldungen von {address} innerhalb von 10 Minuten, die letzte um {time}. Dienste: {services}. Versuchte Benutzernamen: {users}.",
+ "login_api_key": "API-Schlüssel {key}…",
+ "ips_subject": "Angriffsalarm: {signature} — {title}",
+ "ips_text": "„{signature}“ (Schweregrad {severity}) von {src} an {dst}: {n}-mal, zuerst um {time}. Aktion: {action}.",
+ "ips_allowed": "zugelassen (nur Alarm)",
+ "ips_blocked": "gesperrt",
+ "vpn_down_subject": "VPN {name} ist ausgefallen — {title}",
+ "vpn_down_text": "Die VPN-Verbindung {name} ist seit {time} getrennt.",
+ "vpn_back_subject": "VPN {name} ist zurück — {title}",
+ "vpn_back_text": "Die VPN-Verbindung {name} ist um {time} zurückgekommen, nach {duration} Ausfall.",
+ "wd_subject": "Der Hardware-Watchdog hat die Firewall neu gestartet — {title}",
+ "wd_text": "Die Firewall wurde von ihrem Hardware-Watchdog neu gestartet (Eintrag von {time}). Von der Hardware festgehaltene Gründe: {reasons}."
 }

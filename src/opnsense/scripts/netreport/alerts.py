@@ -44,9 +44,12 @@ out by itself.
 """
 
 import datetime
+import ipaddress
 import json
 import os
+import re
 import socket
+import subprocess
 import sys
 import tempfile
 import time
@@ -54,6 +57,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from base64 import b64encode
+from collections import Counter
 
 import netreport as nr
 
@@ -394,12 +398,367 @@ def collect_gateways(settings, state, now):
                    tags=['white_check_mark'])
 
 
+# ---------------------------------------------------------------- logs followed by their place
+
+AUDIT_LOG = '/var/log/audit/audit_{day}.log'
+EVE_LOG = '/var/log/suricata/eve.json'
+MAX_READ = 32 * 1024 * 1024     # a log grown more than this in a minute is read from its last part
+
+
+def day_file(pattern, now):
+    return pattern.format(day=datetime.datetime.fromtimestamp(now).strftime('%Y%m%d'))
+
+
+def read_from(place, path):
+    """the complete lines of path written since place = {"inode", "offset"}, which moves past them;
+    a new inode (the file was rotated) or a shorter file starts again at 0"""
+    try:
+        info = os.stat(path)
+    except OSError:
+        return []
+    offset = place.get('offset', 0) if isinstance(place.get('offset'), int) else 0
+    if place.get('inode') != info.st_ino or info.st_size < offset:
+        place['inode'], offset = info.st_ino, 0
+    partial = info.st_size - offset > MAX_READ
+    if partial:
+        offset = info.st_size - MAX_READ
+    with open(path, 'rb') as fh:
+        fh.seek(offset)
+        data = fh.read(info.st_size - offset)
+    end = data.rfind(b'\n')
+    if end < 0:
+        place['offset'] = offset
+        return []
+    place['offset'] = offset + end + 1
+    lines = data[:end].decode('utf-8', 'replace').split('\n')
+    if partial:
+        lines = lines[1:]           # the first line read from the middle is not a whole one
+    return lines
+
+
+def follow(place, path):
+    """New lines of a log followed by name: on the first run only where it ends is recorded; when the
+    name changes (a new day's file), the rest of the old file is read and the new one from 0."""
+    if 'path' not in place:
+        try:
+            info = os.stat(path)
+            place.update(path=path, inode=info.st_ino, offset=info.st_size)
+        except OSError:
+            place.update(path=path, inode=None, offset=0)
+        return []
+    lines = []
+    if place['path'] != path:
+        lines += read_from(place, place['path'])
+        place.update(path=path, inode=None, offset=0)
+    return lines + read_from(place, path)
+
+
+def message_of(line):
+    """the message of an RFC 5424 line (after "<pri>1 time host app procid msgid sd"), or the line"""
+    parts = line.split(' ', 7)
+    if len(parts) == 8 and parts[0].startswith('<') and parts[0].endswith('>1'):
+        sd = parts[7]
+        if sd.startswith('- '):
+            return sd[2:]
+        if sd.startswith('['):
+            end = sd.find('] ')
+            return sd[end + 2:] if end >= 0 else sd
+        return sd
+    return line
+
+
+# ---------------------------------------------------------------- repeated failed logins
+
+LOGIN_WINDOW = 10 * 60
+LOGIN_QUIET = 30 * 60
+QUIET['login'] = LOGIN_QUIET
+IP = r'(?P<address>[0-9A-Fa-f:.]*[0-9A-Fa-f])'
+LOGIN_PATTERNS = [
+    # OPNsense 26.7, web GUI and API logins (level debug, program "audit")
+    (re.compile(r'user (?P<user>\S+) failed authentication for (?P<service>.+?) on .+? via .+? at ' + IP), None),
+    # sshd
+    (re.compile(r'Failed \S+ for (?:invalid user )?(?P<user>\S*) from ' + IP + r' port (?P<port>\d+)'), 'ssh'),
+    (re.compile(r'Invalid user (?P<user>\S*) from ' + IP + r' port (?P<port>\d+)'), 'ssh'),
+    (re.compile(r'error: PAM: Authentication error for (?:illegal user )?(?P<user>\S*) from ' + IP), 'ssh'),
+]
+API_KEY = re.compile(r'authentication failed for api key (\S+)')
+
+
+def an_address(text):
+    for word in re.findall(r'[0-9A-Fa-f:.]{3,}', text):
+        try:
+            return str(ipaddress.ip_address(word.strip('.:')))
+        except ValueError:
+            continue
+    return ''
+
+
+def login_failure(line):
+    """(address, user, service, port) of a failed login line, or None; an API key is never kept whole"""
+    msg = message_of(line)
+    found = API_KEY.search(msg)
+    if found:
+        key = found.group(1)
+        return (an_address(msg[:found.start()] + ' ' + msg[found.end():]) or '?', 'api-key:' + key[:4], 'api', '')
+    for pattern, service in LOGIN_PATTERNS:
+        found = pattern.search(msg)
+        if found:
+            try:
+                address = str(ipaddress.ip_address(found.group('address')))
+            except ValueError:
+                continue
+            return (address, found.group('user'), service or found.group('service'),
+                    found.groupdict().get('port') or '')
+    return None
+
+
+def collect_logins(settings, state, now):
+    first = state.first('login')
+    st = state.get('login')
+    place = st.setdefault('log', {})
+    lines = follow(place, day_file(AUDIT_LOG, now))
+    fails = st.get('fails') if isinstance(st.get('fails'), dict) else {}
+    for line in lines:
+        failure = login_failure(line)
+        if not failure:
+            continue
+        address, user, service, port = failure
+        stamp = nr.line_time(line) or now
+        seen = fails.setdefault(address, [])
+        # sshd says "Invalid user" and then "Failed password for invalid user" of one try, and PAM may
+        # add its own line: the same address, user and port, or no port within 2 seconds, is one try
+        if service == 'ssh' and any(f[2] == 'ssh' and f[1] == user and
+                                    ((port and f[3] == port) or (not (port and f[3]) and abs(f[0] - stamp) <= 2))
+                                    for f in seen):
+            continue
+        seen.append([stamp, user, service, port])
+    for address in list(fails):
+        fails[address] = [f for f in fails[address] if now - f[0] < LOGIN_WINDOW]
+        if not fails[address]:
+            del fails[address]
+    st['fails'] = fails
+    if first or not wanted(settings, 'login_alert'):
+        return
+    limit = max(2, settings.num('login_fail_count') or 5)
+    t = nr.texts(settings.get('language'))
+    sep = t.get('list_sep', ', ')
+    for address, seen in sorted(fails.items()):
+        if len(seen) < limit:
+            continue
+        users = sorted({t['login_api_key'].format(key=f[1][8:]) if f[1].startswith('api-key:') else f[1] for f in seen})
+        services = sorted({f[2] for f in seen})
+        last = max(f[0] for f in seen)
+        facts = {'address': address, 'count': len(seen), 'users': users, 'services': services, 'last': iso_time(last)}
+        notify(settings, state, 'login', address, subject_of(t, settings, 'login_subject', address=address),
+               t['login_text'].format(n=len(seen), address=address, time=local_time(last), services=sep.join(services),
+                                      users=sep.join(users)), facts, now=now, priority='high', tags=['lock'])
+
+
+# ---------------------------------------------------------------- intrusion prevention (Suricata)
+
+QUIET['ips'] = 30 * 60
+
+
+def collect_ips(settings, state, now):
+    first = state.first('ips')
+    st = state.get('ips')
+    lines = follow(st.setdefault('log', {}), EVE_LOG)
+    if first or not wanted(settings, 'ips_alert'):
+        return
+    worst = 2 if settings.get('ips_severity') == '2' else 1
+    groups = {}
+    for line in lines:
+        if '"alert"' not in line:
+            continue
+        try:
+            ev = json.loads(line)
+            alert = ev['alert']
+            severity = int(alert.get('severity', 3))
+        except (ValueError, KeyError, TypeError, AttributeError):
+            continue
+        if ev.get('event_type') != 'alert' or severity > worst:
+            continue
+        signature = str(alert.get('signature') or alert.get('signature_id') or '?')
+        source = str(ev.get('src_ip') or '?')
+        g = groups.setdefault((str(alert.get('signature_id') or signature), source),
+                              {'signature': signature, 'severity': severity, 'src': source, 'dst': Counter(),
+                               'actions': set(), 'count': 0, 'first': None})
+        g['count'] += 1
+        g['dst'][str(ev.get('dest_ip') or '?')] += 1
+        g['actions'].add('blocked' if alert.get('action') == 'blocked' else 'allowed')
+        g['severity'] = min(g['severity'], severity)
+        try:
+            stamp = datetime.datetime.fromisoformat(re.sub(r'([+-]\d\d)(\d\d)$', r'\1:\2', ev['timestamp'])).timestamp()
+        except (KeyError, ValueError, TypeError):
+            stamp = now
+        g['first'] = stamp if g['first'] is None else min(g['first'], stamp)
+    t = nr.texts(settings.get('language'))
+    sep = t.get('list_sep', ', ')
+    for (sid, source), g in sorted(groups.items()):
+        actions = [a for a in ('blocked', 'allowed') if a in g['actions']]
+        dst = sep.join(d for d, _ in g['dst'].most_common(3))
+        facts = {'signature': g['signature'], 'signature_id': sid, 'severity': g['severity'], 'src': source,
+                 'dst': [d for d, _ in g['dst'].most_common(10)], 'count': g['count'], 'actions': actions,
+                 'first': iso_time(g['first'])}
+        notify(settings, state, 'ips', f'{sid}|{source}', subject_of(t, settings, 'ips_subject', signature=g['signature']),
+               t['ips_text'].format(signature=g['signature'], severity=g['severity'], src=source, dst=dst, n=g['count'],
+                                    time=local_time(g['first']), action=sep.join(t['ips_' + a] for a in actions)),
+               facts, now=now, priority='high', tags=['rotating_light'])
+
+
+# ---------------------------------------------------------------- VPN tunnels
+
+CONFIGCTL = '/usr/local/sbin/configctl'
+CONFIGCTL_TIMEOUT = 30
+WG_HANDSHAKE = 180
+
+
+def configctl(*args):
+    """configd's answer as JSON, or None - a command that fails is unknown, never down"""
+    try:
+        out = subprocess.run([CONFIGCTL] + list(args), capture_output=True, text=True, timeout=CONFIGCTL_TIMEOUT)
+        if out.returncode != 0:
+            return None
+        return json.loads(out.stdout)
+    except Exception:
+        return None
+
+
+def description(settings, uuid):
+    """what config.xml calls the item with this uuid"""
+    if not uuid:
+        return ''
+    for item in settings.root.iter():
+        if item.get('uuid') == uuid:
+            return (item.findtext('description') or item.findtext('descr') or item.findtext('name') or '').strip()
+    return ''
+
+
+def vpn_reads(settings, entries, now):
+    """({key: (name, 'up' or 'down')} of every connection this read could see, the key prefixes of the
+    sources that answered, and the prefixes to leave as they are - a server that did not answer)"""
+    reads, answered, keep = {}, [], []
+    ipsec = configctl('ipsec', 'list', 'status')
+    if isinstance(ipsec, dict):
+        answered.append('ipsec|')
+        for cid, conn in ipsec.items():
+            if isinstance(conn, dict):
+                name = description(settings, cid) or str(conn.get('remote-addrs') or cid)
+                reads[f'ipsec|{cid}'] = ('IPsec ' + name, 'up' if conn.get('sas') else 'down')
+    wg = configctl('wireguard', 'show')
+    if isinstance(wg, dict) and wg.get('status') == 'ok':
+        answered.append('wg|')
+        peers = {}
+        for item in settings.root.iter('client'):
+            if item.findtext('pubkey'):
+                peers[item.findtext('pubkey').strip()] = (item.findtext('name') or '').strip()
+        for rec in wg.get('records') or []:
+            if not isinstance(rec, dict) or rec.get('type') != 'peer':
+                continue
+            key = str(rec.get('public-key') or '')
+            handshake = rec.get('latest-handshake') or 0
+            up = isinstance(handshake, int) and handshake > 0 and now - handshake < WG_HANDSHAKE
+            reads[f'wg|{rec.get("if")}|{key}'] = ('WireGuard ' + (peers.get(key) or f'{rec.get("if")} {key[:8]}…'),
+                                                 'up' if up else 'down')
+    ovpn = configctl('openvpn', 'connections', 'client,server')
+    if isinstance(ovpn, dict):
+        answered.append('ovpn|')
+        for iid, inst in (ovpn.get('client') or {}).items():
+            if isinstance(inst, dict) and inst.get('status') != 'failed':
+                name = description(settings, iid) or iid
+                reads[f'ovpn|c|{iid}'] = ('OpenVPN ' + name, 'up' if inst.get('status') == 'connected' else 'down')
+        for sid, srv in (ovpn.get('server') or {}).items():
+            if not isinstance(srv, dict) or srv.get('status') == 'failed':
+                keep.append(f'ovpn|s|{sid}|')
+                continue
+            name = description(settings, sid) or sid
+            if 'client_list' not in srv and 'timestamp' in srv:
+                # a peer-to-peer instance: its own state
+                reads[f'ovpn|s|{sid}|'] = ('OpenVPN ' + name, 'up' if srv.get('status') == 'connected' else 'down')
+                continue
+            for client in srv.get('client_list') or []:
+                cn = client.get('common_name') or client.get('username') or client.get('real_address') or '?'
+                reads[f'ovpn|s|{sid}|{cn}'] = (f'OpenVPN {name}: {cn}', 'up')
+            # a client that has left the server's list is down
+            for key, entry in entries.items():
+                if key.startswith(f'ovpn|s|{sid}|') and key != f'ovpn|s|{sid}|' and key not in reads:
+                    reads[key] = (entry.get('name') or key, 'down')
+    return reads, answered, keep
+
+
+def collect_vpn(settings, state, now):
+    first = state.first('vpn')
+    entries = state.get('vpn')
+    reads, answered, keep = vpn_reads(settings, entries, now)
+    for key in list(entries):
+        if key in reads or any(key.startswith(p) for p in keep):
+            continue
+        if any(key.startswith(p) for p in answered):
+            del entries[key]            # gone from what answered: removed from the configuration
+    send = wanted(settings, 'vpn_alert') and not first
+    t = nr.texts(settings.get('language'))
+    for key, (name, read) in sorted(reads.items()):
+        said = track(entries, key, read, now)
+        entries[key]['name'] = name
+        if not said or not send:
+            continue
+        facts = {'connection': name, 'state': said[0]}
+        if said[0] == 'down':
+            facts['since'] = iso_time(said[1])
+            notify(settings, state, 'vpn', f'{key}|down|{int(said[1])}', subject_of(t, settings, 'vpn_down_subject', name=name),
+                   t['vpn_down_text'].format(name=name, time=local_time(said[1])), facts, now=now, priority='high',
+                   tags=['warning'])
+        elif said[0] == 'back':
+            facts.update(at=iso_time(said[1]), down_seconds=int(said[2]))
+            notify(settings, state, 'vpn', f'{key}|back|{int(said[1])}', subject_of(t, settings, 'vpn_back_subject', name=name),
+                   t['vpn_back_text'].format(name=name, time=local_time(said[1]), duration=duration(said[2], t)), facts,
+                   now=now, tags=['white_check_mark'])
+
+
+# ---------------------------------------------------------------- a reset the hardware watchdog caused
+
+RESET_REASON = '/var/db/os-watchdog/reset-reason.json'
+WATCHDOG_BIT = 25               # AMD: "the hardware watchdog expired"
+
+
+def collect_watchdog(settings, state, now):
+    first = state.first('watchdog')
+    st = state.get('watchdog')
+    record = nr.load_json(RESET_REASON, None)
+    if not isinstance(record, dict) or 'boot' not in record:
+        return
+    boot = str(record.get('boot'))
+    if st.get('boot') == boot:
+        return
+    st['boot'] = boot
+    bits = [b for b in record.get('bits') or [] if isinstance(b, dict)]
+    by_watchdog = record.get('watchdog') is True or any(str(b.get('bit')) == str(WATCHDOG_BIT) for b in bits)
+    if first or not by_watchdog or not wanted(settings, 'watchdog_alert'):
+        return
+    t = nr.texts(settings.get('language'))
+    reasons = [str(b.get('reason') or b.get('bit')) for b in bits] or [t['unknown']]
+    read_at = record.get('read_at')
+    try:
+        when = float(read_at) if isinstance(read_at, (int, float)) else \
+            datetime.datetime.fromisoformat(str(read_at).replace('Z', '+00:00')).timestamp()
+    except (TypeError, ValueError):
+        when = now
+    facts = {'boot': boot, 'reasons': reasons, 'value': record.get('value'), 'read_at': read_at}
+    notify(settings, state, 'watchdog', boot, subject_of(t, settings, 'wd_subject'),
+           t['wd_text'].format(time=local_time(when), reasons=t.get('list_sep', ', ').join(reasons)), facts, now=now,
+           quiet=0, priority='high', tags=['warning'])
+
+
 # ---------------------------------------------------------------- collectors
 
 # (name, function(settings, state, now)): run each minute by netreport.py's scheduler, each on its
 # own, so that one failing stops neither the others nor the reports
 COLLECTORS = [
     ('gateway', collect_gateways),
+    ('login', collect_logins),
+    ('ips', collect_ips),
+    ('vpn', collect_vpn),
+    ('watchdog', collect_watchdog),
 ]
 
 

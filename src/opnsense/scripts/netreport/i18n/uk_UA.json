@@ -128,5 +128,18 @@
  "gw_flap_subject": "Шлюз {name} то зникає, то з’являється — {title}",
  "gw_flap_text": "Шлюз {name} змінив стан {n} разів за 15 хвилин. Більше сповіщень про нього не буде, доки він 15 хвилин не пробуде в одному стані.",
  "gw_steady_subject": "Шлюз {name} знову стабільний — {title}",
- "gw_steady_text": "Шлюз {name} працює без змін з {time}."
+ "gw_steady_text": "Шлюз {name} працює без змін з {time}.",
+ "login_subject": "Повторні невдалі входи з {address} — {title}",
+ "login_text": "{n} невдалих входів з {address} за 10 хвилин, останній о {time}. Служби: {services}. Спробувані імена користувачів: {users}.",
+ "login_api_key": "ключ API {key}…",
+ "ips_subject": "Сповіщення про вторгнення: {signature} — {title}",
+ "ips_text": "«{signature}» (серйозність {severity}) з {src} до {dst}: {n} разів, уперше о {time}. Дія: {action}.",
+ "ips_allowed": "пропущено (лише сповіщення)",
+ "ips_blocked": "заблоковано",
+ "vpn_down_subject": "VPN {name} недоступна — {title}",
+ "vpn_down_text": "VPN-з’єднання {name} розірване з {time}.",
+ "vpn_back_subject": "VPN {name} знову працює — {title}",
+ "vpn_back_text": "VPN-з’єднання {name} відновилося о {time} після {duration} простою.",
+ "wd_subject": "Апаратний сторожовий таймер перезапустив брандмауер — {title}",
+ "wd_text": "Брандмауер перезапущено апаратним сторожовим таймером (запис від {time}). Причини, записані обладнанням: {reasons}."
 }

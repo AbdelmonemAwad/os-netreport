@@ -128,5 +128,18 @@
  "gw_flap_subject": "{name} ağ geçidi sürekli kesilip geri geliyor — {title}",
  "gw_flap_text": "{name} ağ geçidi 15 dakikada {n} kez durum değiştirdi. 15 dakika tek bir durumda kalana kadar onunla ilgili başka uyarı yok.",
  "gw_steady_subject": "{name} ağ geçidi yeniden kararlı — {title}",
- "gw_steady_text": "{name} ağ geçidi {time} itibarıyla değişmeden çalışıyor."
+ "gw_steady_text": "{name} ağ geçidi {time} itibarıyla değişmeden çalışıyor.",
+ "login_subject": "{address} adresinden tekrarlanan başarısız oturum açmalar — {title}",
+ "login_text": "{address} adresinden 10 dakika içinde {n} başarısız oturum açma, sonuncusu {time}. Hizmetler: {services}. Denenen kullanıcı adları: {users}.",
+ "login_api_key": "API anahtarı {key}…",
+ "ips_subject": "Saldırı uyarısı: {signature} — {title}",
+ "ips_text": "“{signature}” (önem {severity}) {src} kaynağından {dst} hedefine: {n} kez, ilki {time}. Eylem: {action}.",
+ "ips_allowed": "izin verildi (yalnızca uyarı)",
+ "ips_blocked": "engellendi",
+ "vpn_down_subject": "{name} VPN bağlantısı kesildi — {title}",
+ "vpn_down_text": "{name} VPN bağlantısı {time} itibarıyla kesik.",
+ "vpn_back_subject": "{name} VPN bağlantısı geri geldi — {title}",
+ "vpn_back_text": "{name} VPN bağlantısı {duration} kesintiden sonra {time} saatinde geri geldi.",
+ "wd_subject": "Donanım watchdog’u güvenlik duvarını yeniden başlattı — {title}",
+ "wd_text": "Güvenlik duvarı donanım watchdog’u tarafından yeniden başlatıldı ({time} kaydı). Donanımın kaydettiği nedenler: {reasons}."
 }

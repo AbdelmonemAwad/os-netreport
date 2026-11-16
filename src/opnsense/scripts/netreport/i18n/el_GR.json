@@ -128,5 +128,18 @@
  "gw_flap_subject": "Η πύλη {name} πέφτει και επανέρχεται συνεχώς — {title}",
  "gw_flap_text": "Η πύλη {name} άλλαξε κατάσταση {n} φορές σε 15 λεπτά. Καμία άλλη ειδοποίηση μέχρι να μείνει σε μία κατάσταση για 15 λεπτά.",
  "gw_steady_subject": "Η πύλη {name} είναι ξανά σταθερή — {title}",
- "gw_steady_text": "Η πύλη {name} λειτουργεί χωρίς αλλαγή από {time}."
+ "gw_steady_text": "Η πύλη {name} λειτουργεί χωρίς αλλαγή από {time}.",
+ "login_subject": "Επαναλαμβανόμενες αποτυχημένες συνδέσεις από {address} — {title}",
+ "login_text": "{n} αποτυχημένες συνδέσεις από {address} μέσα σε 10 λεπτά, η τελευταία στις {time}. Υπηρεσίες: {services}. Ονόματα χρήστη που δοκιμάστηκαν: {users}.",
+ "login_api_key": "κλειδί API {key}…",
+ "ips_subject": "Ειδοποίηση εισβολής: {signature} — {title}",
+ "ips_text": "«{signature}» (σοβαρότητα {severity}) από {src} προς {dst}: {n} φορές, πρώτη στις {time}. Ενέργεια: {action}.",
+ "ips_allowed": "επιτράπηκε (μόνο ειδοποίηση)",
+ "ips_blocked": "αποκλείστηκε",
+ "vpn_down_subject": "Το VPN {name} είναι εκτός λειτουργίας — {title}",
+ "vpn_down_text": "Η σύνδεση VPN {name} είναι εκτός λειτουργίας από {time}.",
+ "vpn_back_subject": "Το VPN {name} επανήλθε — {title}",
+ "vpn_back_text": "Η σύνδεση VPN {name} επανήλθε στις {time}, μετά από {duration} εκτός λειτουργίας.",
+ "wd_subject": "Το υλικό watchdog επανεκκίνησε το τείχος προστασίας — {title}",
+ "wd_text": "Το τείχος προστασίας επανεκκινήθηκε από το υλικό watchdog (καταγραφή {time}). Αιτίες που κατέγραψε το υλικό: {reasons}."
 }

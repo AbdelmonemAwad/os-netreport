@@ -8,6 +8,7 @@ would have gone out is kept and compared.
 
     python3 tools/test-alerts.py"""
 import base64
+import datetime
 import importlib
 import json
 import os
@@ -103,6 +104,7 @@ def fake_send_mail(ms, rcpt, subject, page, text, attach_name=None):
 nr.mail_settings = fake_mail_settings
 nr.send_mail = fake_send_mail
 
+EXTRA = {'xml': ''}
 GENERAL = {'enabled': '1', 'title': 'Example network', 'recipients': 'admin@example.com', 'language': 'en_US',
            'alerts': '1', 'alert_mail': '1', 'alert_webhook_url': BASE + '/hook',
            'alert_webhook_header': 'Authorization: Bearer example-secret', 'alert_ntfy_server': BASE + '/ntfy/',
@@ -115,9 +117,9 @@ def config(**changes):
     fields = ''.join('<%s>%s</%s>' % (k, v, k) for k, v in general.items())
     with open(nr.CONFIG, 'w', encoding='utf-8') as fh:
         fh.write('<?xml version="1.0"?><opnsense><system><hostname>fw</hostname><domain>example.com</domain>'
-                 '</system><OPNsense><NetReport><general>%s</general><schedules/></NetReport></OPNsense>'
+                 '</system><OPNsense><NetReport><general>%s</general><schedules/></NetReport>%s</OPNsense>'
                  '<interfaces><lan><if>em1</if><ipaddr>192.0.2.1</ipaddr><subnet>24</subnet></lan></interfaces>'
-                 '</opnsense>' % fields)
+                 '</opnsense>' % (fields, EXTRA['xml']))
     return nr.Settings()
 
 
@@ -281,6 +283,194 @@ GENERAL['alerts'] = '0'
 check('gateways: with the master switch off, nothing', minute(alerts.collect_gateways, 2, WAN_DHCP='down'), [])
 GENERAL['alerts'] = '1'
 check('gateways: turned on again, it goes on from where things are', minute(alerts.collect_gateways, 2, WAN_DHCP='down'), [])
+
+# ---------------------------------------------------------------- 3. logins, IPS, VPN, watchdog
+
+
+def stamp(at):
+    return datetime.datetime.fromtimestamp(at).astimezone().isoformat(timespec='seconds')
+
+
+def syslog_line(at, app, message):
+    return '<38>1 %s fw.example.com %s 4242 - [meta sequenceId="1"] %s\n' % (stamp(at), app, message)
+
+
+def append(path, text):
+    with open(path, 'a', encoding='utf-8', newline='\n') as fh:
+        fh.write(text)
+
+
+def sent_by(collect, n=1):
+    return [s for s in minute(collect, n)]
+
+
+alerts.AUDIT_LOG = os.path.join(TOP, 'audit_{day}.log')
+CLOCK = float(int(time.time()) // 86400 * 86400 + 6 * 3600 - time.localtime().tm_gmtoff)   # 06:00 local, today
+audit = lambda: alerts.day_file(alerts.AUDIT_LOG, CLOCK + 60)
+reset()
+append(audit(), ''.join(syslog_line(CLOCK - 30, 'audit', 'user admin failed authentication for WebGui on Local '
+                                    'Database via Local Database at 203.0.113.5') for _ in range(10)))
+check('logins: the first run sends nothing (old lines are history)', sent_by(alerts.collect_logins), [])
+
+
+def gui_failures(n, address='203.0.113.5', user='admin'):
+    append(audit(), ''.join(syslog_line(CLOCK + 30, 'audit', 'user %s failed authentication for WebGui on Local Database '
+                                        'via Local Database at %s' % (user, address)) for _ in range(n)))
+
+
+gui_failures(3)
+gui_failures(1, user='root')
+check('logins: under the count, nothing', sent_by(alerts.collect_logins), [])
+gui_failures(1, user='root')
+sent = sent_by(alerts.collect_logins)
+check('logins: at the count, one alert for the address', [s['subject'] for s in sent],
+      ['Repeated failed logins from 203.0.113.5 — Example network'])
+check('logins: the user names, the count and the services', (sent[0]['facts']['users'], sent[0]['facts']['count'],
+                                                             sent[0]['facts']['services']), (['admin', 'root'], 5, ['WebGui']))
+gui_failures(5)
+check('logins: then quiet for that address', sent_by(alerts.collect_logins), [])
+for port in range(50001, 50006):
+    append(audit(), syslog_line(CLOCK + 30, 'sshd', 'Invalid user guest from 198.51.100.7 port %d' % port) +
+           syslog_line(CLOCK + 30, 'sshd', 'Failed password for invalid user guest from 198.51.100.7 port %d ssh2' % port))
+sent = sent_by(alerts.collect_logins)
+check('logins: sshd, one try counted once although two lines say it', [(s['facts']['address'], s['facts']['count'])
+                                                                       for s in sent], [('198.51.100.7', 5)])
+for _ in range(4):
+    append(audit(), syslog_line(CLOCK + 30, 'sshd', 'error: PAM: Authentication error for illegal user test from 198.51.100.8'))
+    CLOCK += 5
+check('logins: PAM errors count too, and four are under the count', sent_by(alerts.collect_logins), [])
+append(audit(), syslog_line(CLOCK + 30, 'audit', '[203.0.113.9] authentication failed for api key EXAMPLEKEYexamplesecret1') * 5)
+sent = sent_by(alerts.collect_logins)
+check('logins: an API key shows its first 4 characters only', sent[0]['facts']['users'] if sent else None, ['API key EXAM…'])
+check('logins: and the key is in no alert and no state', any(b'EXAMPLEKEYexample' in p['body'] for p in POSTS) or
+      'EXAMPLEKEYexample' in open(alerts.STATE_FILE, encoding='utf-8').read(), False)
+check('logins: older than 10 minutes, a failure no longer counts', (minute(alerts.collect_logins, 11),
+                                                                    nr.load_json(alerts.STATE_FILE, {})['login']['fails']), ([], {}))
+
+old = audit()
+os.replace(old, old + '.0')
+gui_failures(5, address='203.0.113.20')
+check('logins: a new inode starts again at 0', [s['facts']['address'] for s in sent_by(alerts.collect_logins)],
+      ['203.0.113.20'])
+MIDNIGHT = datetime.datetime.combine(datetime.date.fromtimestamp(CLOCK) + datetime.timedelta(days=1),
+                                     datetime.time()).timestamp()
+CLOCK = MIDNIGHT - 120
+minute(alerts.collect_logins)
+append(alerts.day_file(alerts.AUDIT_LOG, MIDNIGHT - 60), syslog_line(MIDNIGHT - 30, 'audit', 'user admin failed '
+       'authentication for WebGui on Local Database via Local Database at 203.0.113.21') * 2)
+append(alerts.day_file(alerts.AUDIT_LOG, MIDNIGHT + 60), syslog_line(MIDNIGHT + 10, 'audit', 'user admin failed '
+       'authentication for WebGui on Local Database via Local Database at 203.0.113.21') * 3)
+check('logins: a new day: the rest of the old file, then the new one', [(s['facts']['address'], s['facts']['count'])
+                                                                       for s in sent_by(alerts.collect_logins)],
+      [('203.0.113.21', 5)])
+
+# IPS
+alerts.EVE_LOG = os.path.join(TOP, 'eve.json')
+
+
+def eve(signature, src='203.0.113.40', dst='192.0.2.10', severity=1, action='allowed', sid=2000001):
+    return json.dumps({'timestamp': stamp(CLOCK + 30).replace('+00:00', '+0000'), 'event_type': 'alert', 'src_ip': src,
+                       'dest_ip': dst, 'alert': {'action': action, 'signature': signature, 'signature_id': sid,
+                                                 'severity': severity}}) + '\n'
+
+
+reset()
+append(alerts.EVE_LOG, eve('ET EXAMPLE old') * 3)
+check('IPS: the first run sends nothing', sent_by(alerts.collect_ips), [])
+append(alerts.EVE_LOG, eve('ET EXAMPLE probe', dst='192.0.2.10') + eve('ET EXAMPLE probe', dst='192.0.2.11', action='blocked') +
+       eve('ET EXAMPLE probe', dst='192.0.2.10') + eve('ET EXAMPLE low', severity=3, sid=3) +
+       eve('ET EXAMPLE medium', severity=2, sid=2) + json.dumps({'event_type': 'flow'}) + '\n')
+sent = sent_by(alerts.collect_ips)
+check('IPS: one alert per signature and source, high only by default', [s['facts']['signature'] for s in sent],
+      ['ET EXAMPLE probe'])
+check('IPS: count, action, source and destinations', (sent[0]['facts']['count'], sent[0]['facts']['actions'],
+                                                      sent[0]['facts']['src'], sent[0]['facts']['dst']),
+      (3, ['blocked', 'allowed'], '203.0.113.40', ['192.0.2.10', '192.0.2.11']))
+check('IPS: the text', sent[0]['text'], '“ET EXAMPLE probe” (severity 1) from 203.0.113.40 to 192.0.2.10, 192.0.2.11: '
+      '3 times, first at %s. Action: blocked, allowed (alert only).' % alerts.local_time(CLOCK - 30))
+append(alerts.EVE_LOG, eve('ET EXAMPLE probe'))
+check('IPS: the same pair is quiet for 30 minutes', sent_by(alerts.collect_ips), [])
+append(alerts.EVE_LOG, eve('ET EXAMPLE probe', src='203.0.113.41'))
+check('IPS: another source is another alert', [s['facts']['src'] for s in sent_by(alerts.collect_ips)], ['203.0.113.41'])
+GENERAL['ips_severity'] = '2'
+append(alerts.EVE_LOG, eve('ET EXAMPLE medium', severity=2, sid=2))
+check('IPS: severity 2 adds medium', [s['facts']['severity'] for s in sent_by(alerts.collect_ips)], [2])
+GENERAL['ips_severity'] = '1'
+os.replace(alerts.EVE_LOG, alerts.EVE_LOG + '.0')
+append(alerts.EVE_LOG, eve('ET EXAMPLE after rotation', sid=7))
+check('IPS: a rotated eve.json is read from its start', [s['facts']['signature'] for s in sent_by(alerts.collect_ips)],
+      ['ET EXAMPLE after rotation'])
+
+# VPN
+ANSWERS = {}
+alerts.configctl = lambda *args: ANSWERS.get(args[0])
+EXTRA['xml'] = ('<Swanctl><Connections><Connection uuid="00000000-0000-4000-8000-000000000001"><description>Office'
+                '</description></Connection></Connections></Swanctl><wireguard><client><clients><client uuid="x">'
+                '<name>Laptop</name><pubkey>EXAMPLEPUBKEY=</pubkey></client></clients></client></wireguard>')
+
+
+def vpn(office=True, branch=False, handshake=10, alice=True, ipsec=True):
+    ANSWERS['ipsec'] = {'00000000-0000-4000-8000-000000000001': {'remote-addrs': '198.51.100.1', 'sas': [{}] if office else []},
+                        '00000000-0000-4000-8000-000000000002': {'remote-addrs': '198.51.100.2', 'sas': [{}] if branch else []}
+                        } if ipsec else None
+    ANSWERS['wireguard'] = {'status': 'ok', 'records': [
+        {'if': 'wg0', 'type': 'interface', 'public-key': 'SERVERKEY='},
+        {'if': 'wg0', 'type': 'peer', 'public-key': 'EXAMPLEPUBKEY=', 'latest-handshake': int(CLOCK + 60 - handshake)}]}
+    ANSWERS['openvpn'] = {'server': {'srv1': {'status': 'ok', 'client_list': [{'common_name': 'alice'}] if alice else []}}}
+
+
+reset()
+vpn()
+check('VPN: the first run sends nothing', sent_by(alerts.collect_vpn), [])
+check('VPN: a connection never up is not reported down', sent_by(alerts.collect_vpn, 3), [])
+vpn(office=False)
+sent = sent_by(alerts.collect_vpn, 2)
+check('VPN: IPsec down on two reads, by its description', [s['subject'] for s in sent],
+      ['VPN IPsec Office is down — Example network'])
+vpn(office=False, ipsec=False)
+check('VPN: a command that fails is unknown, not down or back', sent_by(alerts.collect_vpn, 2), [])
+vpn()
+sent = sent_by(alerts.collect_vpn, 2)
+check('VPN: back, with how long it was down', [s['text'] for s in sent], ['VPN connection IPsec Office came back at %s, '
+                                                                       'after 4 min down.' % alerts.local_time(CLOCK - 60)])
+vpn(handshake=400)
+check('VPN: a WireGuard peer with an old handshake is down', [s['facts']['connection'] for s in sent_by(alerts.collect_vpn, 2)],
+      ['WireGuard Laptop'])
+vpn(alice=False)
+sent = sent_by(alerts.collect_vpn, 2)
+check('VPN: an OpenVPN client gone from its server is down; the peer is back',
+      sorted((s['facts']['connection'], s['facts']['state']) for s in sent),
+      [('OpenVPN srv1: alice', 'down'), ('WireGuard Laptop', 'back')])
+vpn()
+check('VPN: and back when it returns', [s['facts']['state'] for s in sent_by(alerts.collect_vpn, 2)], ['back'])
+EXTRA['xml'] = ''
+
+# watchdog
+alerts.RESET_REASON = os.path.join(TOP, 'reset-reason.json')
+reset()
+
+
+def reset_record(boot, bits=(), watchdog=None):
+    record = {'boot': boot, 'read_at': stamp(CLOCK), 'value': '0x02000000', 'cleared': True, 'after': 0,
+              'read_by': 'os-watchdog', 'bits': [{'bit': b, 'reason': r} for b, r in bits]}
+    if watchdog is not None:
+        record['watchdog'] = watchdog
+    alerts.save_json(alerts.RESET_REASON, record)
+
+
+WD = (25, 'the hardware watchdog expired')
+reset_record('boot-1', [WD])
+check('watchdog: the first run only records the boot', sent_by(alerts.collect_watchdog), [])
+os.replace(alerts.RESET_REASON, alerts.RESET_REASON + '.away')
+check('watchdog: no record, nothing', sent_by(alerts.collect_watchdog), [])
+reset_record('boot-2', [WD, (3, 'example reason')])
+sent = sent_by(alerts.collect_watchdog, 2)
+check('watchdog: a reset by the watchdog: one alert per boot', [s['facts']['reasons'] for s in sent],
+      [['the hardware watchdog expired', 'example reason']])
+reset_record('boot-3', [], watchdog=True)
+check('watchdog: "watchdog": true is enough', [s['facts']['boot'] for s in sent_by(alerts.collect_watchdog)], ['boot-3'])
+reset_record('boot-4', [(3, 'example reason')])
+check('watchdog: another reset is not an alert', sent_by(alerts.collect_watchdog), [])
 
 # One collector failing stops neither the others nor the reports: the scheduler with a collector that
 # raises before one that records.

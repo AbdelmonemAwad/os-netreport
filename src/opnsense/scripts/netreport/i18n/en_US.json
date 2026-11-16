@@ -128,5 +128,18 @@
  "gw_flap_subject": "Gateway {name} keeps going down and up — {title}",
  "gw_flap_text": "Gateway {name} changed state {n} times in 15 minutes. No more alerts for it until it holds one state for 15 minutes.",
  "gw_steady_subject": "Gateway {name} is steady again — {title}",
- "gw_steady_text": "Gateway {name} has been up without a change since {time}."
+ "gw_steady_text": "Gateway {name} has been up without a change since {time}.",
+ "login_subject": "Repeated failed logins from {address} — {title}",
+ "login_text": "{n} failed logins from {address} within 10 minutes, the last at {time}. Services: {services}. User names tried: {users}.",
+ "login_api_key": "API key {key}…",
+ "ips_subject": "Intrusion alert: {signature} — {title}",
+ "ips_text": "“{signature}” (severity {severity}) from {src} to {dst}: {n} times, first at {time}. Action: {action}.",
+ "ips_allowed": "allowed (alert only)",
+ "ips_blocked": "blocked",
+ "vpn_down_subject": "VPN {name} is down — {title}",
+ "vpn_down_text": "VPN connection {name} has been down since {time}.",
+ "vpn_back_subject": "VPN {name} is back — {title}",
+ "vpn_back_text": "VPN connection {name} came back at {time}, after {duration} down.",
+ "wd_subject": "The hardware watchdog restarted the firewall — {title}",
+ "wd_text": "The firewall was restarted by its hardware watchdog (record of {time}). Reasons the hardware recorded: {reasons}."
 }

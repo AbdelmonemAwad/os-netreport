@@ -128,5 +128,18 @@
  "gw_flap_subject": "Brána {name} opakovaně vypadává a obnovuje se — {title}",
  "gw_flap_text": "Brána {name} změnila stav {n}× za 15 minut. Další upozornění na ni přijdou, až 15 minut setrvá v jednom stavu.",
  "gw_steady_subject": "Brána {name} je opět stabilní — {title}",
- "gw_steady_text": "Brána {name} je v provozu beze změny od {time}."
+ "gw_steady_text": "Brána {name} je v provozu beze změny od {time}.",
+ "login_subject": "Opakovaná neúspěšná přihlášení z {address} — {title}",
+ "login_text": "{n} neúspěšných přihlášení z {address} během 10 minut, poslední v {time}. Služby: {services}. Zkoušená uživatelská jména: {users}.",
+ "login_api_key": "klíč API {key}…",
+ "ips_subject": "Upozornění na průnik: {signature} — {title}",
+ "ips_text": "„{signature}“ (závažnost {severity}) z {src} do {dst}: {n}×, poprvé v {time}. Akce: {action}.",
+ "ips_allowed": "povoleno (jen upozornění)",
+ "ips_blocked": "zablokováno",
+ "vpn_down_subject": "VPN {name} je mimo provoz — {title}",
+ "vpn_down_text": "Spojení VPN {name} je mimo provoz od {time}.",
+ "vpn_back_subject": "VPN {name} je zpět — {title}",
+ "vpn_back_text": "Spojení VPN {name} se obnovilo v {time} po {duration} výpadku.",
+ "wd_subject": "Hardwarový watchdog restartoval firewall — {title}",
+ "wd_text": "Firewall restartoval jeho hardwarový watchdog (záznam z {time}). Důvody zaznamenané hardwarem: {reasons}."
 }

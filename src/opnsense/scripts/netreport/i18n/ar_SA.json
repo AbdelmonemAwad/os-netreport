@@ -128,5 +128,18 @@
  "gw_flap_subject": "البوابة {name} تتقطع وتعود مرارًا — {title}",
  "gw_flap_text": "غيّرت البوابة {name} حالتها {n} مرات خلال 15 دقيقة. لن تُرسل تنبيهات أخرى عنها حتى تثبت على حالة واحدة 15 دقيقة.",
  "gw_steady_subject": "استقرت البوابة {name} من جديد — {title}",
- "gw_steady_text": "البوابة {name} تعمل دون تغيير منذ {time}."
+ "gw_steady_text": "البوابة {name} تعمل دون تغيير منذ {time}.",
+ "login_subject": "محاولات دخول فاشلة متكررة من {address} — {title}",
+ "login_text": "{n} محاولات دخول فاشلة من {address} خلال 10 دقائق، آخرها في {time}. الخدمات: {services}. أسماء المستخدمين المجرَّبة: {users}.",
+ "login_api_key": "مفتاح API ‏{key}…",
+ "ips_subject": "تنبيه اختراق: {signature} — {title}",
+ "ips_text": "«{signature}» (الخطورة {severity}) من {src} إلى {dst}: {n} مرة، أولها في {time}. الإجراء: {action}.",
+ "ips_allowed": "سُمح به (تنبيه فقط)",
+ "ips_blocked": "حُظر",
+ "vpn_down_subject": "اتصال VPN ‏{name} مقطوع — {title}",
+ "vpn_down_text": "اتصال VPN ‏{name} مقطوع منذ {time}.",
+ "vpn_back_subject": "عاد اتصال VPN ‏{name} — {title}",
+ "vpn_back_text": "عاد اتصال VPN ‏{name} في {time} بعد انقطاع دام {duration}.",
+ "wd_subject": "أعاد المراقب العتادي تشغيل الجدار الناري — {title}",
+ "wd_text": "أعاد المراقب العتادي تشغيل الجدار الناري (سجل {time}). الأسباب التي سجلها العتاد: {reasons}."
 }

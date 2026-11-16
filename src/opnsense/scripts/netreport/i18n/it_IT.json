@@ -128,5 +128,18 @@
  "gw_flap_subject": "Il gateway {name} cade e torna di continuo — {title}",
  "gw_flap_text": "Il gateway {name} ha cambiato stato {n} volte in 15 minuti. Nessun altro avviso finché non mantiene uno stato per 15 minuti.",
  "gw_steady_subject": "Il gateway {name} è di nuovo stabile — {title}",
- "gw_steady_text": "Il gateway {name} funziona senza cambiamenti dalle {time}."
+ "gw_steady_text": "Il gateway {name} funziona senza cambiamenti dalle {time}.",
+ "login_subject": "Accessi falliti ripetuti da {address} — {title}",
+ "login_text": "{n} accessi falliti da {address} in 10 minuti, l’ultimo alle {time}. Servizi: {services}. Nomi utente provati: {users}.",
+ "login_api_key": "chiave API {key}…",
+ "ips_subject": "Avviso di intrusione: {signature} — {title}",
+ "ips_text": "«{signature}» (gravità {severity}) da {src} a {dst}: {n} volte, la prima alle {time}. Azione: {action}.",
+ "ips_allowed": "consentito (solo avviso)",
+ "ips_blocked": "bloccato",
+ "vpn_down_subject": "La VPN {name} è caduta — {title}",
+ "vpn_down_text": "La connessione VPN {name} è caduta dalle {time}.",
+ "vpn_back_subject": "La VPN {name} è tornata — {title}",
+ "vpn_back_text": "La connessione VPN {name} è tornata alle {time}, dopo {duration} di interruzione.",
+ "wd_subject": "Il watchdog hardware ha riavviato il firewall — {title}",
+ "wd_text": "Il firewall è stato riavviato dal suo watchdog hardware (registrazione delle {time}). Motivi registrati dall’hardware: {reasons}."
 }

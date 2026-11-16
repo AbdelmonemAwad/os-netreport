@@ -128,5 +128,18 @@
  "gw_flap_subject": "O gateway {name} cai e volta repetidamente — {title}",
  "gw_flap_text": "O gateway {name} mudou de estado {n} vezes em 15 minutos. Nenhum outro alerta sobre ele até manter um estado por 15 minutos.",
  "gw_steady_subject": "O gateway {name} está estável de novo — {title}",
- "gw_steady_text": "O gateway {name} está ativo sem mudanças desde {time}."
+ "gw_steady_text": "O gateway {name} está ativo sem mudanças desde {time}.",
+ "login_subject": "Falhas de login repetidas de {address} — {title}",
+ "login_text": "{n} falhas de login de {address} em 10 minutos, a última às {time}. Serviços: {services}. Nomes de usuário tentados: {users}.",
+ "login_api_key": "chave de API {key}…",
+ "ips_subject": "Alerta de intrusão: {signature} — {title}",
+ "ips_text": "“{signature}” (gravidade {severity}) de {src} para {dst}: {n} vezes, a primeira às {time}. Ação: {action}.",
+ "ips_allowed": "permitido (apenas alerta)",
+ "ips_blocked": "bloqueado",
+ "vpn_down_subject": "A VPN {name} caiu — {title}",
+ "vpn_down_text": "A conexão VPN {name} está fora desde {time}.",
+ "vpn_back_subject": "A VPN {name} voltou — {title}",
+ "vpn_back_text": "A conexão VPN {name} voltou às {time}, depois de {duration} fora.",
+ "wd_subject": "O watchdog de hardware reiniciou o firewall — {title}",
+ "wd_text": "O firewall foi reiniciado pelo watchdog de hardware (registro de {time}). Motivos registrados pelo hardware: {reasons}."
 }

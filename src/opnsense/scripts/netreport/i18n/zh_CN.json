@@ -115,5 +115,18 @@
  "gw_flap_subject": "网关 {name} 反复断开又恢复 — {title}",
  "gw_flap_text": "网关 {name} 在 15 分钟内状态变化了 {n} 次。在它保持同一状态 15 分钟之前，不再发送有关它的警报。",
  "gw_steady_subject": "网关 {name} 已恢复稳定 — {title}",
- "gw_steady_text": "网关 {name} 自 {time} 起一直正常。"
+ "gw_steady_text": "网关 {name} 自 {time} 起一直正常。",
+ "login_subject": "来自 {address} 的多次登录失败 — {title}",
+ "login_text": "{address} 在 10 分钟内登录失败 {n} 次，最后一次在 {time}。服务：{services}。尝试过的用户名：{users}。",
+ "login_api_key": "API 密钥 {key}…",
+ "ips_subject": "入侵警报：{signature} — {title}",
+ "ips_text": "“{signature}”（严重级别 {severity}）从 {src} 到 {dst}：{n} 次，首次在 {time}。处理：{action}。",
+ "ips_allowed": "已放行（仅告警）",
+ "ips_blocked": "已拦截",
+ "vpn_down_subject": "VPN {name} 已断开 — {title}",
+ "vpn_down_text": "VPN 连接 {name} 自 {time} 起断开。",
+ "vpn_back_subject": "VPN {name} 已恢复 — {title}",
+ "vpn_back_text": "VPN 连接 {name} 于 {time} 恢复，断开了 {duration}。",
+ "wd_subject": "硬件看门狗重启了防火墙 — {title}",
+ "wd_text": "防火墙被硬件看门狗重启（{time} 的记录）。硬件记录的原因：{reasons}。"
 }

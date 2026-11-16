@@ -128,5 +128,18 @@
  "gw_flap_subject": "Brama {name} ciągle pada i wraca — {title}",
  "gw_flap_text": "Brama {name} zmieniła stan {n} razy w ciągu 15 minut. Kolejne alerty dopiero, gdy przez 15 minut utrzyma jeden stan.",
  "gw_steady_subject": "Brama {name} znów jest stabilna — {title}",
- "gw_steady_text": "Brama {name} działa bez zmian od {time}."
+ "gw_steady_text": "Brama {name} działa bez zmian od {time}.",
+ "login_subject": "Powtarzające się nieudane logowania z {address} — {title}",
+ "login_text": "{n} nieudanych logowań z {address} w ciągu 10 minut, ostatnie o {time}. Usługi: {services}. Próbowane nazwy użytkowników: {users}.",
+ "login_api_key": "klucz API {key}…",
+ "ips_subject": "Alert o włamaniu: {signature} — {title}",
+ "ips_text": "„{signature}” (ważność {severity}) z {src} do {dst}: {n} razy, pierwszy raz o {time}. Działanie: {action}.",
+ "ips_allowed": "dozwolone (tylko alert)",
+ "ips_blocked": "zablokowane",
+ "vpn_down_subject": "VPN {name} nie działa — {title}",
+ "vpn_down_text": "Połączenie VPN {name} nie działa od {time}.",
+ "vpn_back_subject": "VPN {name} znów działa — {title}",
+ "vpn_back_text": "Połączenie VPN {name} wróciło o {time}, po {duration} przerwy.",
+ "wd_subject": "Sprzętowy watchdog zrestartował zaporę — {title}",
+ "wd_text": "Zapora została zrestartowana przez sprzętowy watchdog (zapis z {time}). Przyczyny zapisane przez sprzęt: {reasons}."
 }
