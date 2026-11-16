@@ -1023,8 +1023,17 @@ sent = run_pass([('ips', alerts.collect_ips)])
 check('cap: 10 alerts from one collector, then one that says how many more',
       (len(sent), sent[-1]['subject'] if sent else None, sent[-1]['facts'] if sent else None),
       (11, '3 more alerts of the same kind — Example network', {'collector': 'ips', 'held': 3}))
-check('cap: ... the rest are in the history only', [h['status'] for h in history()[:len(history()) - history_before]].count('skipped'),
-      3)
+skipped = [h for h in history()[:len(history()) - history_before] if h['status'] == 'skipped']
+check('cap: ... the rest are one line in the history, naming them',
+      (len(skipped), skipped[0]['detail'].split(': ')[0] if skipped else None,
+       skipped[0]['detail'].count('ET EXAMPLE storm') if skipped else None),
+      (1, '3 alerts of this kind held this minute (more than 10)', 3))
+history_before = len(history())
+append(alerts.EVE_LOG, ''.join(eve('ET EXAMPLE big storm %d' % i, src='198.51.100.%d' % (100 + i), sid=7000 + i)
+                               for i in range(60)))
+sent = run_pass([('ips', alerts.collect_ips)])
+check('cap: a storm of 60 adds 12 history lines, not 61 (the history keeps 500)', (len(sent), len(history()) - history_before),
+      (11, 12))
 
 # what the cap holds of the outbox and the anomalies waits for the next minute; it is not lost
 reset()

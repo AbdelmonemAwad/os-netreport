@@ -142,7 +142,7 @@ class State:
         data = nr.load_json(self.path, {})
         self.data = data if isinstance(data, dict) else {}
         # this run only: the collector running, how many alerts it has handed on, and how many held
-        self.running, self.handed, self.held = None, 0, 0
+        self.running, self.handed, self.held, self.held_subjects = None, 0, 0, []
 
     def first(self, name):
         """whether this collector has never run: its first run only records where things are"""
@@ -329,13 +329,18 @@ def room(state):
     return state is None or not state.running or state.handed < COLLECTOR_CAP
 
 
-def hold(alert):
-    """the history line of an alert held past its collector's cap"""
+HELD_SHOWN = 5                  # subjects of held alerts named in their history line
+
+
+def held_line(subject, held, subjects):
+    """the one history line of a collector's pass for the alerts it held past its cap: one line however
+    many, so that a storm cannot push the rest of the history (500 lines) out"""
+    names = '; '.join(subjects[:HELD_SHOWN]) + ('; …' if len(subjects) > HELD_SHOWN else '')
     try:
-        nr.add_history({'schedule': alert['subject'], 'subject': alert['subject'], 'recipients': '', 'archive': '',
-                        'status': 'skipped', 'detail': f'held: more than {COLLECTOR_CAP} alerts of this kind this minute'})
+        nr.add_history({'schedule': subject, 'subject': subject, 'recipients': '', 'archive': '', 'status': 'skipped',
+                        'detail': f'{held} alerts of this kind held this minute (more than {COLLECTOR_CAP}): {names}'})
     except Exception as exc:
-        nr.log(f'alert "{alert["subject"]}": the history could not be written: {exc}')
+        nr.log(f'alert "{subject}": the history could not be written: {exc}')
 
 
 def deliver(settings, alert, record=None):
@@ -382,8 +387,8 @@ def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=
 
     Past the running collector's cap the alert is not tried: HELD for every channel. An alert the
     collector keeps until it is sent (defer: an outbox file, an anomaly) is then simply left for the
-    next minute - no history line, no quiet time; any other is a line in the history and counted
-    for the collector's summary alert.
+    next minute - no history line, no quiet time; any other is counted, and named, in the collector's
+    one history line and summary alert for what it held (run_collectors).
     """
     now = time.time() if now is None else now
     quiet = QUIET.get(kind, QUIET_DEFAULT) if quiet is None else quiet
@@ -398,11 +403,11 @@ def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=
         if state.handed >= COLLECTOR_CAP:
             if defer:
                 return {name: HELD for name in ('mail', 'webhook', 'ntfy')}
-            # an alert storm: past the cap, an alert is a line in the history only, and the collector's
-            # summary alert says how many (run_collectors)
+            # an alert storm: past the cap, an alert is not sent; the collector's one history line and
+            # its summary alert say how many (run_collectors)
             state.held += 1
+            state.held_subjects.append(subject)
             sent[mark] = now
-            hold(alert)
             return {name: HELD for name in ('mail', 'webhook', 'ntfy')}
         state.handed += 1
     results = deliver(settings, alert, record)
@@ -1463,7 +1468,7 @@ def run_collectors(settings, state, now, clock=time.monotonic):
     - A pass more than STALE_AFTER after the last one (the plugin was off, the firewall was down):
       the log readers start again from the end of their logs, as on a first run, so a backlog is not
       sent; and each reads only lines of the last STALE_AFTER seconds anyway.
-    - A collector hands on at most COLLECTOR_CAP alerts a run; the rest are lines in the history,
+    - A collector hands on at most COLLECTOR_CAP alerts a run; the rest are one line in the history,
       and one more alert says how many.
     - Past PASS_DEADLINE seconds, the collectors not yet run wait for the next minute (their places
       do not move).
@@ -1480,13 +1485,14 @@ def run_collectors(settings, state, now, clock=time.monotonic):
         if clock() - started > PASS_DEADLINE:
             nr.log(f'alert collectors took more than {PASS_DEADLINE} s: {name} and the ones after it wait for the next minute')
             break
-        state.running, state.handed, state.held = name, 0, 0
+        state.running, state.handed, state.held, state.held_subjects = name, 0, 0, []
         try:
             collect(settings, state, now)
         except Exception as exc:
             nr.log(f'alert collector {name} failed: {exc}')
         held, state.running = state.held, None
         if held:
+            held_line(subject_of(t, settings, 'more_subject', n=held), held, state.held_subjects)
             try:
                 notify(settings, state, name, f'more|{int(now)}', subject_of(t, settings, 'more_subject', n=held),
                        t['more_text'].format(n=held, max=COLLECTOR_CAP), {'collector': name, 'held': held}, now=now,

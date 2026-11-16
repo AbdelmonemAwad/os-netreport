@@ -94,9 +94,11 @@ its place, so turning it on does not send the backlog.
 
 Limits on each minute's pass, so that a storm or a pause does not flood the channels:
 
-- One collector sends at most 10 alerts a minute. Past that, the rest are lines in the history
-  only ("Skipped", "held: more than 10 alerts of this kind this minute"), and one more alert says
-  how many: "N more alerts of the same kind", see the history. os-xgs-npu's alert files and
+- One collector sends at most 10 alerts a minute. Past that, the rest are not sent: one line in
+  the history says how many, for that collector and minute, however many they are ("Skipped", "N
+  alerts of this kind held this minute (more than 10)", with the first five subjects), so a storm
+  cannot push the rest of the history (its last 500 lines) out; and one more alert says how many:
+  "N more alerts of the same kind", see the history. os-xgs-npu's alert files and
   anomalies (below) are not dropped at the cap: those past it wait for the next minute, with no
   history line, and new ones go before the retries of ones that failed, so the retries cannot
   crowd them out.
