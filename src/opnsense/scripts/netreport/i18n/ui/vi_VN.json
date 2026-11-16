@@ -124,7 +124,7 @@
  "Webhook URL": "URL webhook",
  "Each alert is posted here as JSON: source, host, kind, at, subject, text and facts. The certificate is checked. Empty: no webhook.": "Mỗi cảnh báo được gửi đến đây dưới dạng JSON: source, host, kind, at, subject, text và facts. Chứng chỉ được kiểm tra. Để trống: không dùng webhook.",
  "Webhook header": "Header webhook",
- "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token.": "Tùy chọn: một dòng header gửi kèm mỗi lần gửi, ví dụ Authorization: Bearer rồi đến token của bạn.",
+ "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token. Stored on this firewall only. Leave empty to keep the current header.": "Tùy chọn: một dòng header gửi kèm mỗi lần gửi, ví dụ Authorization: Bearer rồi đến token của bạn. Chỉ lưu trên tường lửa này. Để trống để giữ header hiện tại.",
  "ntfy server": "Máy chủ ntfy",
  "The address of an ntfy server, for example https://ntfy.example.com. There is no default: ntfy stays off until a server and a topic are set.": "Địa chỉ của một máy chủ ntfy, ví dụ https://ntfy.example.com. Không có mặc định: ntfy tắt cho đến khi đặt máy chủ và chủ đề.",
  "ntfy topic": "Chủ đề ntfy",

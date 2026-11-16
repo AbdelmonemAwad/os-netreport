@@ -19,7 +19,7 @@ import tempfile
 import threading
 import time
 import types
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPTS = os.path.join(os.path.dirname(HERE), 'src', 'opnsense', 'scripts', 'netreport')
@@ -73,8 +73,30 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         body = self.rfile.read(int(self.headers.get('Content-Length') or 0))
         POSTS.append({'path': self.path, 'headers': dict(self.headers), 'body': body})
+        if self.path.startswith('/redirect'):
+            self.send_response(302)
+            self.send_header('Location', BASE + '/elsewhere')
+            self.send_header('Content-Length', '0')
+            self.end_headers()
+            return
+        if self.path.startswith('/slow'):
+            # a server that trickles its reply
+            self.send_response(200)
+            self.send_header('Content-Length', '100000')
+            self.end_headers()
+            self.wfile.write(b'ok')
+            self.wfile.flush()
+            time.sleep(3)
+            return
         code = 500 if self.path.startswith('/fail') else 200
         self.send_response(code)
+        self.send_header('Content-Length', '2')
+        self.end_headers()
+        self.wfile.write(b'ok')
+
+    def do_GET(self):
+        POSTS.append({'path': self.path, 'headers': dict(self.headers), 'body': b'', 'method': 'GET'})
+        self.send_response(200)
         self.send_header('Content-Length', '2')
         self.end_headers()
         self.wfile.write(b'ok')
@@ -83,7 +105,7 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 
-SERVER = HTTPServer(('127.0.0.1', 0), Handler)
+SERVER = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
 threading.Thread(target=SERVER.serve_forever, daemon=True).start()
 BASE = 'http://127.0.0.1:%d' % SERVER.server_address[1]
 
@@ -213,6 +235,54 @@ check('new device: through the layer, to the webhook too', (hook['kind'], hook['
 check('new device: its own HTML mail', 'Example Corp' in MAILS[0]['html'] and '02:00:00:00:00:01' in MAILS[0]['html'], True)
 check('new device: and ntfy', len(posts('/ntfy/')), 1)
 
+reset()
+settings = config(alert_webhook_url=BASE + '/redirect', alert_ntfy_server=BASE + '/redirect/')
+results = alerts.test_alert(settings)
+check('a redirect is a failure, not followed', (results['webhook'], results['ntfy']),
+      ('the server answered with a redirect to %s/elsewhere (HTTP 302)' % BASE,) * 2)
+check('... so neither the header nor the token goes to the host it names', posts('/elsewhere'), [])
+reset()
+settings = config(alert_webhook_url=BASE + '/slow', alert_ntfy_server='')
+started = time.monotonic()
+results = alerts.test_alert(settings)
+check('a server that trickles its reply does not hold the run (its body is not read)',
+      (results['webhook'], time.monotonic() - started < 2), ('sent', True))
+
+reset()
+settings = config()
+saved_history = nr.add_history
+
+
+def broken_history(entry):
+    raise OSError('example: the disk is full')
+
+
+nr.add_history = broken_history
+del LOGGED[:]
+try:
+    results = alerts.test_alert(settings)
+except OSError as exc:
+    results = str(exc)
+nr.add_history = saved_history
+check('a history that cannot be written stops no alert', (results, len(posts('/hook')), LOGGED),
+      ({'mail': 'sent', 'webhook': 'sent', 'ntfy': 'sent'}, 1,
+       ['alert "Test alert — Example network": the history could not be written: example: the disk is full']))
+os.makedirs(nr.HISTORY_FILE + '.tmp', exist_ok=True)        # what a writer at the same time may leave
+try:
+    nr.add_history({'schedule': 'x', 'subject': 'example', 'recipients': '', 'archive': '', 'status': 'sent', 'detail': ''})
+except OSError:
+    pass
+check('save_json writes through a temporary file of its own', history()[0]['subject'], 'example')
+os.rmdir(nr.HISTORY_FILE + '.tmp')
+
+MVC = os.path.join(os.path.dirname(HERE), 'src', 'opnsense', 'mvc', 'app')
+model = open(os.path.join(MVC, 'models', 'OPNsense', 'NetReport', 'NetReport.xml'), encoding='utf-8').read()
+form = open(os.path.join(MVC, 'controllers', 'OPNsense', 'NetReport', 'forms', 'general.xml'), encoding='utf-8').read()
+check('the webhook header is kept like the ntfy token: update-only, a password field',
+      ('<alert_webhook_header type="UpdateOnlyTextField">' in model,
+       '<id>netreport.general.alert_webhook_header</id>\n        <label>Webhook header</label>\n        <type>password</type>' in form),
+      (True, True))
+
 # ---------------------------------------------------------------- 2. gateways
 
 GATEWAYS = {}
@@ -326,8 +396,11 @@ gui_failures(1, user='root')
 sent = sent_by(alerts.collect_logins)
 check('logins: at the count, one alert for the address', [s['subject'] for s in sent],
       ['Repeated failed logins from 203.0.113.5 — Example network'])
-check('logins: the user names, the count and the services', (sent[0]['facts']['users'], sent[0]['facts']['count'],
-                                                             sent[0]['facts']['services']), (['admin', 'root'], 5, ['WebGui']))
+check('logins: the user names (their first two characters), the count and the services',
+      (sent[0]['facts']['users'], sent[0]['facts'].get('user_names'), sent[0]['facts']['count'], sent[0]['facts']['services']),
+      (['ad…', 'ro…'], 2, 5, ['WebGui']))
+check('logins: the text', sent[0]['text'], '5 failed logins from 203.0.113.5 within 10 minutes, the last at %s. Services: '
+      'WebGui. User names tried: 2 (the first two characters of up to three: ad…, ro…).' % alerts.local_time(CLOCK - 30))
 gui_failures(5)
 check('logins: then quiet for that address', sent_by(alerts.collect_logins), [])
 for port in range(50001, 50006):
@@ -381,6 +454,44 @@ append(audit(), syslog_line(CLOCK + 20, 'audit', GUI_FAIL.replace('.22', '.24'))
        syslog_line(CLOCK + 25, 'audit', FOLD % ('something else entire', 4)) +
        syslog_line(CLOCK + 26, 'sshd', FOLD % (GUI_FAIL[:20], 4)))
 check('logins: a fold of another message, or of another program, counts nothing', sent_by(alerts.collect_logins), [])
+
+# a user name is what the other side typed: the address is the one at the end of the line
+append(audit(), ''.join(syslog_line(CLOCK + 20, 'sshd', 'Failed password for invalid user x from 192.0.2.77 port 22 from '
+                                    '198.51.100.30 port %d ssh2' % (40000 + i)) for i in range(5)))
+append(audit(), ''.join(syslog_line(CLOCK + 20, 'audit', 'user y at 192.0.2.78 failed authentication for WebGui on Local '
+                                    'Database via Local Database at 198.51.100.31') for i in range(5)))
+append(audit(), ''.join(syslog_line(CLOCK + 20 + 5 * i, 'sshd', 'error: PAM: Authentication error for z from 192.0.2.79 '
+                                    'from 198.51.100.32') for i in range(5)))
+check('logins: a user name holding an address does not put it in the alert',
+      sorted(s['facts']['address'] for s in sent_by(alerts.collect_logins)), ['198.51.100.30', '198.51.100.31', '198.51.100.32'])
+check('logins: ... in no alert at all', [p for p in POSTS if b'192.0.2.7' in p['body']], [])
+
+# sshd: every failed try on one connection counts; "Invalid user" and PAM's line are the same try as "Failed"
+append(audit(), syslog_line(CLOCK + 20, 'sshd', 'Invalid user guest from 198.51.100.33 port 51000') +
+       ''.join(syslog_line(CLOCK + 21 + i, 'sshd', 'Failed password for invalid user guest from 198.51.100.33 port 51000 ssh2')
+               for i in range(5)))
+check('logins: five tries on one SSH connection are five', [(s['facts']['address'], s['facts']['count'])
+                                                            for s in sent_by(alerts.collect_logins)], [('198.51.100.33', 5)])
+append(audit(), ''.join(syslog_line(CLOCK + 20 + 10 * i, 'sshd', 'error: PAM: Authentication error for root from 198.51.100.34') +
+                        syslog_line(CLOCK + 21 + 10 * i, 'sshd', 'Failed keyboard-interactive/pam for root from 198.51.100.34 '
+                                    'port 52000 ssh2') for i in range(4)))
+check('logins: a PAM error and its "Failed" line are one try', sent_by(alerts.collect_logins), [])
+append(audit(), ''.join(syslog_line(CLOCK + 20, 'sshd', 'Failed publickey for admin from 198.51.100.35 port 53000 ssh2: '
+                                    'ED25519 SHA256:EXAMPLE') for _ in range(8)) +
+       ''.join(syslog_line(CLOCK + 20, 'sshd', 'Failed publickey for admin from 198.51.100.35 port 53000 ssh2') for _ in range(8)))
+check('logins: "Failed publickey" is not counted (an agent offering several keys)', sent_by(alerts.collect_logins), [])
+
+# people type a password into the user field: the names are never sent as they are
+for i, name in enumerate(['Secret-Pass1', 'Secret-Pass2', 'hunter2-example', 'admin', 'operator']):
+    append(audit(), syslog_line(CLOCK + 20, 'sshd', 'Failed password for invalid user %s from 198.51.100.36 port %d ssh2'
+                                % (name, 54000 + i)))
+sent = sent_by(alerts.collect_logins)
+check('logins: how many names, and at most three, cut to two characters', (sent[0]['facts'].get('user_names'),
+                                                                            sent[0]['facts']['users']) if sent else None,
+      (5, ['Se…', 'ad…', 'hu…']))
+check('logins: ... no name whole in an alert or in the failures kept', [
+    n for n in ('Secret-Pass', 'hunter2', 'operator') if any(n.encode() in p['body'] for p in POSTS) or
+    n in json.dumps(nr.load_json(alerts.STATE_FILE, {})['login']['fails'])], [])
 
 # IPS
 alerts.EVE_LOG = os.path.join(TOP, 'eve.json')
@@ -486,6 +597,25 @@ check('VPN: up is ESTABLISHED with an INSTALLED child SA; then connecting again 
       [('IPsec 198.51.100.2', 'down')])
 vpn()
 sent_by(alerts.collect_vpn, 2)
+
+
+def ovpn_client(status):
+    """an OpenVPN client instance as ovpn_status.py reports it; a socket that refuses is "failed" under "server\""""
+    vpn()
+    if status == 'refused':
+        ANSWERS['openvpn']['server']['cli1'] = {'status': 'failed', 'socket': '/var/etc/openvpn/instance-cli1.sock'}
+    else:
+        ANSWERS['openvpn']['client'] = {'cli1': {'status': status, 'timestamp': 1}}
+
+
+ovpn_client('connected')
+sent_by(alerts.collect_vpn, 2)
+ovpn_client('refused')
+check('VPN: an OpenVPN client whose socket refuses is down, not forgotten',
+      [(s['facts']['connection'], s['facts']['state']) for s in sent_by(alerts.collect_vpn, 2)], [('OpenVPN cli1', 'down')])
+ovpn_client('connected')
+check('VPN: ... and its back follows', [(s['facts']['connection'], s['facts']['state']) for s in sent_by(alerts.collect_vpn, 2)],
+      [('OpenVPN cli1', 'back')])
 EXTRA['xml'] = ''
 
 # watchdog
@@ -676,14 +806,52 @@ GENERAL.update(alert_webhook_url=BASE + '/fail', alert_ntfy_server='')
 reset()
 MAIL['fail'] = 'example mail failure'
 outbox('0002.json')
+del LOGGED[:]
+history_before = len(history())
 minute(alerts.collect_xgs)
 check('XGS: every channel failed: the file is kept', os.listdir(alerts.XGS_OUTBOX), ['0002.json'])
-minute(alerts.collect_xgs)
-check('XGS: and tried again the next minute', len(posts('/fail')), 2)
+minute(alerts.collect_xgs, 3)
+check('XGS: and tried again each minute', len(posts('/fail')), 4)
+check('XGS: ... silently: one history line and one log line, at the first failure',
+      (len(history()) - history_before, history()[0]['status'], len(LOGGED)), (1, 'failed', 1))
 os.utime(os.path.join(alerts.XGS_OUTBOX, '0002.json'), (CLOCK - 25 * 3600, CLOCK - 25 * 3600))
 minute(alerts.collect_xgs)
 check('XGS: after 24 hours it is removed, with a line in the history', (os.listdir(alerts.XGS_OUTBOX), history()[0]['detail']),
       ([], '%s/0002.json dropped: not sent within 24 hours' % alerts.XGS_OUTBOX))
+check('XGS: ... and that is its second and last line', len(history()) - history_before, 2)
+outbox('0004.json', subject='Example retried alert')
+minute(alerts.collect_xgs, 2)
+GENERAL.update(alert_webhook_url=BASE + '/hook')
+minute(alerts.collect_xgs, 2)
+check('XGS: a file sent after failing: one line at the failure, one at the send',
+      [h['status'] for h in history() if h['subject'] == 'Example retried alert'], ['alert', 'failed'])
+GENERAL.update(alert_webhook_url=BASE + '/fail')
+
+# an anomaly no channel took is kept and tried again, as the outbox's files are
+reset()
+MAIL['fail'] = 'example mail failure'
+anomaly(1, 2, 3)
+history_before = len(history())
+minute(alerts.collect_xgs, 3)
+check('XGS: an anomaly every channel failed is kept, tried again silently',
+      (len(posts('/fail')), len(history()) - history_before,
+       [p['rec']['id'] for p in nr.load_json(alerts.STATE_FILE, {})['xgs'].get('pending') or []]), (3, 1, [3]))
+GENERAL.update(alert_webhook_url=BASE + '/hook')
+sent = sent_by(alerts.collect_xgs)
+check('XGS: ... and sent when a channel takes it, with its line', ([s['facts']['id'] for s in sent], history()[0]['status'],
+                                                                   nr.load_json(alerts.STATE_FILE, {})['xgs'].get('pending')),
+      ([3], 'alert', []))
+GENERAL.update(alert_webhook_url=BASE + '/fail')
+anomaly(1, 2, 3, 4)
+minute(alerts.collect_xgs)
+state = alerts.State()
+for pending in state.data['xgs'].get('pending') or []:
+    pending['since'] = CLOCK - 25 * 3600
+state.save()
+minute(alerts.collect_xgs)
+check('XGS: ... and dropped after 24 hours, with a line', (nr.load_json(alerts.STATE_FILE, {})['xgs'].get('pending'),
+                                                           history()[0]['detail']),
+      ([], '%s id 4 dropped: not sent within 24 hours' % alerts.XGS_ANOMALY))
 GENERAL.update(alert_webhook_url=BASE + '/hook', alert_ntfy_server=BASE + '/ntfy/')
 reset()
 GENERAL['xgs_alert'] = '0'
@@ -716,6 +884,32 @@ alerts.COLLECTORS = saved
 check('a collector that fails does not stop the next one', len(RAN), 1)
 check('... and is logged', LOGGED[:1], ['alert collector broken failed: example failure'])
 check('... and the reports still ran (their state written)', os.path.exists(nr.STATE_FILE), True)
+
+# the device scan runs at :x0 and :x5 of the minute the run is for, however long the collectors take
+FAKE_NOW = [datetime.datetime(2026, 11, 16, 10, 10, 0)]
+
+
+class FakeDatetime(datetime.datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return FAKE_NOW[0]
+
+
+def slow_collector(settings, state, now):
+    FAKE_NOW[0] = FAKE_NOW[0] + datetime.timedelta(seconds=90)
+
+
+SCANS = []
+alerts.COLLECTORS = [('slow', slow_collector)]
+nr.update_devices = lambda settings: SCANS.append(1) or ({}, [], {})
+nr.datetime = types.SimpleNamespace(datetime=FakeDatetime, timedelta=datetime.timedelta, date=datetime.date,
+                                    time=datetime.time, timezone=datetime.timezone)
+try:
+    nr.scheduler()
+finally:
+    nr.datetime = datetime
+    alerts.COLLECTORS = saved
+check('scheduler: the time is taken before the collectors, so a long run does not skip the device scan', len(SCANS), 1)
 
 # ---------------------------------------------------------------- end
 

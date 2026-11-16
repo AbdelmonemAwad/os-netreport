@@ -124,7 +124,7 @@
  "Webhook URL": "URL webhooku",
  "Each alert is posted here as JSON: source, host, kind, at, subject, text and facts. The certificate is checked. Empty: no webhook.": "Každé upozornění se sem odešle jako JSON: source, host, kind, at, subject, text a facts. Certifikát se ověřuje. Prázdné: žádný webhook.",
  "Webhook header": "Hlavička webhooku",
- "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token.": "Volitelné: jeden řádek hlavičky odeslaný s každým požadavkem, například Authorization: Bearer a za ním váš token.",
+ "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token. Stored on this firewall only. Leave empty to keep the current header.": "Volitelné: jeden řádek hlavičky odeslaný s každým požadavkem, například Authorization: Bearer a za ním váš token. Uložen pouze na tomto firewallu. Ponechte prázdné, chcete-li zachovat stávající hlavičku.",
  "ntfy server": "Server ntfy",
  "The address of an ntfy server, for example https://ntfy.example.com. There is no default: ntfy stays off until a server and a topic are set.": "Adresa serveru ntfy, například https://ntfy.example.com. Výchozí není žádná: ntfy zůstává vypnuté, dokud nenastavíte server a téma.",
  "ntfy topic": "Téma ntfy",

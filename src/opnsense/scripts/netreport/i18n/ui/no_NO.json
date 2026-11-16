@@ -124,7 +124,7 @@
  "Webhook URL": "Webhook-URL",
  "Each alert is posted here as JSON: source, host, kind, at, subject, text and facts. The certificate is checked. Empty: no webhook.": "Hvert varsel sendes hit som JSON: source, host, kind, at, subject, text og facts. Sertifikatet kontrolleres. Tomt: ingen webhook.",
  "Webhook header": "Webhook-hode",
- "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token.": "Valgfritt: én hodelinje som sendes med hver forespørsel, for eksempel Authorization: Bearer fulgt av tokenet ditt.",
+ "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token. Stored on this firewall only. Leave empty to keep the current header.": "Valgfritt: én hodelinje som sendes med hver forespørsel, for eksempel Authorization: Bearer fulgt av tokenet ditt. Lagres bare på denne brannmuren. La stå tomt for å beholde gjeldende hodelinje.",
  "ntfy server": "ntfy-server",
  "The address of an ntfy server, for example https://ntfy.example.com. There is no default: ntfy stays off until a server and a topic are set.": "Adressen til en ntfy-server, for eksempel https://ntfy.example.com. Det finnes ingen standard: ntfy er av til en server og et emne er satt.",
  "ntfy topic": "ntfy-emne",

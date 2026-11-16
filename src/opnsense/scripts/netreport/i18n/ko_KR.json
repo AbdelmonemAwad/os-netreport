@@ -119,6 +119,7 @@
  "login_subject": "{address}에서 반복된 로그인 실패 — {title}",
  "login_text": "10분 안에 {address}에서 로그인 실패 {n}회, 마지막은 {time}. 서비스: {services}. 시도된 사용자 이름: {users}.",
  "login_api_key": "API 키 {key}…",
+ "login_names": "{n}개 (최대 3개의 앞 두 글자: {names})",
  "ips_subject": "침입 알림: {signature} — {title}",
  "ips_text": "\"{signature}\"(심각도 {severity}) {src}에서 {dst}(으)로: {n}회, 처음은 {time}. 조치: {action}.",
  "ips_allowed": "허용(알림만)",

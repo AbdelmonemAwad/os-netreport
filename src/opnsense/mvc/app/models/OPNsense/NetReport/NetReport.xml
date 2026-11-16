@@ -106,7 +106,7 @@
                 <Mask>/^https?:\/\/[^\s]+$/i</Mask>
                 <ValidationMessage>Enter an address that starts with https:// or http://.</ValidationMessage>
             </alert_webhook_url>
-            <alert_webhook_header type="TextField">
+            <alert_webhook_header type="UpdateOnlyTextField">
                 <Mask>/^[A-Za-z0-9_-]+:[^\r\n]*$/</Mask>
                 <ValidationMessage>Enter one header line as Name: value.</ValidationMessage>
             </alert_webhook_header>

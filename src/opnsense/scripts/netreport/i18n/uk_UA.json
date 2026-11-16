@@ -132,6 +132,7 @@
  "login_subject": "Повторні невдалі входи з {address} — {title}",
  "login_text": "{n} невдалих входів з {address} за 10 хвилин, останній о {time}. Служби: {services}. Спробувані імена користувачів: {users}.",
  "login_api_key": "ключ API {key}…",
+ "login_names": "{n} (перші два символи щонайбільше трьох із них: {names})",
  "ips_subject": "Сповіщення про вторгнення: {signature} — {title}",
  "ips_text": "«{signature}» (серйозність {severity}) з {src} до {dst}: {n} разів, уперше о {time}. Дія: {action}.",
  "ips_allowed": "пропущено (лише сповіщення)",

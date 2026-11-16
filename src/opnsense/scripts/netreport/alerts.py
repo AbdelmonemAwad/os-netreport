@@ -73,6 +73,7 @@ Taken from os-xgs-npu, when it is installed (neither existing is normal):
 """
 
 import datetime
+import hashlib
 import ipaddress
 import json
 import os
@@ -170,6 +171,9 @@ def duration(seconds, t):
 
 def error_text(exc):
     if isinstance(exc, urllib.error.HTTPError):
+        if 300 <= exc.code < 400:
+            where = exc.headers.get('Location', '') if exc.headers else ''
+            return f'the server answered with a redirect to {where or "(no address)"} (HTTP {exc.code})'
         return f'HTTP {exc.code} {exc.reason}'.strip()
     if isinstance(exc, urllib.error.URLError):
         return str(exc.reason)
@@ -193,14 +197,32 @@ def page_of(t, subject, text):
 
 # ---------------------------------------------------------------- channels
 
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    """A redirect is not followed: urllib would follow 301/302/303 with a GET that still carries the
+    webhook's header or ntfy's token, to whatever host the redirect names, and count its 200 as sent.
+    Without a handler for it, any 3xx is an HTTPError, and a failure."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+OPENER = urllib.request.build_opener(NoRedirect)
+
+
 def post(url, body, headers):
     if not url.lower().startswith(('https://', 'http://')):
         raise ValueError('the address must start with https:// or http://')
     request = urllib.request.Request(url, data=body, headers=headers, method='POST')
-    # TLS is verified: the default context checks the certificate and the name
-    with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
-        response.read(4096)
-        return response.status
+    # TLS is verified: the default context checks the certificate and the name. The reply's body is
+    # not read - the status is enough - so a server that trickles it cannot hold the run.
+    response = OPENER.open(request, timeout=HTTP_TIMEOUT)
+    try:
+        status = response.status
+    finally:
+        response.close()
+    if not 200 <= status < 300:
+        raise urllib.error.HTTPError(url, status, response.reason, response.headers, None)
+    return status
 
 
 def header_line(value):
@@ -265,8 +287,16 @@ def by_ntfy(settings, alert):
     return SENT
 
 
-def deliver(settings, alert):
-    """hand one alert to every channel; returns {"mail": ..., "webhook": ..., "ntfy": ...}"""
+def was_sent(results):
+    """whether at least one channel took the alert"""
+    return bool(results) and SENT in results.values()
+
+
+def deliver(settings, alert, record=None):
+    """Hand one alert to every channel; returns {"mail": ..., "webhook": ..., "ntfy": ...}.
+
+    The try is a line in the history (and, when nothing took it, in the system log) unless record,
+    given the results, says no: a retry that fails again is silent."""
     results, rcpt = {}, []
     try:
         results['mail'], rcpt = by_mail(settings, alert)
@@ -277,27 +307,32 @@ def deliver(settings, alert):
             results[name] = channel(settings, alert)
         except Exception as exc:
             results[name] = error_text(exc)
+    if record is not None and not record(results):
+        return results
     tried = [name for name, result in results.items() if result != NOT_SET]
-    sent = [name for name, result in results.items() if result == SENT]
+    sent = was_sent(results)
     recipients = list(rcpt) + [name for name in ('webhook', 'ntfy') if name in tried]
     if not tried:
         detail = 'no alert channel is set'
     else:
         detail = '; '.join(f'{name}: {result}' for name, result in results.items())
-    nr.add_history({'schedule': alert['subject'], 'subject': alert['subject'], 'recipients': ', '.join(recipients),
-                    'archive': '', 'status': 'alert' if sent else 'failed', 'detail': detail})
+    try:
+        nr.add_history({'schedule': alert['subject'], 'subject': alert['subject'], 'recipients': ', '.join(recipients),
+                        'archive': '', 'status': 'alert' if sent else 'failed', 'detail': detail})
+    except Exception as exc:
+        nr.log(f'alert "{alert["subject"]}": the history could not be written: {exc}')
     if not sent:
         nr.log(f'alert "{alert["subject"]}" was not sent: {detail}')
     return results
 
 
 def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=None, now=None,
-           quiet=None, priority='default', tags=()):
+           quiet=None, priority='default', tags=(), record=None):
     """Send one alert, unless the same kind and key went out within its quiet time.
 
     Returns the result per channel, or None when the quiet time held it back. The time of the try is
     remembered whatever the channels answered, so that a channel that is down is tried again after
-    the quiet time and not every minute.
+    the quiet time and not every minute. record is as deliver()'s.
     """
     now = time.time() if now is None else now
     quiet = QUIET.get(kind, QUIET_DEFAULT) if quiet is None else quiet
@@ -308,7 +343,7 @@ def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=
         return None
     alert = {'kind': kind, 'key': str(key), 'at': now if at is None else at, 'subject': subject, 'text': text,
              'html': page, 'facts': facts or {}, 'priority': priority, 'tags': list(tags)}
-    results = deliver(settings, alert)
+    results = deliver(settings, alert, record)
     if state is not None:
         sent[mark] = now
         state.save()
@@ -559,15 +594,21 @@ LOGIN_WINDOW = 10 * 60
 LOGIN_QUIET = 30 * 60
 QUIET['login'] = LOGIN_QUIET
 IP = r'(?P<address>[0-9A-Fa-f:.]*[0-9A-Fa-f])'
+# Each pattern is anchored at the end of the message and the address taken from there: a user name is
+# what the other side typed, and one like "x from 192.0.2.77 port 22" must not put that address in
+# the alert. (kind, service, pattern); a user name may hold spaces.
 LOGIN_PATTERNS = [
     # OPNsense 26.7, web GUI and API logins (level debug, program "audit")
-    (re.compile(r'user (?P<user>\S+) failed authentication for (?P<service>.+?) on .+? via .+? at ' + IP), None),
-    # sshd
-    (re.compile(r'Failed \S+ for (?:invalid user )?(?P<user>\S*) from ' + IP + r' port (?P<port>\d+)'), 'ssh'),
-    (re.compile(r'Invalid user (?P<user>\S*) from ' + IP + r' port (?P<port>\d+)'), 'ssh'),
-    (re.compile(r'error: PAM: Authentication error for (?:illegal user )?(?P<user>\S*) from ' + IP), 'ssh'),
+    ('gui', None, re.compile(r'user (?P<user>.+) failed authentication for (?P<service>.+?) on .+ via .+ at ' + IP + '$')),
+    # sshd: every failed try is a line of its own; "publickey" is not counted, since an agent offering
+    # several keys to a valid user logs it routinely
+    ('failed', 'ssh', re.compile(r'Failed (?P<method>\S+) for (?:invalid user )?(?P<user>.*) from ' + IP +
+                                 r' port (?P<port>\d+)(?: ssh2)?$')),
+    ('invalid', 'ssh', re.compile(r'Invalid user (?P<user>.*) from ' + IP + r' port (?P<port>\d+)$')),
+    ('pam', 'ssh', re.compile(r'error: PAM: Authentication error for (?:illegal user )?(?P<user>.*) from ' + IP + '$')),
 ]
 API_KEY = re.compile(r'authentication failed for api key (\S+)')
+PAM_PAIR = 2                    # seconds: a PAM error and sshd's "Failed" line of one try
 
 
 def without_key(line):
@@ -585,22 +626,76 @@ def an_address(text):
 
 
 def login_failure(line):
-    """(address, user, service, port) of a failed login line, or None; an API key is never kept whole"""
-    msg = message_of(line)
+    """(address, user, service, port, kind) of a failed login line, or None; an API key is never kept
+    whole (its user is "api-key:" and its first 4 characters)"""
+    msg = message_of(line).strip()
     found = API_KEY.search(msg)
     if found:
         key = found.group(1)
-        return (an_address(msg[:found.start()] + ' ' + msg[found.end():]) or '?', 'api-key:' + key[:4], 'api', '')
-    for pattern, service in LOGIN_PATTERNS:
+        return (an_address(msg[:found.start()]) or '?', 'api-key:' + key[:4], 'api', '', 'api')
+    for kind, service, pattern in LOGIN_PATTERNS:
         found = pattern.search(msg)
-        if found:
-            try:
-                address = str(ipaddress.ip_address(found.group('address')))
-            except ValueError:
-                continue
-            return (address, found.group('user'), service or found.group('service'),
-                    found.groupdict().get('port') or '')
+        if not found or (kind == 'failed' and found.group('method') == 'publickey'):
+            continue
+        try:
+            address = str(ipaddress.ip_address(found.group('address')))
+        except ValueError:
+            continue
+        return (address, found.group('user'), service or found.group('service'), found.groupdict().get('port') or '',
+                kind)
     return None
+
+
+def user_id(user):
+    """A user name tried is kept as a digest, to count the names, and its first two characters, to
+    show them: people type a password into the user field, and the names are never sent whole."""
+    if user.startswith('api-key:'):
+        return user, user
+    return hashlib.sha256(user.encode('utf-8', 'replace')).hexdigest()[:16], user[:2] + '…'
+
+
+def count_failure(seen, stamp, uid, shown, service, port, kind):
+    """Add one failed login to an address's list [stamp, uid, service, port, kind, paired, shown].
+
+    Every sshd "Failed" line is a try. Its "Invalid user" line (the same port) and PAM's error (the
+    same user within PAM_PAIR seconds) are the same try and are not counted beside it, whichever comes
+    first; without a "Failed" line they count as one try each."""
+    def pairs(f, other):
+        if other == 'invalid':
+            return f[3] == port and port != ''
+        return f[1] == uid and abs(f[0] - stamp) <= PAM_PAIR
+    if kind == 'failed':
+        paired = ''
+        for other in ('invalid', 'pam'):
+            for f in seen:
+                if f[4] == other and not f[5] and pairs(f, other):
+                    seen.remove(f)
+                    paired += other[0]
+                    break
+        seen.append([stamp, uid, service, port, kind, paired, shown])
+        return
+    if kind in ('invalid', 'pam'):
+        for f in seen:
+            if f[4] == 'failed' and kind[0] not in f[5] and pairs(f, kind):
+                f[5] += kind[0]
+                return
+    seen.append([stamp, uid, service, port, kind, '', shown])
+
+
+def failures_of(fails):
+    """the per-address lists as they are now kept; a list an older version kept is converted"""
+    out = {}
+    for address, seen in (fails.items() if isinstance(fails, dict) else []):
+        kept = []
+        for f in seen if isinstance(seen, list) else []:
+            if isinstance(f, list) and len(f) == 4:
+                uid, shown = user_id(str(f[1]))
+                f = [f[0], uid, f[2], f[3], '', '', shown]
+            if isinstance(f, list) and len(f) == 7 and isinstance(f[0], (int, float)):
+                kept.append(f)
+        if kept:
+            out[address] = kept
+    return out
 
 
 def collect_logins(settings, state, now):
@@ -608,21 +703,15 @@ def collect_logins(settings, state, now):
     st = state.get('login')
     place = st.setdefault('log', {})
     lines = follow(place, day_file(AUDIT_LOG, now), unfold=True, redact=without_key)
-    fails = st.get('fails') if isinstance(st.get('fails'), dict) else {}
+    fails = failures_of(st.get('fails'))
     for line in lines:
         failure = login_failure(line)
         if not failure:
             continue
-        address, user, service, port = failure
+        address, user, service, port, kind = failure
         stamp = nr.line_time(line) or now
-        seen = fails.setdefault(address, [])
-        # sshd says "Invalid user" and then "Failed password for invalid user" of one try, and PAM may
-        # add its own line: the same address, user and port, or no port within 2 seconds, is one try
-        if service == 'ssh' and any(f[2] == 'ssh' and f[1] == user and
-                                    ((port and f[3] == port) or (not (port and f[3]) and abs(f[0] - stamp) <= 2))
-                                    for f in seen):
-            continue
-        seen.append([stamp, user, service, port])
+        uid, shown = user_id(user)
+        count_failure(fails.setdefault(address, []), stamp, uid, shown, service, port, kind)
     for address in list(fails):
         fails[address] = [f for f in fails[address] if now - f[0] < LOGIN_WINDOW]
         if not fails[address]:
@@ -636,13 +725,16 @@ def collect_logins(settings, state, now):
     for address, seen in sorted(fails.items()):
         if len(seen) < limit:
             continue
-        users = sorted({t['login_api_key'].format(key=f[1][8:]) if f[1].startswith('api-key:') else f[1] for f in seen})
+        names = len({f[1] for f in seen})
+        shown = sorted({t['login_api_key'].format(key=f[6][8:]) if f[6].startswith('api-key:') else f[6] for f in seen})[:3]
         services = sorted({f[2] for f in seen})
         last = max(f[0] for f in seen)
-        facts = {'address': address, 'count': len(seen), 'users': users, 'services': services, 'last': iso_time(last)}
+        facts = {'address': address, 'count': len(seen), 'user_names': names, 'users': shown, 'services': services,
+                 'last': iso_time(last)}
         notify(settings, state, 'login', address, subject_of(t, settings, 'login_subject', address=address),
                t['login_text'].format(n=len(seen), address=address, time=local_time(last), services=sep.join(services),
-                                      users=sep.join(users)), facts, now=now, priority='high', tags=['lock'])
+                                      users=t['login_names'].format(n=names, names=sep.join(shown))),
+               facts, now=now, priority='high', tags=['lock'])
 
 
 # ---------------------------------------------------------------- intrusion prevention (Suricata)
@@ -770,12 +862,22 @@ def vpn_reads(settings, entries, now):
     if isinstance(ovpn, dict):
         answered.append('ovpn|')
         for iid, inst in (ovpn.get('client') or {}).items():
-            if isinstance(inst, dict) and inst.get('status') != 'failed':
-                name = description(settings, iid) or iid
+            if not isinstance(inst, dict):
+                continue
+            name = description(settings, iid) or iid
+            if inst.get('status') != 'failed' or f'ovpn|c|{iid}' in entries:
                 reads[f'ovpn|c|{iid}'] = ('OpenVPN ' + name, 'up' if inst.get('status') == 'connected' else 'down')
         for sid, srv in (ovpn.get('server') or {}).items():
             if not isinstance(srv, dict) or srv.get('status') == 'failed':
-                keep.append(f'ovpn|s|{sid}|')
+                # An instance whose management socket refuses: ovpn_status.py cannot tell a client from
+                # a server then and lists it under "server" as {"status": "failed"}. Both its keys are
+                # kept; one followed as a client, or a peer-to-peer instance, is down (its process is
+                # gone), so its "down" is reported and its "back" follows. A server's clients stay as
+                # they were.
+                keep += [f'ovpn|s|{sid}|', f'ovpn|c|{sid}']
+                for key in (f'ovpn|c|{sid}', f'ovpn|s|{sid}|'):
+                    if key in entries and key not in reads:
+                        reads[key] = (entries[key].get('name') or 'OpenVPN ' + (description(settings, sid) or sid), 'down')
                 continue
             name = description(settings, sid) or sid
             if 'client_list' not in srv and 'timestamp' in srv:
@@ -797,7 +899,7 @@ def collect_vpn(settings, state, now):
     entries = state.get('vpn')
     reads, answered, keep = vpn_reads(settings, entries, now)
     for key in list(entries):
-        if key in reads or any(key.startswith(p) for p in keep):
+        if key in reads or any(key == p or (p.endswith('|') and key.startswith(p)) for p in keep):
             continue
         if any(key.startswith(p) for p in answered):
             del entries[key]            # gone from what answered: removed from the configuration
@@ -1040,12 +1142,33 @@ def channels_set(settings):
             bool(settings.get('alert_ntfy_server') and settings.get('alert_ntfy_topic')))
 
 
+def dropped(subject, detail):
+    """the one history line of an alert dropped unsent"""
+    try:
+        nr.add_history({'schedule': subject, 'subject': subject, 'recipients': '', 'archive': '', 'status': 'failed',
+                        'detail': detail})
+    except Exception as exc:
+        nr.log(f'alert "{subject}": the history could not be written: {exc}')
+
+
+def retried(was_failing):
+    """deliver()'s record for an alert tried again: its history is written once at the first failure,
+    once on the send that succeeds, and (by its caller) once when it is dropped - not every minute"""
+    return lambda results: was_sent(results) or not was_failing
+
+
 def collect_xgs_outbox(settings, state, now, send):
     """(a) one JSON file per alert - {"source", "kind", "at", "subject", "text", "facts"} - taken and
-    removed once a channel has it; kept while every channel fails, and dropped after 24 hours"""
+    removed once a channel has it; kept while every channel fails and tried again each minute,
+    silently, and dropped after 24 hours"""
+    st = state.get('xgs')
+    failing = st.get('outbox_failing') if isinstance(st.get('outbox_failing'), dict) else {}
     if not os.path.isdir(XGS_OUTBOX):
+        st.pop('outbox_failing', None)
         return
-    for name in sorted(os.listdir(XGS_OUTBOX)):
+    names = sorted(os.listdir(XGS_OUTBOX))
+    failing = {n: t for n, t in failing.items() if n in names}
+    for name in names:
         path = os.path.join(XGS_OUTBOX, name)
         if not name.endswith('.json') or not os.path.isfile(path):
             continue
@@ -1060,21 +1183,54 @@ def collect_xgs_outbox(settings, state, now, send):
             facts = dict(facts, source=str(item.get('source') or ''))
             results = notify(settings, state, str(item.get('kind') or 'xgs'), name,
                              str(item.get('subject') or item.get('text'))[:300], str(item.get('text') or item.get('subject')),
-                             facts, at=time_of(item.get('at'), mtime), now=now, quiet=0, priority='high', tags=['warning'])
-            if results and SENT in results.values():
+                             facts, at=time_of(item.get('at'), mtime), now=now, quiet=0, priority='high', tags=['warning'],
+                             record=retried(name in failing))
+            if was_sent(results):
+                failing.pop(name, None)
                 os.unlink(path)
                 continue
+            failing.setdefault(name, now)
         if now - mtime >= OUTBOX_MAX_AGE:
             os.unlink(path)
-            subject = str(item.get('subject') or name) if isinstance(item, dict) else name
-            nr.add_history({'schedule': subject, 'subject': subject, 'recipients': '', 'archive': '', 'status': 'failed',
-                            'detail': f'{XGS_OUTBOX}/{name} dropped: not sent within 24 hours'})
+            failing.pop(name, None)
+            dropped(str(item.get('subject') or name) if isinstance(item, dict) else name,
+                    f'{XGS_OUTBOX}/{name} dropped: not sent within 24 hours')
+    st['outbox_failing'] = failing
+
+
+PENDING_MAX = 1000              # anomalies kept for a retry at most
+
+
+def send_anomaly(settings, state, rec, now, was_failing):
+    t = nr.texts(settings.get('language'))
+    at = time_of(rec.get('at'), now)
+    kind, host = str(rec.get('kind') or 'anomaly'), str(rec.get('host') or settings.hostname())
+    source = str(rec.get('source') or 'os-xgs-npu')
+    # the anomaly's kind (sent, received, opened, scan, sweep...) is a fact, not a subject
+    results = notify(settings, state, 'anomaly', f'{source}|{rec["id"]}', subject_of(t, settings, 'xgs_anomaly_subject', host=host),
+                     t['xgs_anomaly_text'].format(source=source, time=local_time(at), message=str(rec.get('message') or '')),
+                     {'id': rec['id'], 'kind': kind, 'host': host, 'source': source}, at=at, now=now, quiet=0,
+                     priority='high', tags=['warning'], record=retried(was_failing))
+    return was_sent(results)
 
 
 def collect_xgs_anomaly(settings, state, now, send, first):
     """(b) one JSON object a line - {"id", "at", "host", "kind", "message", "source"} - "id" counting up
-    from 1: what is above the last id sent is sent; a file whose ids are all below it was started again"""
+    from 1: what is above the last id sent is sent; a file whose ids are all below it was started again.
+    An anomaly no channel took is kept pending and tried again each minute, as the outbox's files are,
+    and dropped after 24 hours."""
     st = state.get('xgs')
+    pending = [p for p in st.get('pending') or [] if isinstance(p, dict) and isinstance(p.get('rec'), dict)]
+    still = []
+    for p in pending:
+        if send and channels_set(settings) and send_anomaly(settings, state, p['rec'], now, True):
+            continue
+        if now - (p.get('since') or now) >= OUTBOX_MAX_AGE:
+            dropped(f'{XGS_ANOMALY} id {p["rec"].get("id")}', f'{XGS_ANOMALY} id {p["rec"].get("id")} dropped: '
+                    'not sent within 24 hours')
+            continue
+        still.append(p)
+    st['pending'] = still
     try:
         with open(XGS_ANOMALY, encoding='utf-8', errors='replace') as fh:
             lines = fh.read().splitlines()
@@ -1096,7 +1252,6 @@ def collect_xgs_anomaly(settings, state, now, send, first):
     last = last if isinstance(last, int) else 0
     if top < last:
         last = 0                        # the file was started again
-    t = nr.texts(settings.get('language'))
     for rec in sorted(records, key=lambda r: r['id']):
         if rec['id'] <= last:
             continue
@@ -1104,14 +1259,9 @@ def collect_xgs_anomaly(settings, state, now, send, first):
         st['last_id'] = last
         if not send:
             continue
-        at = time_of(rec.get('at'), now)
-        kind, host = str(rec.get('kind') or 'anomaly'), str(rec.get('host') or settings.hostname())
-        source = str(rec.get('source') or 'os-xgs-npu')
-        # the anomaly's kind (sent, received, opened, scan, sweep...) is a fact, not a subject
-        notify(settings, state, 'anomaly', f'{source}|{rec["id"]}', subject_of(t, settings, 'xgs_anomaly_subject', host=host),
-               t['xgs_anomaly_text'].format(source=source, time=local_time(at), message=str(rec.get('message') or '')),
-               {'id': rec['id'], 'kind': kind, 'host': host, 'source': source}, at=at, now=now, quiet=0, priority='high',
-               tags=['warning'])
+        if not send_anomaly(settings, state, rec, now, False):
+            still.append({'rec': rec, 'since': now})
+    st['pending'] = still[-PENDING_MAX:]
     st['last_id'] = last
 
 

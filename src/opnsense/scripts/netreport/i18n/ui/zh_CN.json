@@ -124,7 +124,7 @@
  "Webhook URL": "Webhook 地址",
  "Each alert is posted here as JSON: source, host, kind, at, subject, text and facts. The certificate is checked. Empty: no webhook.": "每条警报以 JSON 形式（source、host、kind、at、subject、text、facts）POST 到这里。会校验证书。留空：不使用 webhook。",
  "Webhook header": "Webhook 请求头",
- "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token.": "可选：随每次发送附带的一行请求头，例如 Authorization: Bearer 后接你的令牌。",
+ "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token. Stored on this firewall only. Leave empty to keep the current header.": "可选：随每次发送附带的一行请求头，例如 Authorization: Bearer 后接你的令牌。仅保存在本防火墙上。留空则保留当前请求头。",
  "ntfy server": "ntfy 服务器",
  "The address of an ntfy server, for example https://ntfy.example.com. There is no default: ntfy stays off until a server and a topic are set.": "ntfy 服务器的地址，例如 https://ntfy.example.com。没有默认值：在设置服务器和主题之前，ntfy 保持关闭。",
  "ntfy topic": "ntfy 主题",

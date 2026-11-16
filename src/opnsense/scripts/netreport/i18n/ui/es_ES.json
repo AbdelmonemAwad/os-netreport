@@ -124,7 +124,7 @@
  "Webhook URL": "URL del webhook",
  "Each alert is posted here as JSON: source, host, kind, at, subject, text and facts. The certificate is checked. Empty: no webhook.": "Cada alerta se envía aquí como JSON: source, host, kind, at, subject, text y facts. Se comprueba el certificado. Vacío: sin webhook.",
  "Webhook header": "Cabecera del webhook",
- "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token.": "Opcional: una línea de cabecera enviada con cada envío, por ejemplo Authorization: Bearer seguido de su token.",
+ "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token. Stored on this firewall only. Leave empty to keep the current header.": "Opcional: una línea de cabecera enviada con cada envío, por ejemplo Authorization: Bearer seguido de su token. Se guarda solo en este cortafuegos. Déjelo vacío para mantener la cabecera actual.",
  "ntfy server": "Servidor ntfy",
  "The address of an ntfy server, for example https://ntfy.example.com. There is no default: ntfy stays off until a server and a topic are set.": "La dirección de un servidor ntfy, por ejemplo https://ntfy.example.com. No hay valor predeterminado: ntfy queda desactivado hasta que se indiquen un servidor y un tema.",
  "ntfy topic": "Tema de ntfy",

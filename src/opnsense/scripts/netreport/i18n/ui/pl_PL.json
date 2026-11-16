@@ -124,7 +124,7 @@
  "Webhook URL": "Adres URL webhooka",
  "Each alert is posted here as JSON: source, host, kind, at, subject, text and facts. The certificate is checked. Empty: no webhook.": "Każdy alert jest wysyłany tutaj jako JSON: source, host, kind, at, subject, text i facts. Certyfikat jest sprawdzany. Puste: bez webhooka.",
  "Webhook header": "Nagłówek webhooka",
- "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token.": "Opcjonalnie: jeden wiersz nagłówka wysyłany z każdym żądaniem, na przykład Authorization: Bearer i dalej Twój token.",
+ "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token. Stored on this firewall only. Leave empty to keep the current header.": "Opcjonalnie: jeden wiersz nagłówka wysyłany z każdym żądaniem, na przykład Authorization: Bearer i dalej Twój token. Przechowywany tylko na tej zaporze. Pozostaw puste, aby zachować bieżący nagłówek.",
  "ntfy server": "Serwer ntfy",
  "The address of an ntfy server, for example https://ntfy.example.com. There is no default: ntfy stays off until a server and a topic are set.": "Adres serwera ntfy, na przykład https://ntfy.example.com. Nie ma wartości domyślnej: ntfy pozostaje wyłączone, dopóki nie ustawisz serwera i tematu.",
  "ntfy topic": "Temat ntfy",

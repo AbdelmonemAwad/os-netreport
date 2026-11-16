@@ -132,6 +132,7 @@
  "login_subject": "Powtarzające się nieudane logowania z {address} — {title}",
  "login_text": "{n} nieudanych logowań z {address} w ciągu 10 minut, ostatnie o {time}. Usługi: {services}. Próbowane nazwy użytkowników: {users}.",
  "login_api_key": "klucz API {key}…",
+ "login_names": "{n} (pierwsze dwa znaki najwyżej trzech z nich: {names})",
  "ips_subject": "Alert o włamaniu: {signature} — {title}",
  "ips_text": "„{signature}” (ważność {severity}) z {src} do {dst}: {n} razy, pierwszy raz o {time}. Działanie: {action}.",
  "ips_allowed": "dozwolone (tylko alert)",

@@ -55,6 +55,7 @@ import ssl
 import subprocess
 import sys
 import syslog
+import tempfile
 import time
 import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
@@ -142,11 +143,22 @@ def load_json(path, default):
 
 
 def save_json(path, data):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    tmp = path + '.tmp'
-    with open(tmp, 'w', encoding='utf-8') as fh:
-        json.dump(data, fh, indent=1, ensure_ascii=False)
-    os.replace(tmp, path)
+    """Write JSON whole: a temporary file of its own in the same folder, renamed over the file. Its
+    own, so that the scheduler and a page action writing at the same time cannot fail each other."""
+    folder = os.path.dirname(path)
+    os.makedirs(folder, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=folder, prefix='.' + os.path.basename(path) + '.')
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as fh:
+            json.dump(data, fh, indent=1, ensure_ascii=False)
+        os.chmod(tmp, 0o644)
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def log(msg):
@@ -1113,6 +1125,9 @@ def scheduler():
     settings = Settings()
     if settings.get('enabled') != '1':
         return
+    # the minute this run is for, taken before the collectors: a long run must not move the device
+    # scan's :x0/:x5 past it
+    now = datetime.datetime.now()
 
     # The alert collectors first, so that a report being built does not hold an alert back; each in
     # its own try, so that one failing stops neither the others nor the reports.
@@ -1130,7 +1145,6 @@ def scheduler():
 
     state = load_json(STATE_FILE, {})
     last_sent = state.setdefault('last_sent', {})
-    now = datetime.datetime.now()
     for uuid, sched in settings.schedules.items():
         if sched.get('enabled') != '1':
             continue

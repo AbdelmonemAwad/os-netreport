@@ -132,6 +132,7 @@
  "login_subject": "{address} adresinden tekrarlanan başarısız oturum açmalar — {title}",
  "login_text": "{address} adresinden 10 dakika içinde {n} başarısız oturum açma, sonuncusu {time}. Hizmetler: {services}. Denenen kullanıcı adları: {users}.",
  "login_api_key": "API anahtarı {key}…",
+ "login_names": "{n} (en fazla üçünün ilk iki karakteri: {names})",
  "ips_subject": "Saldırı uyarısı: {signature} — {title}",
  "ips_text": "“{signature}” (önem {severity}) {src} kaynağından {dst} hedefine: {n} kez, ilki {time}. Eylem: {action}.",
  "ips_allowed": "izin verildi (yalnızca uyarı)",

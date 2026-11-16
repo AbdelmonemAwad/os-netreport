@@ -132,6 +132,7 @@
  "login_subject": "Wiederholt fehlgeschlagene Anmeldungen von {address} — {title}",
  "login_text": "{n} fehlgeschlagene Anmeldungen von {address} innerhalb von 10 Minuten, die letzte um {time}. Dienste: {services}. Versuchte Benutzernamen: {users}.",
  "login_api_key": "API-Schlüssel {key}…",
+ "login_names": "{n} (die ersten zwei Zeichen von höchstens drei: {names})",
  "ips_subject": "Angriffsalarm: {signature} — {title}",
  "ips_text": "„{signature}“ (Schweregrad {severity}) von {src} an {dst}: {n}-mal, zuerst um {time}. Aktion: {action}.",
  "ips_allowed": "zugelassen (nur Alarm)",

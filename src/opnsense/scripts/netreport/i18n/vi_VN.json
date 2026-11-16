@@ -132,6 +132,7 @@
  "login_subject": "Đăng nhập thất bại lặp lại từ {address} — {title}",
  "login_text": "{n} lần đăng nhập thất bại từ {address} trong 10 phút, lần cuối lúc {time}. Dịch vụ: {services}. Tên người dùng đã thử: {users}.",
  "login_api_key": "khóa API {key}…",
+ "login_names": "{n} (hai ký tự đầu của tối đa ba tên: {names})",
  "ips_subject": "Cảnh báo xâm nhập: {signature} — {title}",
  "ips_text": "“{signature}” (mức {severity}) từ {src} đến {dst}: {n} lần, lần đầu lúc {time}. Hành động: {action}.",
  "ips_allowed": "cho qua (chỉ cảnh báo)",

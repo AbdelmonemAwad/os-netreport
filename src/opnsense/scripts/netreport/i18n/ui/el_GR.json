@@ -124,7 +124,7 @@
  "Webhook URL": "URL webhook",
  "Each alert is posted here as JSON: source, host, kind, at, subject, text and facts. The certificate is checked. Empty: no webhook.": "Κάθε ειδοποίηση αποστέλλεται εδώ ως JSON: source, host, kind, at, subject, text και facts. Το πιστοποιητικό ελέγχεται. Κενό: χωρίς webhook.",
  "Webhook header": "Κεφαλίδα webhook",
- "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token.": "Προαιρετικό: μία γραμμή κεφαλίδας που στέλνεται με κάθε αποστολή, για παράδειγμα Authorization: Bearer και μετά το token σας.",
+ "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token. Stored on this firewall only. Leave empty to keep the current header.": "Προαιρετικό: μία γραμμή κεφαλίδας που στέλνεται με κάθε αποστολή, για παράδειγμα Authorization: Bearer και μετά το token σας. Αποθηκεύεται μόνο σε αυτό το τείχος προστασίας. Αφήστε κενό για να διατηρηθεί η τρέχουσα κεφαλίδα.",
  "ntfy server": "Διακομιστής ntfy",
  "The address of an ntfy server, for example https://ntfy.example.com. There is no default: ntfy stays off until a server and a topic are set.": "Η διεύθυνση ενός διακομιστή ntfy, για παράδειγμα https://ntfy.example.com. Δεν υπάρχει προεπιλογή: το ntfy μένει ανενεργό μέχρι να οριστούν διακομιστής και θέμα.",
  "ntfy topic": "Θέμα ntfy",

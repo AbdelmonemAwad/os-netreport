@@ -79,9 +79,9 @@ off). They are written in the *Alert language*, with times in the firewall's loc
 | Alert | When | Setting (default) |
 | --- | --- | --- |
 | Gateway down / back | A monitored gateway's state (dpinger, as **System → Gateways** shows it) has changed and held on two reads a minute apart: "down since" the first read that saw it, "back after" how long it was down. More than 3 changes in 15 minutes is one "flapping" alert instead, and nothing more until one state has held for 15 minutes. Gateways with monitoring off are skipped. | `gateway_alert` (on) |
-| Repeated failed logins | One address failed to sign in to the web GUI, the API or SSH `login_fail_count` times within 10 minutes; the alert lists the user names tried, the count and the services. Then quiet for that address for 30 minutes. An API key is shown by its first 4 characters only. | `login_alert` (on), `login_fail_count` (5) |
+| Repeated failed logins | One address failed to sign in to the web GUI, the API or SSH `login_fail_count` times within 10 minutes; the alert gives the count, the services, and how many different user names were tried with at most three of them cut to their first two characters (people type a password into the user field, so the names are never sent as they are). Every failed SSH try counts, several on one connection too; sshd's "Invalid user" and PAM's error beside a "Failed" line are the same try, and "Failed publickey" is not counted (an agent offering several keys logs it routinely). The address is the one at the end of the line, so a user name holding an address cannot put it in the alert. Then quiet for that address for 30 minutes. An API key is shown by its first 4 characters only. | `login_alert` (on), `login_fail_count` (5) |
 | Intrusion alert | Suricata logged an alert of high severity (or high and medium) in `eve.json`: one alert per signature and source with the action (allowed or blocked), the destinations and the count, then quiet 30 minutes for that pair. | `ips_alert` (on), `ips_severity` (high only) |
-| VPN tunnel down / back | An IPsec connection has no IKE session ESTABLISHED with a child SA INSTALLED (one still connecting, a peer that does not answer, is not up), a WireGuard peer's last handshake is 180 seconds old or older, an OpenVPN client instance is not connected or a client left its server - with the same two reads as the gateways. A connection that has not been up since the plugin started following it is not reported down; a command that fails is unknown, never down. | `vpn_alert` (on) |
+| VPN tunnel down / back | An IPsec connection has no IKE session ESTABLISHED with a child SA INSTALLED (one still connecting, a peer that does not answer, is not up), a WireGuard peer's last handshake is 180 seconds old or older, an OpenVPN client instance is not connected (or its management socket refuses) or a client left its server - with the same two reads as the gateways. A connection that has not been up since the plugin started following it is not reported down; a command that fails is unknown, never down. | `vpn_alert` (on) |
 | Hardware watchdog reset | os-watchdog recorded that the hardware watchdog caused the last restart (`/var/db/os-watchdog/reset-reason.json`); one alert per boot, with the reasons. | `watchdog_alert` (on) |
 | Command-and-control list | A device of the firewall's own networks (IPv4 or IPv6) tried to reach an address on a command-and-control list that os-blocklists blocks with its log on, on its rule `Block Lists: blocklists_<id> out` or `... from inside`; one alert the first time an address is seen, with its name and MAC where they are known, the list, the destination and the time. The device is also listed in the report's security section. | `c2_alert` (on) |
 | From other XGS plugins | What os-xgs-npu leaves for this plugin (below). | `xgs_alert` (on) |
@@ -97,13 +97,18 @@ its place, so turning it on does not send the backlog.
   recipients, as an HTML mail.
 - **Webhook** (`alert_webhook_url`, empty = off): each alert is POSTed as JSON
   `{"source": "os-netreport", "host", "kind", "at", "subject", "text", "facts"}`, with one optional
-  header line (`alert_webhook_header`, for example an `Authorization` header), a 10 second
-  timeout, and the server's certificate checked.
+  header line (`alert_webhook_header`, for example an `Authorization` header; kept on the
+  firewall like a password, not shown again, and left as it is when the field is saved empty), a
+  10 second timeout, and the server's certificate checked.
 - **ntfy** (`alert_ntfy_server` and `alert_ntfy_topic`, both empty = off): the plain text POSTed to
   `<server>/<topic>` with ntfy's `Title`, `Priority` and `Tags` headers, and `alert_ntfy_token` as
   a bearer token when set. There is no default server, on purpose: a public server by default
   would send the firewall's events out by itself. On a public server anyone who knows the topic
   can read it.
+
+A webhook or ntfy server that answers with a redirect is not followed (the header or the token
+would go along to whatever host it names): any 3xx is a failure, "the server answered with a
+redirect to ...". Only the reply's status is read, not its body.
 
 *Send a test alert* on the Settings tab sends one to every channel that is set and shows what each
 one answered (`configctl netreport testalert` does the same from a shell).
@@ -117,11 +122,14 @@ otherwise above. What the layer remembers - quiet times, log offsets, states - i
 - **Taken from os-xgs-npu** (neither existing is normal):
   - `/var/db/os-xgs-npu/alerts/*.json`, one alert a file
     (`{"source", "kind", "at", "subject", "text", "facts"}`): sent, then removed; kept while every
-    channel fails and tried again the next minute, and removed with a line in the history after
-    24 hours.
+    channel fails and tried again each minute, and removed after 24 hours. A retry is silent: the
+    history has one line at the first failure, one when a send succeeds, and one when the file is
+    dropped.
   - `/var/db/os-xgs-npu/anomaly/alerts.jsonl`, one `{"id", "at", "host", "kind", "message",
     "source"}` a line, `id` counting up from 1: what is above the last id sent is sent; ids all
-    below it mean the file was started again, and it is read from the start.
+    below it mean the file was started again, and it is read from the start. An anomaly no
+    channel took is kept and tried again each minute like the files above (the same history
+    lines), and dropped after 24 hours.
 - **Written for os-portguard**: `/var/db/netreport/infected.json`,
   `{"<address>": {"first", "last", "count", "list", "mac", "name"}}` - the addresses of the
   firewall's own networks that os-blocklists blocked on their way to a command-and-control list

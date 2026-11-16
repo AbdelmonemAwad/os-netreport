@@ -132,6 +132,7 @@
  "login_subject": "Επαναλαμβανόμενες αποτυχημένες συνδέσεις από {address} — {title}",
  "login_text": "{n} αποτυχημένες συνδέσεις από {address} μέσα σε 10 λεπτά, η τελευταία στις {time}. Υπηρεσίες: {services}. Ονόματα χρήστη που δοκιμάστηκαν: {users}.",
  "login_api_key": "κλειδί API {key}…",
+ "login_names": "{n} (οι δύο πρώτοι χαρακτήρες έως τριών από αυτά: {names})",
  "ips_subject": "Ειδοποίηση εισβολής: {signature} — {title}",
  "ips_text": "«{signature}» (σοβαρότητα {severity}) από {src} προς {dst}: {n} φορές, πρώτη στις {time}. Ενέργεια: {action}.",
  "ips_allowed": "επιτράπηκε (μόνο ειδοποίηση)",

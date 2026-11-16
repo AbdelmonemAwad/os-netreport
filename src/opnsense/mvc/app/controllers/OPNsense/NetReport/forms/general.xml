@@ -135,8 +135,8 @@
     <field>
         <id>netreport.general.alert_webhook_header</id>
         <label>Webhook header</label>
-        <type>text</type>
-        <help>Optional: one header line sent with each post, for example Authorization: Bearer followed by your token.</help>
+        <type>password</type>
+        <help>Optional: one header line sent with each post, for example Authorization: Bearer followed by your token. Stored on this firewall only. Leave empty to keep the current header.</help>
     </field>
     <field>
         <id>netreport.general.alert_ntfy_server</id>

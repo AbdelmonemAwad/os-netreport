@@ -124,7 +124,7 @@
  "Webhook URL": "URL вебхука",
  "Each alert is posted here as JSON: source, host, kind, at, subject, text and facts. The certificate is checked. Empty: no webhook.": "Кожне сповіщення надсилається сюди як JSON: source, host, kind, at, subject, text і facts. Сертифікат перевіряється. Порожньо: без вебхука.",
  "Webhook header": "Заголовок вебхука",
- "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token.": "Необов’язково: один рядок заголовка, що надсилається з кожним запитом, наприклад Authorization: Bearer і далі ваш токен.",
+ "Optional: one header line sent with each post, for example Authorization: Bearer followed by your token. Stored on this firewall only. Leave empty to keep the current header.": "Необов’язково: один рядок заголовка, що надсилається з кожним запитом, наприклад Authorization: Bearer і далі ваш токен. Зберігається лише на цьому брандмауері. Залиште порожнім, щоб зберегти поточний заголовок.",
  "ntfy server": "Сервер ntfy",
  "The address of an ntfy server, for example https://ntfy.example.com. There is no default: ntfy stays off until a server and a topic are set.": "Адреса сервера ntfy, наприклад https://ntfy.example.com. Типового значення немає: ntfy вимкнено, доки не задано сервер і тему.",
  "ntfy topic": "Тема ntfy",
