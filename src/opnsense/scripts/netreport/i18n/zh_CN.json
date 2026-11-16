@@ -118,7 +118,6 @@
  "gw_steady_text": "网关 {name} 自 {time} 起一直正常。",
  "login_subject": "来自 {address} 的多次登录失败 — {title}",
  "login_text": "{address} 在 10 分钟内登录失败 {n} 次，最后一次在 {time}。服务：{services}。尝试过的用户名：{users}。",
- "login_api_key": "API 密钥 {key}…",
  "login_names": "{n} 个（最多三个的前两个字符：{names}）",
  "ips_subject": "入侵警报：{signature} — {title}",
  "ips_text": "“{signature}”（严重级别 {severity}）从 {src} 到 {dst}：{n} 次，首次在 {time}。处理：{action}。",

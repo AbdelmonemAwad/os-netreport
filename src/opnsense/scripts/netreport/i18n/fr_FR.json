@@ -131,7 +131,6 @@
  "gw_steady_text": "La passerelle {name} fonctionne sans changement depuis {time}.",
  "login_subject": "Échecs de connexion répétés depuis {address} — {title}",
  "login_text": "{n} échecs de connexion depuis {address} en 10 minutes, le dernier à {time}. Services : {services}. Noms d’utilisateur essayés : {users}.",
- "login_api_key": "clé d’API {key}…",
  "login_names": "{n} (les deux premiers caractères de trois au plus : {names})",
  "ips_subject": "Alerte d’intrusion : {signature} — {title}",
  "ips_text": "« {signature} » (gravité {severity}) de {src} vers {dst} : {n} fois, la première à {time}. Action : {action}.",

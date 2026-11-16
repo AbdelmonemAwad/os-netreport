@@ -131,7 +131,6 @@
  "gw_steady_text": "La puerta de enlace {name} funciona sin cambios desde {time}.",
  "login_subject": "Inicios de sesión fallidos repetidos desde {address} — {title}",
  "login_text": "{n} inicios de sesión fallidos desde {address} en 10 minutos, el último a las {time}. Servicios: {services}. Nombres de usuario probados: {users}.",
- "login_api_key": "clave API {key}…",
  "login_names": "{n} (los dos primeros caracteres de hasta tres: {names})",
  "ips_subject": "Alerta de intrusión: {signature} — {title}",
  "ips_text": "«{signature}» (gravedad {severity}) de {src} a {dst}: {n} veces, la primera a las {time}. Acción: {action}.",

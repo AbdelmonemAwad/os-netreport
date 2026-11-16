@@ -134,7 +134,7 @@
  "Gateway down and back": "ゲートウェイのダウンと復旧",
  "Alert when a monitored gateway goes down and when it comes back, once the new state has held on two reads a minute apart. A gateway that changes state more than 3 times in 15 minutes gets one alert, and no more until it holds one state for 15 minutes.": "監視中のゲートウェイがダウンしたときと復旧したときに、新しい状態が 1 分間隔の 2 回の読み取りで続いた時点でアラートします。15 分間に 3 回を超えて状態が変わるゲートウェイには 1 回だけアラートし、15 分間同じ状態が続くまでそれ以上送りません。",
  "Repeated failed logins": "繰り返されるログイン失敗",
- "Alert when one address fails to sign in to the web GUI, the API or SSH this many times within 10 minutes, then nothing more for that address for 30 minutes.": "1 つのアドレスが 10 分以内に Web GUI、API、SSH へのサインインにこの回数失敗するとアラートし、その後 30 分間はそのアドレスについて送りません。",
+ "Alert when one address fails to sign in to the web GUI, the API or SSH this many times within 10 minutes, then nothing more for that address for 30 minutes. A failed API key is not counted: OPNsense logs no address for it.": "1 つのアドレスが 10 分以内に Web GUI、API、SSH へのサインインにこの回数失敗するとアラートし、その後 30 分間はそのアドレスについて送りません。失敗した API キーは数えません。OPNsense はその送信元アドレスを記録しないためです。",
  "Failed logins before an alert": "アラートまでのログイン失敗回数",
  "Intrusion prevention alerts": "侵入防御のアラート",
  "Alert on Suricata alerts as they are logged: one alert per signature and source, then nothing more for that pair for 30 minutes.": "Suricata のアラートが記録されたときに通知します。シグネチャと送信元の組ごとに 1 回、その後 30 分間はその組について送りません。",

@@ -131,7 +131,6 @@
  "gw_steady_text": "دروازهٔ {name} از {time} بدون تغییر برقرار است.",
  "login_subject": "ورودهای ناموفق پیاپی از {address} — {title}",
  "login_text": "{n} ورود ناموفق از {address} در ۱۰ دقیقه، آخرینش در {time}. سرویس‌ها: {services}. نام‌های کاربری آزموده‌شده: {users}.",
- "login_api_key": "کلید API ‏{key}…",
  "login_names": "{n} (دو نویسهٔ نخست از حداکثر سه نام: {names})",
  "ips_subject": "هشدار نفوذ: {signature} — {title}",
  "ips_text": "«{signature}» (شدت {severity}) از {src} به {dst}: {n} بار، نخستین در {time}. اقدام: {action}.",

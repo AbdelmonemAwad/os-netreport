@@ -380,15 +380,21 @@ def sent_by(collect, n=1):
 alerts.AUDIT_LOG = os.path.join(TOP, 'audit_{day}.log')
 CLOCK = float(int(time.time()) // 86400 * 86400 + 6 * 3600 - time.localtime().tm_gmtoff)   # 06:00 local, today
 audit = lambda: alerts.day_file(alerts.AUDIT_LOG, CLOCK + 60)
+
+
+def gui_line(user, address):
+    """OPNsense 26.7's warning for a failed web GUI login (Auth/AuthenticationFactory.php)"""
+    return ('user %s could not authenticate for WebGui. [using OPNsense\\Auth\\Services\\WebGui + OPNsense\\Auth\\Local] '
+            'at %s' % (user, address))
+
+
 reset()
-append(audit(), ''.join(syslog_line(CLOCK - 30, 'audit', 'user admin failed authentication for WebGui on Local '
-                                    'Database via Local Database at 203.0.113.5') for _ in range(10)))
+append(audit(), ''.join(syslog_line(CLOCK - 30, 'audit', gui_line('admin', '203.0.113.5')) for _ in range(10)))
 check('logins: the first run sends nothing (old lines are history)', sent_by(alerts.collect_logins), [])
 
 
 def gui_failures(n, address='203.0.113.5', user='admin'):
-    append(audit(), ''.join(syslog_line(CLOCK + 30, 'audit', 'user %s failed authentication for WebGui on Local Database '
-                                        'via Local Database at %s' % (user, address)) for _ in range(n)))
+    append(audit(), ''.join(syslog_line(CLOCK + 30, 'audit', gui_line(user, address)) for _ in range(n)))
 
 
 gui_failures(3)
@@ -415,11 +421,56 @@ for _ in range(4):
     append(audit(), syslog_line(CLOCK + 30, 'sshd', 'error: PAM: Authentication error for illegal user test from 198.51.100.8'))
     CLOCK += 5
 check('logins: PAM errors count too, and four are under the count', sent_by(alerts.collect_logins), [])
-append(audit(), syslog_line(CLOCK + 30, 'audit', '[203.0.113.9] authentication failed for api key EXAMPLEKEYexamplesecret1') * 5)
-sent = sent_by(alerts.collect_logins)
-check('logins: an API key shows its first 4 characters only', sent[0]['facts']['users'] if sent else None, ['API key EXAM…'])
-check('logins: and the key is in no alert and no state', any(b'EXAMPLEKEYexample' in p['body'] for p in POSTS) or
+append(audit(), syslog_line(CLOCK + 30, 'audit', 'uri /api/core/firmware/status authentication failed for api key '
+                            'EXAMPLEKEYexamplesecret1 from 203.0.113.9') * 5)
+check('logins: a failed API key counts nothing (OPNsense logs no address for it)', sent_by(alerts.collect_logins), [])
+check('logins: ... and the key is in no alert and no state', any(b'EXAMPLEKEYexample' in p['body'] for p in POSTS) or
       'EXAMPLEKEYexample' in open(alerts.STATE_FILE, encoding='utf-8').read(), False)
+
+# the lines OPNsense 26.7.9 wrote on a lab appliance for one failed web GUI login and one SSH try
+# with an unknown user (the time put to now)
+
+
+def real(at, line):
+    head = line.split(' ', 2)
+    return '%s %s %s\n' % (head[0], stamp(at), head[2])
+
+
+REAL_GUI = [
+    '<36>1 2026-11-16T20:51:28+00:00 OPNsense.internal audit 26383 - [meta sequenceId="1792"] user lab-no-such-user could '
+    'not authenticate for WebGui. [using OPNsense\\Auth\\Services\\WebGui + OPNsense\\Auth\\Local] at 192.0.2.10',
+    '<35>1 2026-11-16T20:51:28+00:00 OPNsense.internal audit 26383 - [meta sequenceId="1793"] /index.php: Web GUI '
+    'authentication error for \'lab-no-such-user\' from 192.0.2.10']
+REAL_SSH = [
+    '<38>1 2026-11-16T20:50:49+00:00 OPNsense.internal sshd-session 62279 - [meta sequenceId="1776"] Invalid user '
+    'lab-no-such-user from 192.0.2.10 port %d',
+    '<38>1 2026-11-16T20:50:49+00:00 OPNsense.internal sshd-session 62279 - [meta sequenceId="1777"] Connection reset by '
+    'invalid user lab-no-such-user 192.0.2.10 port %d [preauth]']
+append(audit(), ''.join(real(CLOCK + 30, line) for line in REAL_GUI * 4))
+check('logins (OPNsense 26.7.9): a failed GUI login and the login page\'s line for it are one try',
+      sent_by(alerts.collect_logins), [])
+append(audit(), ''.join(real(CLOCK + 30, line) for line in REAL_GUI))
+sent = sent_by(alerts.collect_logins)
+check('logins (OPNsense 26.7.9): the fifth try is the alert, with its service',
+      [(s['facts']['address'], s['facts']['count'], s['facts']['services'], s['facts']['users']) for s in sent],
+      [('192.0.2.10', 5, ['WebGui'], ['la…'])])
+append(audit(), ''.join(real(CLOCK + 30, line.replace('192.0.2.10', '192.0.2.12') % port)
+                        for port in range(52425, 52430) for line in REAL_SSH))
+sent = sent_by(alerts.collect_logins)
+check('logins (OPNsense 26.7.9): sshd-session\'s "Invalid user" counts, its "Connection reset" does not',
+      [(s['facts']['address'], s['facts']['count'], s['facts']['services']) for s in sent], [('192.0.2.12', 5, ['ssh'])])
+append(audit(), ''.join(syslog_line(CLOCK + 30, 'audit', 'user admin failed authentication for WebGui on '
+                                    'OPNsense\\Auth\\Local via OPNsense\\Auth\\Services\\WebGui at 192.0.2.13') * 5) +
+       ''.join(syslog_line(CLOCK + 30, 'audit', 'user admin could not authenticate for WebGui, failed constraints on '
+                                    'OPNsense\\Auth\\Local authenticated via OPNsense\\Auth\\Services\\WebGui at 192.0.2.14') * 5) +
+       ''.join(syslog_line(CLOCK + 30, 'audit', '/index.php: Web GUI authentication error for \'admin\' from 192.0.2.15') * 5))
+check('logins: the debug line, a disabled account\'s "failed constraints" and the login page\'s line count nothing',
+      sent_by(alerts.collect_logins), [])
+append(audit(), ''.join(syslog_line(CLOCK + 30, 'sshd', gui_line('admin', '192.0.2.16')) for _ in range(5)) +
+       ''.join(syslog_line(CLOCK + 30, 'audit', 'Invalid user guest from 192.0.2.17 port %d' % (55000 + i)) for i in range(5)) +
+       ''.join(syslog_line(CLOCK + 30, 'filterlog', 'Failed password for guest from 192.0.2.18 port %d ssh2' % (56000 + i))
+               for i in range(5)))
+check('logins: a line is read only by the patterns of its program', sent_by(alerts.collect_logins), [])
 check('logins: older than 10 minutes, a failure no longer counts', (minute(alerts.collect_logins, 11),
                                                                     nr.load_json(alerts.STATE_FILE, {})['login']['fails']), ([], {}))
 
@@ -432,17 +483,17 @@ MIDNIGHT = datetime.datetime.combine(datetime.date.fromtimestamp(CLOCK) + dateti
                                      datetime.time()).timestamp()
 CLOCK = MIDNIGHT - 120
 minute(alerts.collect_logins)
-append(alerts.day_file(alerts.AUDIT_LOG, MIDNIGHT - 60), syslog_line(MIDNIGHT - 30, 'audit', 'user admin failed '
-       'authentication for WebGui on Local Database via Local Database at 203.0.113.21') * 2)
-append(alerts.day_file(alerts.AUDIT_LOG, MIDNIGHT + 60), syslog_line(MIDNIGHT + 10, 'audit', 'user admin failed '
-       'authentication for WebGui on Local Database via Local Database at 203.0.113.21') * 3)
+append(alerts.day_file(alerts.AUDIT_LOG, MIDNIGHT - 60), syslog_line(MIDNIGHT - 30, 'audit',
+                                                                       gui_line('admin', '203.0.113.21')) * 2)
+append(alerts.day_file(alerts.AUDIT_LOG, MIDNIGHT + 60), syslog_line(MIDNIGHT + 10, 'audit',
+                                                                       gui_line('admin', '203.0.113.21')) * 3)
 check('logins: a new day: the rest of the old file, then the new one', [(s['facts']['address'], s['facts']['count'])
                                                                        for s in sent_by(alerts.collect_logins)],
       [('203.0.113.21', 5)])
 
 # syslog-ng's suppress(): five identical lines within seconds are the first, then "repeated 4 times"
 FOLD = "Last message '%s' repeated %d times, suppressed by syslog-ng on fw.example.com"
-GUI_FAIL = 'user labuser failed authentication for WebGui on Local Database via Local Database at 203.0.113.22'
+GUI_FAIL = gui_line('labuser', '203.0.113.22')
 append(audit(), syslog_line(CLOCK + 20, 'audit', GUI_FAIL) + syslog_line(CLOCK + 25, 'audit', FOLD % (GUI_FAIL[:20], 4)))
 check('logins: a line syslog-ng folded counts as many times as it was repeated',
       [(s['facts']['address'], s['facts']['count']) for s in sent_by(alerts.collect_logins)], [('203.0.113.22', 5)])
@@ -460,8 +511,7 @@ check('logins: a fold of another message, or of another program, counts nothing'
 # a user name is what the other side typed: the address is the one at the end of the line
 append(audit(), ''.join(syslog_line(CLOCK + 20, 'sshd', 'Failed password for invalid user x from 192.0.2.77 port 22 from '
                                     '198.51.100.30 port %d ssh2' % (40000 + i)) for i in range(5)))
-append(audit(), ''.join(syslog_line(CLOCK + 20, 'audit', 'user y at 192.0.2.78 failed authentication for WebGui on Local '
-                                    'Database via Local Database at 198.51.100.31') for i in range(5)))
+append(audit(), ''.join(syslog_line(CLOCK + 20, 'audit', gui_line('y at 192.0.2.78', '198.51.100.31')) for i in range(5)))
 append(audit(), ''.join(syslog_line(CLOCK + 20 + 5 * i, 'sshd', 'error: PAM: Authentication error for z from 192.0.2.79 '
                                     'from 198.51.100.32') for i in range(5)))
 check('logins: a user name holding an address does not put it in the alert',

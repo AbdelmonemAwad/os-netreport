@@ -131,7 +131,6 @@
  "gw_steady_text": "Gateway {name} has been up without a change since {time}.",
  "login_subject": "Repeated failed logins from {address} — {title}",
  "login_text": "{n} failed logins from {address} within 10 minutes, the last at {time}. Services: {services}. User names tried: {users}.",
- "login_api_key": "API key {key}…",
  "login_names": "{n} (the first two characters of up to three: {names})",
  "ips_subject": "Intrusion alert: {signature} — {title}",
  "ips_text": "“{signature}” (severity {severity}) from {src} to {dst}: {n} in this minute, the first at {time}. Action: {action}.",

@@ -535,11 +535,11 @@ def read_from(place, path):
     return lines
 
 
-def follow(place, path, unfold=False, redact=None):
+def follow(place, path, unfold=False):
     """New lines of a log followed by name: on the first run only where it ends is recorded; when the
     name changes (a new day's file), the rest of the old file is read and the new one from 0. With
     unfold, the lines syslog-ng folded into "Last message '...' repeated N times" are given back
-    (see unfolded()); redact is applied to the line kept for that."""
+    (see unfolded())."""
     if 'path' not in place:
         try:
             info = os.stat(path)
@@ -552,7 +552,7 @@ def follow(place, path, unfold=False, redact=None):
         lines += read_from(place, place['path'])
         place.update(path=path, inode=None, offset=0)
     lines += read_from(place, path)
-    return unfolded(place, lines, redact) if unfold else lines
+    return unfolded(place, lines) if unfold else lines
 
 
 def rfc5424(line):
@@ -593,9 +593,15 @@ def message_of(line):
 # the folded line's program
 FOLDED = re.compile(r"^Last message '(?P<prefix>.*)' repeated (?P<n>\d+) times?, suppressed by syslog-ng on \S+\s*$")
 UNFOLD_MAX = 1000               # a folded count is given back up to this many times
+API_KEY = re.compile(r'(authentication failed for api key )(\S{0,4})\S*')
 
 
-def unfolded(place, lines, redact=None):
+def without_key(line):
+    """a line as it may be kept in the state: an API key OPNsense logged cut to its first 4 characters"""
+    return API_KEY.sub(lambda found: found.group(1) + found.group(2), line)
+
+
+def unfolded(place, lines):
     """The lines with each one syslog-ng folded given back: a "Last message '...' repeated N times" line
     stands for N more of the program's previous line, when the quoted part begins that line's message;
     it carries the time of the fold. The previous line of each program is kept in place["prev"], so a
@@ -619,7 +625,7 @@ def unfolded(place, lines, redact=None):
         head, _, rest = earlier.partition(' ')
         again = ' '.join([head, stamp, rest.partition(' ')[2]])
         out += [again] * min(int(folded.group('n')), UNFOLD_MAX)
-    place['prev'] = {p: (redact(line) if redact else line)[:4096] for p, line in prev.items()}
+    place['prev'] = {p: without_key(line)[:4096] for p, line in prev.items()}
     return out
 
 
@@ -629,46 +635,45 @@ LOGIN_WINDOW = 10 * 60
 LOGIN_QUIET = 30 * 60
 QUIET['login'] = LOGIN_QUIET
 IP = r'(?P<address>[0-9A-Fa-f:.]*[0-9A-Fa-f])'
+GUI_PROGRAMS = ('audit',)
+SSH_PROGRAMS = ('sshd', 'sshd-session')     # sshd-session: OpenSSH's per-connection process (OPNsense 26.7)
 # Each pattern is anchored at the end of the message and the address taken from there: a user name is
 # what the other side typed, and one like "x from 192.0.2.77 port 22" must not put that address in
-# the alert. (kind, service, pattern); a user name may hold spaces.
+# the alert. A pattern is tried only on the lines of its programs. (kind, programs, service, pattern);
+# a user name may hold spaces.
 LOGIN_PATTERNS = [
-    # OPNsense 26.7, web GUI and API logins (level debug, program "audit")
-    ('gui', None, re.compile(r'user (?P<user>.+) failed authentication for (?P<service>.+?) on .+ via .+ at ' + IP + '$')),
+    # OPNsense 26.7 (Auth/AuthenticationFactory.php): every failed authentication of any service - the
+    # web GUI, the API's user and password, others - ends in one warning, "user <name> could not
+    # authenticate for <service>. [using <service class> + <authenticator class>] at <address>". Not
+    # counted: the debug line before it per authenticator ("... failed authentication for ..."), which
+    # is not always written; the login page's "Web GUI authentication error for '<name>' from
+    # <address>", the same try; and "... could not authenticate for <service>, failed constraints on
+    # ...", a right password for an account disabled or expired. A failed API key is logged without
+    # the caller's address ("uri ... authentication failed for api key ..."), so it is not counted.
+    ('gui', GUI_PROGRAMS, None,
+     re.compile(r'user (?P<user>.+) could not authenticate for (?P<service>\S+?)\. \[using [^\[\]]* \+ [^\[\]]*\] at ' +
+                IP + '$')),
     # sshd: every failed try is a line of its own; "publickey" is not counted, since an agent offering
     # several keys to a valid user logs it routinely
-    ('failed', 'ssh', re.compile(r'Failed (?P<method>\S+) for (?:invalid user )?(?P<user>.*) from ' + IP +
-                                 r' port (?P<port>\d+)(?: ssh2)?$')),
-    ('invalid', 'ssh', re.compile(r'Invalid user (?P<user>.*) from ' + IP + r' port (?P<port>\d+)$')),
-    ('pam', 'ssh', re.compile(r'error: PAM: Authentication error for (?:illegal user )?(?P<user>.*) from ' + IP + '$')),
+    ('failed', SSH_PROGRAMS, 'ssh', re.compile(r'Failed (?P<method>\S+) for (?:invalid user )?(?P<user>.*) from ' + IP +
+                                               r' port (?P<port>\d+)(?: ssh2)?$')),
+    ('invalid', SSH_PROGRAMS, 'ssh', re.compile(r'Invalid user (?P<user>.*) from ' + IP + r' port (?P<port>\d+)$')),
+    ('pam', SSH_PROGRAMS, 'ssh', re.compile(r'error: PAM: Authentication error for (?:illegal user )?(?P<user>.*) from ' +
+                                            IP + '$')),
 ]
-API_KEY = re.compile(r'authentication failed for api key (\S+)')
 PAM_PAIR = 2                    # seconds: a PAM error and sshd's "Failed" line of one try
 
 
-def without_key(line):
-    """the line with an API key cut to its first 4 characters, as it may be kept in the state"""
-    return API_KEY.sub(lambda found: 'authentication failed for api key ' + found.group(1)[:4], line)
-
-
-def an_address(text):
-    for word in re.findall(r'[0-9A-Fa-f:.]{3,}', text):
-        try:
-            return str(ipaddress.ip_address(word.strip('.:')))
-        except ValueError:
-            continue
-    return ''
-
-
 def login_failure(line):
-    """(address, user, service, port, kind) of a failed login line, or None; an API key is never kept
-    whole (its user is "api-key:" and its first 4 characters)"""
-    msg = message_of(line).strip()
-    found = API_KEY.search(msg)
-    if found:
-        key = found.group(1)
-        return (an_address(msg[:found.start()]) or '?', 'api-key:' + key[:4], 'api', '', 'api')
-    for kind, service, pattern in LOGIN_PATTERNS:
+    """(address, user, service, port, kind) of a failed login line, or None; a line is read only by
+    the patterns of its program"""
+    parsed = rfc5424(line)
+    if not parsed:
+        return None
+    program, msg = parsed[1], parsed[2].strip()
+    for kind, programs, service, pattern in LOGIN_PATTERNS:
+        if program not in programs:
+            continue
         found = pattern.search(msg)
         if not found or (kind == 'failed' and found.group('method') == 'publickey'):
             continue
@@ -684,8 +689,6 @@ def login_failure(line):
 def user_id(user):
     """A user name tried is kept as a digest, to count the names, and its first two characters, to
     show them: people type a password into the user field, and the names are never sent whole."""
-    if user.startswith('api-key:'):
-        return user, user
     return hashlib.sha256(user.encode('utf-8', 'replace')).hexdigest()[:16], user[:2] + '…'
 
 
@@ -737,7 +740,7 @@ def collect_logins(settings, state, now):
     first = state.first('login')
     st = state.get('login')
     place = st.setdefault('log', {})
-    lines = follow(place, day_file(AUDIT_LOG, now), unfold=True, redact=without_key)
+    lines = follow(place, day_file(AUDIT_LOG, now), unfold=True)
     fails = failures_of(st.get('fails'))
     for line in lines:
         failure = login_failure(line)
@@ -761,7 +764,7 @@ def collect_logins(settings, state, now):
         if len(seen) < limit:
             continue
         names = len({f[1] for f in seen})
-        shown = sorted({t['login_api_key'].format(key=f[6][8:]) if f[6].startswith('api-key:') else f[6] for f in seen})[:3]
+        shown = sorted({f[6] for f in seen})[:3]
         services = sorted({f[2] for f in seen})
         last = max(f[0] for f in seen)
         facts = {'address': address, 'count': len(seen), 'user_names': names, 'users': shown, 'services': services,

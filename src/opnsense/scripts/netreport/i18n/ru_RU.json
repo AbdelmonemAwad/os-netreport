@@ -131,7 +131,6 @@
  "gw_steady_text": "Шлюз {name} работает без изменений с {time}.",
  "login_subject": "Повторные неудачные входы с {address} — {title}",
  "login_text": "{n} неудачных входов с {address} за 10 минут, последний в {time}. Службы: {services}. Пробованные имена пользователей: {users}.",
- "login_api_key": "ключ API {key}…",
  "login_names": "{n} (первые два символа не более чем трёх из них: {names})",
  "ips_subject": "Оповещение о вторжении: {signature} — {title}",
  "ips_text": "«{signature}» (серьёзность {severity}) с {src} на {dst}: {n} раз, впервые в {time}. Действие: {action}.",

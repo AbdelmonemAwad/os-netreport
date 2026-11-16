@@ -118,7 +118,6 @@
  "gw_steady_text": "ゲートウェイ {name} は {time} から変化なく稼働しています。",
  "login_subject": "{address} からのログイン失敗の繰り返し — {title}",
  "login_text": "{address} から 10 分以内に {n} 回のログイン失敗。最後は {time}。サービス: {services}。試されたユーザー名: {users}。",
- "login_api_key": "API キー {key}…",
  "login_names": "{n} 件（最大 3 件の先頭 2 文字: {names}）",
  "ips_subject": "侵入アラート: {signature} — {title}",
  "ips_text": "「{signature}」（重大度 {severity}）{src} から {dst} へ: {n} 回、最初は {time}。処置: {action}。",

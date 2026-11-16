@@ -166,7 +166,7 @@
         <id>netreport.general.login_alert</id>
         <label>Repeated failed logins</label>
         <type>checkbox</type>
-        <help>Alert when one address fails to sign in to the web GUI, the API or SSH this many times within 10 minutes, then nothing more for that address for 30 minutes.</help>
+        <help>Alert when one address fails to sign in to the web GUI, the API or SSH this many times within 10 minutes, then nothing more for that address for 30 minutes. A failed API key is not counted: OPNsense logs no address for it.</help>
     </field>
     <field>
         <id>netreport.general.login_fail_count</id>

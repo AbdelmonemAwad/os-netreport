@@ -131,7 +131,6 @@
  "gw_steady_text": "Il gateway {name} funziona senza cambiamenti dalle {time}.",
  "login_subject": "Accessi falliti ripetuti da {address} — {title}",
  "login_text": "{n} accessi falliti da {address} in 10 minuti, l’ultimo alle {time}. Servizi: {services}. Nomi utente provati: {users}.",
- "login_api_key": "chiave API {key}…",
  "login_names": "{n} (i primi due caratteri di al massimo tre: {names})",
  "ips_subject": "Avviso di intrusione: {signature} — {title}",
  "ips_text": "«{signature}» (gravità {severity}) da {src} a {dst}: {n} volte, la prima alle {time}. Azione: {action}.",

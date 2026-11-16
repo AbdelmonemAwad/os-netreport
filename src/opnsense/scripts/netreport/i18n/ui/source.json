@@ -134,7 +134,7 @@
  "Gateway down and back",
  "Alert when a monitored gateway goes down and when it comes back, once the new state has held on two reads a minute apart. A gateway that changes state more than 3 times in 15 minutes gets one alert, and no more until it holds one state for 15 minutes.",
  "Repeated failed logins",
- "Alert when one address fails to sign in to the web GUI, the API or SSH this many times within 10 minutes, then nothing more for that address for 30 minutes.",
+ "Alert when one address fails to sign in to the web GUI, the API or SSH this many times within 10 minutes, then nothing more for that address for 30 minutes. A failed API key is not counted: OPNsense logs no address for it.",
  "Failed logins before an alert",
  "Intrusion prevention alerts",
  "Alert on Suricata alerts as they are logged: one alert per signature and source, then nothing more for that pair for 30 minutes.",

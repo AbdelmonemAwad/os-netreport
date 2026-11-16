@@ -134,7 +134,7 @@
  "Gateway down and back": "閘道中斷與恢復",
  "Alert when a monitored gateway goes down and when it comes back, once the new state has held on two reads a minute apart. A gateway that changes state more than 3 times in 15 minutes gets one alert, and no more until it holds one state for 15 minutes.": "受監控的閘道中斷或恢復時發出警報，前提是新狀態在間隔一分鐘的兩次讀取中保持不變。15 分鐘內狀態變化超過 3 次的閘道只收到一則警報，直到它在一個狀態保持 15 分鐘前不再傳送。",
  "Repeated failed logins": "多次登入失敗",
- "Alert when one address fails to sign in to the web GUI, the API or SSH this many times within 10 minutes, then nothing more for that address for 30 minutes.": "當一個位址在 10 分鐘內登入 Web 介面、API 或 SSH 失敗達到此次數時發出警報，之後 30 分鐘內不再為該位址傳送。",
+ "Alert when one address fails to sign in to the web GUI, the API or SSH this many times within 10 minutes, then nothing more for that address for 30 minutes. A failed API key is not counted: OPNsense logs no address for it.": "當一個位址在 10 分鐘內登入 Web 介面、API 或 SSH 失敗達到此次數時發出警報，之後 30 分鐘內不再為該位址傳送。被拒絕的 API 金鑰不計入：OPNsense 不會為其記錄位址。",
  "Failed logins before an alert": "觸發警報的登入失敗次數",
  "Intrusion prevention alerts": "入侵防禦警報",
  "Alert on Suricata alerts as they are logged: one alert per signature and source, then nothing more for that pair for 30 minutes.": "Suricata 告警寫入日誌時即發出警報：每個特徵與來源組合一則，之後 30 分鐘內不再為該組合傳送。",

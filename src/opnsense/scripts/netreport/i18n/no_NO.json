@@ -131,7 +131,6 @@
  "gw_steady_text": "Gateway {name} har vært oppe uten endring siden {time}.",
  "login_subject": "Gjentatte mislykkede pålogginger fra {address} — {title}",
  "login_text": "{n} mislykkede pålogginger fra {address} innen 10 minutter, den siste {time}. Tjenester: {services}. Brukernavn som ble prøvd: {users}.",
- "login_api_key": "API-nøkkel {key}…",
  "login_names": "{n} (de to første tegnene i opptil tre av dem: {names})",
  "ips_subject": "Inntrengingsvarsel: {signature} — {title}",
  "ips_text": "«{signature}» (alvorlighetsgrad {severity}) fra {src} til {dst}: {n} ganger, første gang {time}. Handling: {action}.",

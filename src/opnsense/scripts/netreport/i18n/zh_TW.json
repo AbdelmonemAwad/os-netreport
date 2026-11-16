@@ -118,7 +118,6 @@
  "gw_steady_text": "閘道 {name} 自 {time} 起一直正常。",
  "login_subject": "來自 {address} 的多次登入失敗 — {title}",
  "login_text": "{address} 在 10 分鐘內登入失敗 {n} 次，最後一次在 {time}。服務：{services}。嘗試過的使用者名稱：{users}。",
- "login_api_key": "API 金鑰 {key}…",
  "login_names": "{n} 個（最多三個的前兩個字元：{names}）",
  "ips_subject": "入侵警報：{signature} — {title}",
  "ips_text": "「{signature}」（嚴重等級 {severity}）從 {src} 到 {dst}：{n} 次，首次在 {time}。處理：{action}。",

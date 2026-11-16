@@ -131,7 +131,6 @@
  "gw_steady_text": "Brána {name} je v provozu beze změny od {time}.",
  "login_subject": "Opakovaná neúspěšná přihlášení z {address} — {title}",
  "login_text": "{n} neúspěšných přihlášení z {address} během 10 minut, poslední v {time}. Služby: {services}. Zkoušená uživatelská jména: {users}.",
- "login_api_key": "klíč API {key}…",
  "login_names": "{n} (první dva znaky nejvýše tří z nich: {names})",
  "ips_subject": "Upozornění na průnik: {signature} — {title}",
  "ips_text": "„{signature}“ (závažnost {severity}) z {src} do {dst}: {n}×, poprvé v {time}. Akce: {action}.",

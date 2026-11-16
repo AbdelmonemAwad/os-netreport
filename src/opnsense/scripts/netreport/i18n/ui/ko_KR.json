@@ -134,7 +134,7 @@
  "Gateway down and back": "게이트웨이 장애 및 복구",
  "Alert when a monitored gateway goes down and when it comes back, once the new state has held on two reads a minute apart. A gateway that changes state more than 3 times in 15 minutes gets one alert, and no more until it holds one state for 15 minutes.": "모니터링 중인 게이트웨이가 다운되거나 복구되면, 새 상태가 1분 간격 두 번의 읽기 동안 유지된 뒤 알립니다. 15분 동안 상태가 3번 넘게 바뀌는 게이트웨이는 알림을 한 번만 받고, 15분 동안 한 상태를 유지할 때까지 더 받지 않습니다.",
  "Repeated failed logins": "반복된 로그인 실패",
- "Alert when one address fails to sign in to the web GUI, the API or SSH this many times within 10 minutes, then nothing more for that address for 30 minutes.": "한 주소가 10분 안에 웹 GUI, API 또는 SSH 로그인에 이 횟수만큼 실패하면 알리고, 그 후 30분 동안 해당 주소에 대해서는 더 알리지 않습니다.",
+ "Alert when one address fails to sign in to the web GUI, the API or SSH this many times within 10 minutes, then nothing more for that address for 30 minutes. A failed API key is not counted: OPNsense logs no address for it.": "한 주소가 10분 안에 웹 GUI, API 또는 SSH 로그인에 이 횟수만큼 실패하면 알리고, 그 후 30분 동안 해당 주소에 대해서는 더 알리지 않습니다. 실패한 API 키는 세지 않습니다. OPNsense가 그 주소를 기록하지 않기 때문입니다.",
  "Failed logins before an alert": "알림 전 로그인 실패 횟수",
  "Intrusion prevention alerts": "침입 방지 알림",
  "Alert on Suricata alerts as they are logged: one alert per signature and source, then nothing more for that pair for 30 minutes.": "Suricata 경고가 기록되는 즉시 알립니다. 시그니처와 출발지 쌍마다 한 번, 그 후 30분 동안 그 쌍에 대해서는 더 알리지 않습니다.",

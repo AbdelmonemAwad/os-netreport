@@ -131,7 +131,6 @@
  "gw_steady_text": "البوابة {name} تعمل دون تغيير منذ {time}.",
  "login_subject": "محاولات دخول فاشلة متكررة من {address} — {title}",
  "login_text": "{n} محاولات دخول فاشلة من {address} خلال 10 دقائق، آخرها في {time}. الخدمات: {services}. أسماء المستخدمين المجرَّبة: {users}.",
- "login_api_key": "مفتاح API ‏{key}…",
  "login_names": "{n} (أول حرفين من ثلاثة منها على الأكثر: {names})",
  "ips_subject": "تنبيه أمني من Suricata: {signature} — {title}",
  "ips_text": "«{signature}» (الخطورة {severity}) من {src} إلى {dst}: {n} مرة، أولها في {time}. الإجراء: {action}.",
