@@ -96,7 +96,10 @@ Limits on each minute's pass, so that a storm or a pause does not flood the chan
 
 - One collector sends at most 10 alerts a minute. Past that, the rest are lines in the history
   only ("Skipped", "held: more than 10 alerts of this kind this minute"), and one more alert says
-  how many: "N more alerts of the same kind", see the history.
+  how many: "N more alerts of the same kind", see the history. os-xgs-npu's alert files and
+  anomalies (below) are not dropped at the cap: those past it wait for the next minute, with no
+  history line, and new ones go before the retries of ones that failed, so the retries cannot
+  crowd them out.
 - The whole pass has 45 seconds. Collectors not yet run by then wait for the next minute; their
   places in the logs do not move, so nothing is lost.
 - When the last pass is more than 10 minutes old (the plugin was off, the firewall was down), the
@@ -135,7 +138,8 @@ otherwise above. What the layer remembers - quiet times, log offsets, states - i
 - **Taken from os-xgs-npu** (neither existing is normal):
   - `/var/db/os-xgs-npu/alerts/*.json`, one alert a file
     (`{"source", "kind", "at", "subject", "text", "facts"}`): sent, then removed; kept while every
-    channel fails and tried again each minute, and removed after 24 hours. Files already waiting
+    channel fails and tried again each minute, and removed after 24 hours; a file is removed
+    only once it was sent or is 24 hours old. Files already waiting
     when the plugin first runs are taken too, on purpose: they are left there to be taken. A
     retry is silent: the history has one line at the first failure, one when a send succeeds,
     and one when the file is dropped. Only regular files are taken: a symbolic link is not

@@ -88,7 +88,7 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.flush()
             time.sleep(3)
             return
-        code = 500 if self.path.startswith('/fail') else 200
+        code = 500 if self.path.startswith('/fail') or b'Example stuck' in body else 200
         self.send_response(code)
         self.send_header('Content-Length', '2')
         self.end_headers()
@@ -972,6 +972,42 @@ check('cap: 10 alerts from one collector, then one that says how many more',
       (11, '3 more alerts of the same kind — Example network', {'collector': 'ips', 'held': 3}))
 check('cap: ... the rest are in the history only', [h['status'] for h in history()[:len(history()) - history_before]].count('skipped'),
       3)
+
+# what the cap holds of the outbox and the anomalies waits for the next minute; it is not lost
+reset()
+history_before = len(history())
+for i in range(13):
+    outbox('c%02d.json' % i, subject='Example capped alert %d' % i)
+sent = run_pass([('xgs', alerts.collect_xgs)])
+check('cap: 10 outbox files sent, the other 3 kept, with no history line',
+      (len(sent), sorted(os.listdir(alerts.XGS_OUTBOX)), len(history()) - history_before),
+      (10, ['c10.json', 'c11.json', 'c12.json'], 10))
+check('cap: ... and sent the next minute', ([s['subject'] for s in run_pass([('xgs', alerts.collect_xgs)])],
+                                            os.listdir(alerts.XGS_OUTBOX)),
+      (['Example capped alert 10', 'Example capped alert 11', 'Example capped alert 12'], []))
+LAST_ID = nr.load_json(alerts.STATE_FILE, {})['xgs']['last_id']
+anomaly(*range(1, LAST_ID + 14))
+sent = run_pass([('xgs', alerts.collect_xgs)])
+check('cap: 10 anomalies sent, 3 kept for the next minute', (len(sent), [p['rec']['id'] for p in nr.load_json(
+    alerts.STATE_FILE, {})['xgs'].get('pending') or []]), (10, [LAST_ID + 11, LAST_ID + 12, LAST_ID + 13]))
+check('cap: ... and sent then', [s['facts']['id'] for s in run_pass([('xgs', alerts.collect_xgs)])],
+      [LAST_ID + 11, LAST_ID + 12, LAST_ID + 13])
+GENERAL.update(alert_ntfy_server='')
+MAIL['fail'] = 'example mail failure'
+for i in range(10):
+    outbox('d%02d.json' % i, subject='Example stuck alert %d' % i)
+run_pass([('xgs', alerts.collect_xgs)])
+outbox('e-new.json', subject='Example new alert')
+sent = run_pass([('xgs', alerts.collect_xgs)])
+check('cap: retries cannot crowd out a new file: it goes first, and is sent', ([s['subject'] for s in sent][:1],
+                                                                              'e-new.json' in os.listdir(alerts.XGS_OUTBOX)),
+      (['Example new alert'], False))
+check('cap: ... the retries after it, within the cap', len(sent), 10)
+check('cap: ... and the retries are kept', len(os.listdir(alerts.XGS_OUTBOX)), 10)
+for name in os.listdir(alerts.XGS_OUTBOX):
+    os.unlink(os.path.join(alerts.XGS_OUTBOX, name))
+GENERAL.update(alert_ntfy_server=BASE + '/ntfy/')
+MAIL['fail'] = None
 
 TICK = [0.0]
 RAN2 = []

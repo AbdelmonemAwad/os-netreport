@@ -68,8 +68,9 @@ Taken from os-xgs-npu, when it is installed (neither existing is normal):
     /var/db/os-xgs-npu/alerts/*.json - one alert a file, {"source", "kind", "at", "subject", "text",
     "facts"}: sent, then removed; kept while every channel fails and tried again each minute
     (silently: a history line at the first failure, on the send that succeeds, and when it is
-    dropped), and removed after 24 hours. Only regular files are taken (a symbolic link is not
-    followed), and one is removed only while it is still the file that was read.
+    dropped), and removed after 24 hours. One held at the collector's cap is not removed: it waits
+    for the next minute. Only regular files are taken (a symbolic link is not followed), and one is
+    removed only while it is still the file that was read.
 
     /var/db/os-xgs-npu/anomaly/alerts.jsonl - one {"id", "at", "host", "kind", "message", "source"} a
     line, "id" counting up from 1 and never reused: what is above the last id sent is sent; ids all
@@ -103,7 +104,7 @@ QUIET_KEEP = 2 * 86400          # how long a sent key is remembered at all
 HTTP_TIMEOUT = 10
 NOT_SET = 'not set'
 SENT = 'sent'
-HELD = 'held'                   # past a collector's cap this run: in the history only
+HELD = 'held'                   # past a collector's cap this run: in the history only, or left for the next minute
 COLLECTOR_CAP = 10              # alerts one collector sends in one run; the rest are summed up in one more
 PASS_DEADLINE = 45              # seconds: collectors not yet run by then wait for the next minute
 STALE_AFTER = 10 * 60           # a pass older than this, or a log line older than this, is not alerted on
@@ -304,9 +305,14 @@ def was_sent(results):
     return bool(results) and SENT in results.values()
 
 
-def taken(results):
-    """whether the alert is done with: a channel took it, or it was held past its collector's cap"""
-    return was_sent(results) or (bool(results) and HELD in results.values())
+def waits(results):
+    """whether the alert was held past its collector's cap: it was not tried"""
+    return bool(results) and HELD in results.values()
+
+
+def room(state):
+    """whether the running collector may still hand on an alert this run"""
+    return state is None or not state.running or state.handed < COLLECTOR_CAP
 
 
 def hold(alert):
@@ -353,12 +359,17 @@ def deliver(settings, alert, record=None):
 
 
 def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=None, now=None,
-           quiet=None, priority='default', tags=(), record=None):
+           quiet=None, priority='default', tags=(), record=None, defer=False):
     """Send one alert, unless the same kind and key went out within its quiet time.
 
     Returns the result per channel, or None when the quiet time held it back. The time of the try is
     remembered whatever the channels answered, so that a channel that is down is tried again after
     the quiet time and not every minute. record is as deliver()'s.
+
+    Past the running collector's cap the alert is not tried: HELD for every channel. An alert the
+    collector keeps until it is sent (defer: an outbox file, an anomaly) is then simply left for the
+    next minute - no history line, no quiet time; any other is a line in the history and counted
+    for the collector's summary alert.
     """
     now = time.time() if now is None else now
     quiet = QUIET.get(kind, QUIET_DEFAULT) if quiet is None else quiet
@@ -370,14 +381,16 @@ def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=
     alert = {'kind': kind, 'key': str(key), 'at': now if at is None else at, 'subject': subject, 'text': text,
              'html': page, 'facts': facts or {}, 'priority': priority, 'tags': list(tags)}
     if state is not None and state.running:
-        state.handed += 1
-        if state.handed > COLLECTOR_CAP:
+        if state.handed >= COLLECTOR_CAP:
+            if defer:
+                return {name: HELD for name in ('mail', 'webhook', 'ntfy')}
             # an alert storm: past the cap, an alert is a line in the history only, and the collector's
             # summary alert says how many (run_collectors)
             state.held += 1
             sent[mark] = now
             hold(alert)
             return {name: HELD for name in ('mail', 'webhook', 'ntfy')}
+        state.handed += 1
     results = deliver(settings, alert, record)
     if state is not None:
         sent[mark] = now
@@ -1243,35 +1256,37 @@ def remove_same(path, info):
 def collect_xgs_outbox(settings, state, now, send):
     """(a) one JSON file per alert - {"source", "kind", "at", "subject", "text", "facts"} - taken and
     removed once a channel has it; kept while every channel fails and tried again each minute,
-    silently, and dropped after 24 hours"""
+    silently, and dropped after 24 hours. A file is removed only when it was sent or is 24 hours
+    old: one held at the collector's cap waits for the next minute. New files go first and the
+    retries after them, each only while the cap leaves room, so that retries cannot crowd them out."""
     st = state.get('xgs')
     failing = st.get('outbox_failing') if isinstance(st.get('outbox_failing'), dict) else {}
     if not os.path.isdir(XGS_OUTBOX):
         st.pop('outbox_failing', None)
         return
-    names = sorted(os.listdir(XGS_OUTBOX))
+    names = sorted(n for n in os.listdir(XGS_OUTBOX) if n.endswith('.json'))
     failing = {n: t for n, t in failing.items() if n in names}
-    for name in names:
+    for name in [n for n in names if n not in failing] + [n for n in names if n in failing]:
         path = os.path.join(XGS_OUTBOX, name)
-        if not name.endswith('.json'):
-            continue
         item, info = read_outbox(path)
         if info is None:
             continue
         mtime = info.st_mtime
         usable = isinstance(item, dict) and bool(item.get('subject') or item.get('text'))
-        if usable and send and channels_set(settings):
+        retry = name in failing
+        if usable and send and channels_set(settings) and (not retry or room(state)):
             facts = item.get('facts') if isinstance(item.get('facts'), dict) else {}
             facts = dict(facts, source=str(item.get('source') or ''))
             results = notify(settings, state, str(item.get('kind') or 'xgs'), name,
                              str(item.get('subject') or item.get('text'))[:300], str(item.get('text') or item.get('subject')),
                              facts, at=time_of(item.get('at'), mtime), now=now, quiet=0, priority='high', tags=['warning'],
-                             record=retried(name in failing))
-            if taken(results):
+                             record=retried(retry), defer=True)
+            if was_sent(results):
                 failing.pop(name, None)
                 remove_same(path, info)
                 continue
-            failing.setdefault(name, now)
+            if not waits(results):
+                failing.setdefault(name, now)
         if now - mtime >= OUTBOX_MAX_AGE:
             failing.pop(name, None)
             if remove_same(path, info):
@@ -1284,6 +1299,7 @@ PENDING_MAX = 1000              # anomalies kept for a retry at most
 
 
 def send_anomaly(settings, state, rec, now, was_failing):
+    """one anomaly to the channels: SENT, HELD (past the collector's cap, not tried) or 'failed'"""
     t = nr.texts(settings.get('language'))
     at = time_of(rec.get('at'), now)
     kind, host = str(rec.get('kind') or 'anomaly'), str(rec.get('host') or settings.hostname())
@@ -1292,59 +1308,65 @@ def send_anomaly(settings, state, rec, now, was_failing):
     results = notify(settings, state, 'anomaly', f'{source}|{rec["id"]}', subject_of(t, settings, 'xgs_anomaly_subject', host=host),
                      t['xgs_anomaly_text'].format(source=source, time=local_time(at), message=str(rec.get('message') or '')),
                      {'id': rec['id'], 'kind': kind, 'host': host, 'source': source}, at=at, now=now, quiet=0,
-                     priority='high', tags=['warning'], record=retried(was_failing))
-    return taken(results)
+                     priority='high', tags=['warning'], record=retried(was_failing), defer=True)
+    return SENT if was_sent(results) else HELD if waits(results) else 'failed'
 
 
 def collect_xgs_anomaly(settings, state, now, send, first):
     """(b) one JSON object a line - {"id", "at", "host", "kind", "message", "source"} - "id" counting up
     from 1: what is above the last id sent is sent; a file whose ids are all below it was started again.
-    An anomaly no channel took is kept pending and tried again each minute, as the outbox's files are,
-    and dropped after 24 hours."""
+    An anomaly not sent - no channel took it, or the collector's cap held it - is kept pending and tried
+    again each minute (a failed one silently, as the outbox's files are), and dropped after 24 hours.
+    New anomalies go first and the pending ones after them, while the cap leaves room."""
     st = state.get('xgs')
     pending = [p for p in st.get('pending') or [] if isinstance(p, dict) and isinstance(p.get('rec'), dict)]
-    still = []
-    for p in pending:
-        if send and channels_set(settings) and send_anomaly(settings, state, p['rec'], now, True):
-            continue
-        if now - (p.get('since') or now) >= OUTBOX_MAX_AGE:
-            dropped(f'{XGS_ANOMALY} id {p["rec"].get("id")}', f'{XGS_ANOMALY} id {p["rec"].get("id")} dropped: '
-                    'not sent within 24 hours')
-            continue
-        still.append(p)
-    st['pending'] = still
+    new = []
     try:
         with open(XGS_ANOMALY, encoding='utf-8', errors='replace') as fh:
             lines = fh.read().splitlines()
     except OSError:
-        return
-    records = []
-    for line in lines:
-        try:
-            rec = json.loads(line)
-        except ValueError:
-            continue
-        if isinstance(rec, dict) and isinstance(rec.get('id'), int) and not isinstance(rec.get('id'), bool):
-            records.append(rec)
-    top = max((r['id'] for r in records), default=0)
-    last = st.get('last_id')
-    if first:
-        st['last_id'] = top
-        return
-    last = last if isinstance(last, int) else 0
-    if top < last:
-        last = 0                        # the file was started again
-    for rec in sorted(records, key=lambda r: r['id']):
-        if rec['id'] <= last:
-            continue
-        last = rec['id']
+        lines = None
+    if lines is not None:
+        records = []
+        for line in lines:
+            try:
+                rec = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(rec, dict) and isinstance(rec.get('id'), int) and not isinstance(rec.get('id'), bool):
+                records.append(rec)
+        top = max((r['id'] for r in records), default=0)
+        last = st.get('last_id')
+        if first:
+            last = top
+        else:
+            last = last if isinstance(last, int) else 0
+            if top < last:
+                last = 0                    # the file was started again
+            for rec in sorted(records, key=lambda r: r['id']):
+                if rec['id'] <= last:
+                    continue
+                last = rec['id']
+                if send:
+                    new.append(rec)
         st['last_id'] = last
-        if not send:
+    kept_new, kept_old = [], []
+    for rec in new:
+        result = send_anomaly(settings, state, rec, now, False)
+        if result != SENT:
+            kept_new.append({'rec': rec, 'since': now, 'failed': result != HELD})
+    for p in pending:
+        if send and channels_set(settings) and room(state):
+            result = send_anomaly(settings, state, p['rec'], now, p.get('failed', True))
+            if result == SENT:
+                continue
+            p['failed'] = p.get('failed', True) or result != HELD
+        if now - (p.get('since') or now) >= OUTBOX_MAX_AGE:
+            dropped(f'{XGS_ANOMALY} id {p["rec"].get("id")}', f'{XGS_ANOMALY} id {p["rec"].get("id")} dropped: '
+                    'not sent within 24 hours')
             continue
-        if not send_anomaly(settings, state, rec, now, False):
-            still.append({'rec': rec, 'since': now})
-    st['pending'] = still[-PENDING_MAX:]
-    st['last_id'] = last
+        kept_old.append(p)
+    st['pending'] = (kept_old + kept_new)[-PENDING_MAX:]
 
 
 def collect_xgs(settings, state, now):
