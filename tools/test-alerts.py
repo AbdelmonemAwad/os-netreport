@@ -89,6 +89,19 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.flush()
             time.sleep(3)
             return
+        if self.path.startswith('/drip'):
+            # a server that sends its headers a line a second: no socket operation waits 10 s, the whole far longer
+            try:
+                self.wfile.write(b'HTTP/1.1 200 OK\r\n')
+                self.wfile.flush()
+                for _ in range(20):
+                    time.sleep(1)
+                    self.wfile.write(b'X-Example: slow\r\n')
+                    self.wfile.flush()
+                self.wfile.write(b'Content-Length: 0\r\n\r\n')
+            except OSError:
+                pass
+            return
         code = 500 if self.path.startswith('/fail') or b'Example stuck' in body else 200
         self.send_response(code)
         self.send_header('Content-Length', '2')
@@ -252,6 +265,15 @@ started = time.monotonic()
 results = alerts.test_alert(settings)
 check('a server that trickles its reply does not hold the run (its body is not read)',
       (results['webhook'], time.monotonic() - started < 2), ('sent', True))
+reset()
+alerts.REQUEST_LIMIT = 3                                    # 15 in use; shorter here to keep the test quick
+settings = config(alert_webhook_url=BASE + '/drip', alert_ntfy_server='')
+started = time.monotonic()
+results = alerts.test_alert(settings)
+took = time.monotonic() - started
+alerts.REQUEST_LIMIT = 15
+check('a server that drips its headers is cut at the limit on the whole request',
+      (results['webhook'], took < 6, results['mail']), ('no answer within 3 s', True, 'sent'))
 
 reset()
 settings = config()

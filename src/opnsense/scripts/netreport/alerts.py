@@ -79,6 +79,7 @@ Taken from os-xgs-npu, when it is installed (neither existing is normal):
 
 import datetime
 import hashlib
+import http.client
 import ipaddress
 import json
 import os
@@ -88,6 +89,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -101,7 +103,8 @@ STATE_FILE = os.path.join(nr.STATE_DIR, 'alerts-state.json')
 QUIET_DEFAULT = 30 * 60
 QUIET = {}                      # kind -> seconds, where a kind wants other than QUIET_DEFAULT
 QUIET_KEEP = 2 * 86400          # how long a sent key is remembered at all
-HTTP_TIMEOUT = 10
+HTTP_TIMEOUT = 10               # seconds, each socket operation of a request
+REQUEST_LIMIT = 15              # seconds, a whole request: connecting, sending, the reply's status
 NOT_SET = 'not set'
 SENT = 'sent'
 HELD = 'held'                   # past a collector's cap this run: in the history only, or left for the next minute
@@ -202,6 +205,8 @@ def error_text(exc):
             where = site_of(exc.headers.get('Location', ''), exc.filename) if exc.headers else ''
             return f'the server answered with a redirect to {where or "(no address)"} (HTTP {exc.code})'
         return f'HTTP {exc.code} {exc.reason}'.strip()
+    if isinstance(exc, RequestTimeout):
+        return str(exc)
     if isinstance(exc, urllib.error.URLError):
         return str(exc.reason)
     if isinstance(exc, socket.timeout):
@@ -233,22 +238,70 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
-OPENER = urllib.request.build_opener(NoRedirect)
+class RequestTimeout(Exception):
+    pass
+
+
+def opener(sockets):
+    """urllib's opener, redirects not followed, that puts each socket it connects in sockets"""
+    def watched(cls):
+        class Watched(cls):
+            def connect(self):
+                super().connect()
+                sockets.append(self.sock)
+        return Watched
+
+    class Http(urllib.request.HTTPHandler):
+        def http_open(self, req):
+            return self.do_open(watched(http.client.HTTPConnection), req)
+
+    class Https(urllib.request.HTTPSHandler):
+        def https_open(self, req):
+            more = {'check_hostname': self._check_hostname} if getattr(self, '_check_hostname', None) is not None else {}
+            return self.do_open(watched(http.client.HTTPSConnection), req, context=self._context, **more)
+
+    return urllib.request.build_opener(NoRedirect, Http, Https)
 
 
 def post(url, body, headers):
+    """POST body; the HTTP status, or an exception. urllib's timeout is per socket operation, so a
+    server that answers a byte at a time could hold the run for long: the whole request has
+    REQUEST_LIMIT seconds, after which its socket is shut and the try is a failure."""
     if not url.lower().startswith(('https://', 'http://')):
         raise ValueError('the address must start with https:// or http://')
     request = urllib.request.Request(url, data=body, headers=headers, method='POST')
+    sockets, box = [], {}
+
+    def run():
+        try:
+            box['status'] = post_now(request, sockets)
+        except BaseException as exc:                # handed to the caller
+            box['error'] = exc
+    worker = threading.Thread(target=run, name='alert-post', daemon=True)
+    worker.start()
+    worker.join(REQUEST_LIMIT)
+    if worker.is_alive():
+        for sock in list(sockets):
+            try:
+                sock.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
+        raise RequestTimeout(f'no answer within {REQUEST_LIMIT} s')
+    if 'error' in box:
+        raise box['error']
+    return box['status']
+
+
+def post_now(request, sockets):
     # TLS is verified: the default context checks the certificate and the name. The reply's body is
     # not read - the status is enough - so a server that trickles it cannot hold the run.
-    response = OPENER.open(request, timeout=HTTP_TIMEOUT)
+    response = opener(sockets).open(request, timeout=HTTP_TIMEOUT)
     try:
         status = response.status
     finally:
         response.close()
     if not 200 <= status < 300:
-        raise urllib.error.HTTPError(url, status, response.reason, response.headers, None)
+        raise urllib.error.HTTPError(request.full_url, status, response.reason, response.headers, None)
     return status
 
 

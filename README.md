@@ -117,7 +117,8 @@ Limits on each minute's pass, so that a storm or a pause does not flood the chan
   `{"source": "os-netreport", "host", "kind", "at", "subject", "text", "facts"}`, with one optional
   header line (`alert_webhook_header`, for example an `Authorization` header; kept on the
   firewall like a password, not shown again, and left as it is when the field is saved empty), a
-  10 second timeout, and the server's certificate checked.
+  10 second timeout on each step and 15 seconds for the whole request (as for ntfy: a server that
+  answers a byte at a time cannot hold the minute's pass), and the server's certificate checked.
 - **ntfy** (`alert_ntfy_server` and `alert_ntfy_topic`, both empty = off): the plain text POSTed to
   `<server>/<topic>` with ntfy's `Title`, `Priority` and `Tags` headers, and `alert_ntfy_token` as
   a bearer token when set. There is no default server, on purpose: a public server by default
