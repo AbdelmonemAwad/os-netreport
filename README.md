@@ -78,7 +78,7 @@ off). They are written in the *Alert language*, with times in the firewall's loc
 
 | Alert | When | Setting (default) |
 | --- | --- | --- |
-| Gateway down / back | A monitored gateway's state (dpinger, as **System → Gateways** shows it) has changed and held on two reads a minute apart: "down since" the first read that saw it, "back after" how long it was down. More than 3 changes in 15 minutes is one "flapping" alert instead, and nothing more until one state has held for 15 minutes. Gateways with monitoring off are skipped. | `gateway_alert` (on) |
+| Gateway down / back | A monitored gateway's state (dpinger, as **System → Gateways** shows it) has changed and held on two reads a minute apart: "down since" the first read that saw it, "back after" how long it was down. More than 3 changes in 15 minutes is one "flapping" alert instead, and nothing more until one state has held for 15 minutes. The changes counted are the raw reads, before the two-reads rule, on purpose: two one-minute blips within 15 minutes (four changes) are flapping. Gateways with monitoring off are skipped. | `gateway_alert` (on) |
 | Repeated failed logins | One address failed to sign in to the web GUI, the API or SSH `login_fail_count` times within 10 minutes; the alert gives the count, the services, and how many different user names were tried with at most three of them cut to their first two characters (people type a password into the user field, so the names are never sent as they are). Every failed SSH try counts, several on one connection too; sshd's "Invalid user" and PAM's error beside a "Failed" line are the same try, and "Failed publickey" is not counted (an agent offering several keys logs it routinely). The address is the one at the end of the line, so a user name holding an address cannot put it in the alert. Then quiet for that address for 30 minutes. An API key is shown by its first 4 characters only. | `login_alert` (on), `login_fail_count` (5) |
 | Intrusion alert | Suricata logged an alert of high severity (or high and medium) in `eve.json`: one alert per signature and source with the action (allowed or blocked), the destinations and the count, then quiet 30 minutes for that pair. | `ips_alert` (on), `ips_severity` (high only) |
 | VPN tunnel down / back | An IPsec connection has no IKE session ESTABLISHED with a child SA INSTALLED (one still connecting, a peer that does not answer, is not up), a WireGuard peer's last handshake is 180 seconds old or older, an OpenVPN client instance is not connected (or its management socket refuses) or a client left its server - with the same two reads as the gateways. A connection that has not been up since the plugin started following it is not reported down; a command that fails is unknown, never down. | `vpn_alert` (on) |
@@ -88,7 +88,8 @@ off). They are written in the *Alert language*, with times in the firewall's loc
 | New device | A device joined the local network for the first time (within five minutes). | `new_device_alert` (on) |
 
 Each collector's first run only records where things are (log offsets, states, the last id), so
-installing the plugin does not alert on old history; with an alert off its collector still keeps
+installing the plugin does not alert on old history (os-xgs-npu's alert files are the exception:
+they are left there to be taken, and those already waiting are sent on the first run); with an alert off its collector still keeps
 its place, so turning it on does not send the backlog.
 
 Limits on each minute's pass, so that a storm or a pause does not flood the channels:
@@ -134,11 +135,13 @@ otherwise above. What the layer remembers - quiet times, log offsets, states - i
 - **Taken from os-xgs-npu** (neither existing is normal):
   - `/var/db/os-xgs-npu/alerts/*.json`, one alert a file
     (`{"source", "kind", "at", "subject", "text", "facts"}`): sent, then removed; kept while every
-    channel fails and tried again each minute, and removed after 24 hours. A retry is silent: the
-    history has one line at the first failure, one when a send succeeds, and one when the file is
-    dropped. Only regular files are taken: a symbolic link is not followed (nor sent, nor removed),
-    and a file is removed only if it is still the one that was read (the same inode and size), so
-    an alert written over it in the meantime goes the next minute.
+    channel fails and tried again each minute, and removed after 24 hours. Files already waiting
+    when the plugin first runs are taken too, on purpose: they are left there to be taken. A
+    retry is silent: the history has one line at the first failure, one when a send succeeds,
+    and one when the file is dropped. Only regular files are taken: a symbolic link is not
+    followed (nor sent, nor removed), and a file is removed only if it is still the one that was
+    read (the same inode and size), so an alert written over it in the meantime goes the next
+    minute.
   - `/var/db/os-xgs-npu/anomaly/alerts.jsonl`, one `{"id", "at", "host", "kind", "message",
     "source"}` a line, `id` counting up from 1: what is above the last id sent is sent; ids all
     below it mean the file was started again, and it is read from the start. An anomaly no
