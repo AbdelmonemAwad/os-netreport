@@ -338,7 +338,7 @@ def header_text(value):
         value.encode('ascii')
         return value
     except UnicodeEncodeError:
-        return '=?UTF-8?B?' + b64encode(value.encode('utf-8')).decode('ascii') + '?='
+        return '=?UTF-8?B?' + b64encode(value.encode('utf-8', 'replace')).decode('ascii') + '?='
 
 
 def by_mail(settings, alert):
@@ -362,7 +362,7 @@ def by_webhook(settings, alert):
         headers[name] = value
     body = json.dumps({'source': 'os-netreport', 'host': settings.hostname(), 'kind': alert['kind'],
                        'at': iso_time(alert['at']), 'subject': alert['subject'], 'text': alert['text'],
-                       'facts': alert.get('facts') or {}}, ensure_ascii=False).encode('utf-8')
+                       'facts': alert.get('facts') or {}}, ensure_ascii=False).encode('utf-8', 'replace')
     post(url, body, headers)
     return SENT
 
@@ -379,7 +379,7 @@ def by_ntfy(settings, alert):
         headers['Tags'] = header_text(','.join(tags))
     if settings.get('alert_ntfy_token'):
         headers['Authorization'] = 'Bearer ' + settings.get('alert_ntfy_token').strip()
-    post(server.rstrip('/') + '/' + urllib.parse.quote(topic.strip(), safe=''), alert['text'].encode('utf-8'),
+    post(server.rstrip('/') + '/' + urllib.parse.quote(topic.strip(), safe=''), alert['text'].encode('utf-8', 'replace'),
          headers)
     return SENT
 
