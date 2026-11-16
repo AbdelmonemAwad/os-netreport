@@ -1298,6 +1298,27 @@ check('slow channel: ... what is kept until sent stays kept', sorted(os.listdir(
 check('slow channel: ... and the next pass tries it again', ([s['subject'] for s in run_pass([('xgs', alerts.collect_xgs)])],
                                                              os.listdir(alerts.XGS_OUTBOX)),
       (['Example slow alert 10', 'Example slow alert 11'], []))
+# ... but only what is kept until sent is skipped: any other alert is tried on every channel
+MIXED = {}
+
+
+def mixed(settings, state, now):
+    for key, kept in (('a', True), ('b', False), ('c', True), ('d', False)):
+        MIXED[key] = alerts.notify(settings, state, 'example', 'mixed|' + key, 'Example mixed ' + key, 'Example text.',
+                                   now=now, quiet=0, defer=kept)
+
+
+reset()
+GENERAL.update(alert_webhook_url=BASE + '/stall', alert_ntfy_server='')
+alerts.REQUEST_LIMIT = alerts.HTTP_TIMEOUT = 1
+try:
+    run_pass([('mixed', mixed)])
+finally:
+    alerts.REQUEST_LIMIT, alerts.HTTP_TIMEOUT = 15, 10
+    GENERAL.update(alert_webhook_url=BASE + '/hook', alert_ntfy_server=BASE + '/ntfy/')
+check('slow channel: an alert not kept until sent (a gateway down...) is tried all the same; one kept is skipped',
+      ([MIXED[k]['webhook'] == alerts.SKIPPED_SLOW for k in 'abcd'], len(posts('/stall')), [MIXED[k]['mail'] for k in 'abcd']),
+      ([False, False, True, False], 3, ['sent'] * 4))
 
 TICK = [0.0]
 RAN2 = []

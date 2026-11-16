@@ -420,18 +420,20 @@ def timed_out(exc):
     return isinstance(exc, (RequestTimeout, socket.timeout, TimeoutError))
 
 
-def deliver(settings, alert, record=None, slow=None):
+def deliver(settings, alert, record=None, slow=None, kept=False):
     """Hand one alert to every channel; returns {"mail": ..., "webhook": ..., "ntfy": ...}.
 
     The try is a line in the history (and, when nothing took it, in the system log) unless record,
     given the results, says no: a retry that fails again is silent.
 
-    slow is the pass's set of channels that timed out: one that did is not tried again in that pass
-    (SKIPPED_SLOW, a failure: what is kept until sent stays kept), so that ten alerts to a server
-    that does not answer cannot take ten times REQUEST_LIMIT."""
+    slow is the pass's set of channels that timed out. An alert kept until it is sent (kept: an
+    outbox file, an anomaly) is not tried in that pass on a channel in it (SKIPPED_SLOW, a failure:
+    it stays kept for the next pass), so that ten of them to a server that does not answer cannot
+    take ten times REQUEST_LIMIT. Any other alert - a gateway down, failed logins... - would be lost
+    by a skip: it is tried on every channel, each try ending within REQUEST_LIMIT."""
     results, rcpt = {}, []
     for name, channel in (('mail', by_mail), ('webhook', by_webhook), ('ntfy', by_ntfy)):
-        if slow is not None and name in slow:
+        if kept and slow is not None and name in slow:
             results[name] = SKIPPED_SLOW
             continue
         try:
@@ -495,7 +497,7 @@ def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=
             sent[mark] = now
             return {name: HELD for name in ('mail', 'webhook', 'ntfy')}
         state.handed += 1
-    results = deliver(settings, alert, record, getattr(state, 'slow', None))
+    results = deliver(settings, alert, record, getattr(state, 'slow', None), kept=defer)
     if state is not None:
         sent[mark] = now
         state.save()
