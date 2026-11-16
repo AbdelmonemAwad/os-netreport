@@ -446,6 +446,19 @@ for _ in range(4):
     append(audit(), syslog_line(CLOCK + 30, 'sshd', 'error: PAM: Authentication error for illegal user test from 198.51.100.8'))
     CLOCK += 5
 check('logins: PAM errors count too, and four are under the count', sent_by(alerts.collect_logins), [])
+# with password logins allowed, OPNsense's System authentication answers for sshd too, and audit writes
+# its line beside sshd-session's own for the same try: counted once
+PAM_LINE = ('user lab could not authenticate for %s. [using OPNsense\\Auth\\Services\\System + OPNsense\\Auth\\Local] '
+            'at %s')
+for port in range(51001, 51006):
+    append(audit(), syslog_line(CLOCK + 30, 'audit', PAM_LINE % ('sshd', '198.51.100.9')) +
+           syslog_line(CLOCK + 30, 'sshd-session', 'Failed password for lab from 198.51.100.9 port %d ssh2' % port))
+sent = sent_by(alerts.collect_logins)
+check('logins: an SSH try audit also logged for the PAM service sshd counts once',
+      [(s['facts']['address'], s['facts']['count'], s['facts']['services']) for s in sent], [('198.51.100.9', 5, ['ssh'])])
+append(audit(), ''.join(syslog_line(CLOCK + 30, 'audit', PAM_LINE % (service, '198.51.100.10'))
+                        for service in ('sshd', 'login', 'su', 'sudo', 'sshd', 'login')))
+check('logins: ... and audit\'s lines for the PAM services count nothing on their own', sent_by(alerts.collect_logins), [])
 append(audit(), syslog_line(CLOCK + 30, 'audit', 'uri /api/core/firmware/status authentication failed for api key '
                             'EXAMPLEKEYexamplesecret1 from 203.0.113.9') * 5)
 check('logins: a failed API key counts nothing (OPNsense logs no address for it)', sent_by(alerts.collect_logins), [])

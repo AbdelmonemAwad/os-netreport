@@ -763,6 +763,11 @@ LOGIN_PATTERNS = [
                                             IP + '$')),
 ]
 PAM_PAIR = 2                    # seconds: a PAM error and sshd's "Failed" line of one try
+# OPNsense's "System" authentication also answers for the PAM services when an owner lets passwords
+# log in, and then audit may write its "could not authenticate for sshd" beside sshd's own "Failed
+# password" line of the same try: the audit line is not counted for these, SSH is counted from sshd's
+# lines alone (sshd's names for itself among them)
+PAM_SERVICES = frozenset(('sshd', 'login', 'su', 'sudo', 'ssh') + SSH_PROGRAMS)
 
 
 def login_failure(line):
@@ -777,6 +782,8 @@ def login_failure(line):
             continue
         found = pattern.search(msg)
         if not found or (kind == 'failed' and found.group('method') == 'publickey'):
+            continue
+        if kind == 'gui' and found.group('service').lower() in PAM_SERVICES:
             continue
         try:
             address = str(ipaddress.ip_address(found.group('address')))
