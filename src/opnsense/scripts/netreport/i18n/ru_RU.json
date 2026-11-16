@@ -148,6 +148,6 @@
  "infected_intro": "Устройства, пытавшиеся за последние 7 дней связаться со списком серверов управления. Межсетевой экран их заблокировал; проверьте эти устройства.",
  "blocklist": "Список",
  "last_seen": "Последний раз",
- "xgs_anomaly_subject": "{kind} на {host} — {title}",
+ "xgs_anomaly_subject": "Необычный трафик от {host} — {title}",
  "xgs_anomaly_text": "{source} сообщил в {time}: {message}"
 }

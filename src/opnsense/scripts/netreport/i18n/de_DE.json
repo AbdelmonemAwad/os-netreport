@@ -148,6 +148,6 @@
  "infected_intro": "Geräte, die in den letzten 7 Tagen eine Liste von Steuerservern erreichen wollten. Die Firewall hat sie gesperrt; prüfen Sie diese Geräte.",
  "blocklist": "Liste",
  "last_seen": "Zuletzt gesehen",
- "xgs_anomaly_subject": "{kind} auf {host} — {title}",
+ "xgs_anomaly_subject": "Ungewöhnlicher Datenverkehr von {host} — {title}",
  "xgs_anomaly_text": "{source} meldete um {time}: {message}"
 }

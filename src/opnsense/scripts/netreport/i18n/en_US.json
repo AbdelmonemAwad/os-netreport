@@ -148,6 +148,6 @@
  "infected_intro": "Devices that tried to reach a command-and-control list in the last 7 days. The firewall blocked them; check these devices.",
  "blocklist": "List",
  "last_seen": "Last seen",
- "xgs_anomaly_subject": "{kind} on {host} — {title}",
+ "xgs_anomaly_subject": "Unusual traffic from {host} — {title}",
  "xgs_anomaly_text": "{source} reported at {time}: {message}"
 }

@@ -148,6 +148,6 @@
  "infected_intro": "Dispositivi che negli ultimi 7 giorni hanno tentato di contattare una lista di comando e controllo. Il firewall li ha bloccati; controlla questi dispositivi.",
  "blocklist": "Lista",
  "last_seen": "Visto l’ultima volta",
- "xgs_anomaly_subject": "{kind} su {host} — {title}",
+ "xgs_anomaly_subject": "Traffico insolito da {host} — {title}",
  "xgs_anomaly_text": "{source} ha segnalato alle {time}: {message}"
 }

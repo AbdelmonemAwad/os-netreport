@@ -81,9 +81,9 @@ off). They are written in the *Alert language*, with times in the firewall's loc
 | Gateway down / back | A monitored gateway's state (dpinger, as **System → Gateways** shows it) has changed and held on two reads a minute apart: "down since" the first read that saw it, "back after" how long it was down. More than 3 changes in 15 minutes is one "flapping" alert instead, and nothing more until one state has held for 15 minutes. Gateways with monitoring off are skipped. | `gateway_alert` (on) |
 | Repeated failed logins | One address failed to sign in to the web GUI, the API or SSH `login_fail_count` times within 10 minutes; the alert lists the user names tried, the count and the services. Then quiet for that address for 30 minutes. An API key is shown by its first 4 characters only. | `login_alert` (on), `login_fail_count` (5) |
 | Intrusion alert | Suricata logged an alert of high severity (or high and medium) in `eve.json`: one alert per signature and source with the action (allowed or blocked), the destinations and the count, then quiet 30 minutes for that pair. | `ips_alert` (on), `ips_severity` (high only) |
-| VPN tunnel down / back | An IPsec connection lost its security associations, a WireGuard peer's last handshake is 180 seconds old or older, an OpenVPN client instance is not connected or a client left its server - with the same two reads as the gateways. A connection that has not been up since the plugin started following it is not reported down; a command that fails is unknown, never down. | `vpn_alert` (on) |
+| VPN tunnel down / back | An IPsec connection has no IKE session ESTABLISHED with a child SA INSTALLED (one still connecting, a peer that does not answer, is not up), a WireGuard peer's last handshake is 180 seconds old or older, an OpenVPN client instance is not connected or a client left its server - with the same two reads as the gateways. A connection that has not been up since the plugin started following it is not reported down; a command that fails is unknown, never down. | `vpn_alert` (on) |
 | Hardware watchdog reset | os-watchdog recorded that the hardware watchdog caused the last restart (`/var/db/os-watchdog/reset-reason.json`); one alert per boot, with the reasons. | `watchdog_alert` (on) |
-| Command-and-control list | A device of the firewall's own networks tried to reach an address on a command-and-control list that os-blocklists blocks with its log on; one alert the first time an address is seen, with its name and MAC where they are known, the list, the destination and the time. The device is also listed in the report's security section. | `c2_alert` (on) |
+| Command-and-control list | A device of the firewall's own networks (IPv4 or IPv6) tried to reach an address on a command-and-control list that os-blocklists blocks with its log on, on its rule `Block Lists: blocklists_<id> out` or `... from inside`; one alert the first time an address is seen, with its name and MAC where they are known, the list, the destination and the time. The device is also listed in the report's security section. | `c2_alert` (on) |
 | From other XGS plugins | What os-xgs-npu leaves for this plugin (below). | `xgs_alert` (on) |
 | New device | A device joined the local network for the first time (within five minutes). | `new_device_alert` (on) |
 
@@ -136,10 +136,10 @@ otherwise above. What the layer remembers - quiet times, log offsets, states - i
 | Alert | Source |
 | --- | --- |
 | Gateways | `pluginctl -r return_gateways_status` (dpinger) |
-| Failed logins | `/var/log/audit/audit_YYYYMMDD.log`. OPNsense writes a failed web GUI or API login there at syslog level debug, under the program `audit`; its audit log keeps every level, so the line is there whatever the system's log level. sshd's failures are there too (facility auth). |
+| Failed logins | `/var/log/audit/audit_YYYYMMDD.log`. OPNsense writes a failed web GUI or API login there at syslog level debug, under the program `audit`; its audit log keeps every level, so the line is there whatever the system's log level. sshd's failures are there too (facility auth). The audit log's destination folds a line repeated within seconds into "Last message '...' repeated N times"; such a line counts as N more of the line it folds. |
 | Intrusion alerts | `/var/log/suricata/eve.json` |
 | VPN tunnels | `configctl ipsec list status`, `configctl wireguard show`, `configctl openvpn connections client,server` |
-| Command-and-control | `/var/log/filter/filter_YYYYMMDD.log`, the rule's description from `/tmp/rules.debug` (the way the firewall's live log names its rules) |
+| Command-and-control | `/var/log/filter/filter_YYYYMMDD.log` (folded lines given back as for the audit log), the rule's description from `/tmp/rules.debug` (the way the firewall's live log names its rules) |
 
 ## Screenshots
 
@@ -289,10 +289,12 @@ the English one.
 - A WireGuard peer counts as up while its last handshake is less than 180 seconds old. A peer
   that carries no traffic and has no persistent keepalive set handshakes less often, and reads as
   down; set a keepalive on such a peer, or turn the VPN alert off.
-- The command-and-control alert reads the source address pf logs on os-blocklists' outbound rule,
-  and counts only IPv4 addresses of the firewall's own networks. Where that rule matches after
-  outbound NAT, the logged source is the firewall's own address, which names no device and is
-  left out; which address pf logs there has not been seen on an appliance yet.
+- The command-and-control alert needs os-blocklists' rule `Block Lists: blocklists_<id> from
+  inside` (its next release adds one for every command-and-control feed) for devices behind the
+  firewall's outbound NAT. pf matches os-blocklists' outbound rule (`... out`) after NAT and logs
+  the firewall's own address as the source there (seen on an appliance: three tries out of three),
+  which names no device and is left out; the `from inside` rule matches where the packet enters
+  the firewall, before NAT, with the device's own address.
 - Some languages change word forms with the number (Polish, Russian, Ukrainian and others).
   The wording was chosen to read well for most numbers, but not every count is grammatically
   perfect.

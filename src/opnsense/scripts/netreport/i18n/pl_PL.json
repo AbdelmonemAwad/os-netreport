@@ -148,6 +148,6 @@
  "infected_intro": "Urządzenia, które w ciągu ostatnich 7 dni próbowały połączyć się z listą serwerów dowodzenia. Zapora je zablokowała; sprawdź te urządzenia.",
  "blocklist": "Lista",
  "last_seen": "Ostatnio widziane",
- "xgs_anomaly_subject": "{kind} na {host} — {title}",
+ "xgs_anomaly_subject": "Nietypowy ruch z {host} — {title}",
  "xgs_anomaly_text": "{source} zgłosił o {time}: {message}"
 }

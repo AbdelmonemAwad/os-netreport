@@ -148,6 +148,6 @@
  "infected_intro": "أجهزة حاولت خلال آخر 7 أيام الاتصال بعناوين في قائمة قيادة وتحكم. حظرها الجدار الناري؛ افحص هذه الأجهزة.",
  "blocklist": "القائمة",
  "last_seen": "آخر ظهور",
- "xgs_anomaly_subject": "{kind} على {host} — {title}",
+ "xgs_anomaly_subject": "حركة غير معتادة من {host} — {title}",
  "xgs_anomaly_text": "أبلغ {source} في {time}: {message}"
 }

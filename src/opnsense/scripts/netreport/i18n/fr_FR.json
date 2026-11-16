@@ -148,6 +148,6 @@
  "infected_intro": "Appareils qui ont tenté de joindre une liste de commande et contrôle au cours des 7 derniers jours. Le pare-feu les a bloqués ; vérifiez ces appareils.",
  "blocklist": "Liste",
  "last_seen": "Vu pour la dernière fois",
- "xgs_anomaly_subject": "{kind} sur {host} — {title}",
+ "xgs_anomaly_subject": "Trafic inhabituel depuis {host} — {title}",
  "xgs_anomaly_text": "{source} a signalé à {time} : {message}"
 }

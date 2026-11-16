@@ -434,13 +434,25 @@ def local_networks():
     nets = []
     for line in run('/sbin/ifconfig -a').splitlines():
         found = re.search(r'inet (\d+\.\d+\.\d+\.\d+) netmask (0x[0-9a-fA-F]+)', line)
+        if found:
+            try:
+                bits = bin(int(found.group(2), 16)).count('1')
+                nets.append(ipaddress.ip_network('%s/%d' % (found.group(1), bits), strict=False))
+            except Exception:
+                pass
+            continue
+        # IPv6 too, so that a device using it counts as one of ours; never the link-local
+        # networks (every interface has fe80::/10) or the loopback
+        found = re.search(r'inet6 ([0-9A-Fa-f:.]+)(?:%\S+)? prefixlen (\d+)', line)
         if not found:
             continue
         try:
-            bits = bin(int(found.group(2), 16)).count('1')
-            nets.append(ipaddress.ip_network('%s/%d' % (found.group(1), bits), strict=False))
+            net = ipaddress.ip_network('%s/%s' % (found.group(1), found.group(2)), strict=False)
         except Exception:
             continue
+        if net.network_address.is_link_local or net.network_address.is_loopback:
+            continue
+        nets.append(net)
     return nets
 
 

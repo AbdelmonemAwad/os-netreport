@@ -135,6 +135,6 @@
  "infected_intro": "过去 7 天内尝试连接命令与控制列表的设备。防火墙已拦截；请检查这些设备。",
  "blocklist": "列表",
  "last_seen": "最后出现",
- "xgs_anomaly_subject": "{host} 上的 {kind} — {title}",
+ "xgs_anomaly_subject": "来自 {host} 的异常流量 — {title}",
  "xgs_anomaly_text": "{source} 于 {time} 报告：{message}"
 }

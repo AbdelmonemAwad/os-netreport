@@ -52,8 +52,12 @@ Each one's first run only records where things are, so an install does not alert
     {"<address>": {"first": <unix time>, "last": <unix time>, "count": <blocked connections>,
                    "list": "<os-blocklists feed id>", "mac": "<mac or empty>", "name": "<name or empty>"}}
 
-    one entry per address of the firewall's own networks (never one of the firewall's own addresses)
-    that os-blocklists blocked on its way to a command-and-control list; "first" and "last" are
+    one entry per address of the firewall's own networks, IPv4 or IPv6 (never one of the firewall's
+    own addresses), that os-blocklists blocked on its way to a command-and-control list - on its rule
+    "Block Lists: blocklists_<id> out" or "... from inside". For a device behind the firewall's
+    outbound NAT only the second names it: pf matches the "out" rule after NAT and logs the firewall's
+    own address there, so such a device is seen only with os-blocklists' "from inside" rule (its next
+    release adds one for every command-and-control feed); "first" and "last" are
     the times of the first and the latest blocked connection, and an entry whose "last" is older
     than 7 days is dropped. Written whole (a temporary file renamed over it).
 
@@ -461,9 +465,11 @@ def read_from(place, path):
     return lines
 
 
-def follow(place, path):
+def follow(place, path, unfold=False, redact=None):
     """New lines of a log followed by name: on the first run only where it ends is recorded; when the
-    name changes (a new day's file), the rest of the old file is read and the new one from 0."""
+    name changes (a new day's file), the rest of the old file is read and the new one from 0. With
+    unfold, the lines syslog-ng folded into "Last message '...' repeated N times" are given back
+    (see unfolded()); redact is applied to the line kept for that."""
     if 'path' not in place:
         try:
             info = os.stat(path)
@@ -475,21 +481,76 @@ def follow(place, path):
     if place['path'] != path:
         lines += read_from(place, place['path'])
         place.update(path=path, inode=None, offset=0)
-    return lines + read_from(place, path)
+    lines += read_from(place, path)
+    return unfolded(place, lines, redact) if unfold else lines
+
+
+def rfc5424(line):
+    """(time, program, message) of an RFC 5424 line ("<pri>1 time host app procid msgid sd msg"), or None"""
+    parts = line.split(' ', 6)
+    if len(parts) < 7 or not parts[0].startswith('<') or not parts[0].endswith('>1'):
+        return None
+    rest = parts[6]
+    if rest == '-' or rest.startswith('- '):
+        return parts[1], parts[3], rest[2:]
+    # structured data: [id name="value" ...] elements, where a value may hold \" \] and spaces
+    i, quoted = 0, False
+    while i < len(rest) and rest[i] == '[':
+        i += 1
+        while i < len(rest):
+            c = rest[i]
+            if quoted and c == '\\':
+                i += 2
+                continue
+            if c == '"':
+                quoted = not quoted
+            elif c == ']' and not quoted:
+                break
+            i += 1
+        i += 1
+    msg = rest[i:]
+    return parts[1], parts[3], msg[1:] if msg.startswith(' ') else msg
 
 
 def message_of(line):
     """the message of an RFC 5424 line (after "<pri>1 time host app procid msgid sd"), or the line"""
-    parts = line.split(' ', 7)
-    if len(parts) == 8 and parts[0].startswith('<') and parts[0].endswith('>1'):
-        sd = parts[7]
-        if sd.startswith('- '):
-            return sd[2:]
-        if sd.startswith('['):
-            end = sd.find('] ')
-            return sd[end + 2:] if end >= 0 else sd
-        return sd
-    return line
+    parsed = rfc5424(line)
+    return parsed[2] if parsed else line
+
+
+# syslog-ng's suppress(): OPNsense's log destinations write a line repeated within seconds once, then
+# "Last message '<its first 20 characters>' repeated N times, suppressed by syslog-ng on <host>", with
+# the folded line's program
+FOLDED = re.compile(r"^Last message '(?P<prefix>.*)' repeated (?P<n>\d+) times?, suppressed by syslog-ng on \S+\s*$")
+UNFOLD_MAX = 1000               # a folded count is given back up to this many times
+
+
+def unfolded(place, lines, redact=None):
+    """The lines with each one syslog-ng folded given back: a "Last message '...' repeated N times" line
+    stands for N more of the program's previous line, when the quoted part begins that line's message;
+    it carries the time of the fold. The previous line of each program is kept in place["prev"], so a
+    fold read the minute after its line is given back too."""
+    prev = place.get('prev') if isinstance(place.get('prev'), dict) else {}
+    out = []
+    for line in lines:
+        parsed = rfc5424(line)
+        if not parsed:
+            out.append(line)
+            continue
+        stamp, program, msg = parsed
+        folded = FOLDED.match(msg)
+        if not folded:
+            prev[program] = line
+            out.append(line)
+            continue
+        earlier = prev.get(program)
+        if not earlier or not message_of(earlier).startswith(folded.group('prefix')):
+            continue
+        head, _, rest = earlier.partition(' ')
+        again = ' '.join([head, stamp, rest.partition(' ')[2]])
+        out += [again] * min(int(folded.group('n')), UNFOLD_MAX)
+    place['prev'] = {p: (redact(line) if redact else line)[:4096] for p, line in prev.items()}
+    return out
 
 
 # ---------------------------------------------------------------- repeated failed logins
@@ -507,6 +568,11 @@ LOGIN_PATTERNS = [
     (re.compile(r'error: PAM: Authentication error for (?:illegal user )?(?P<user>\S*) from ' + IP), 'ssh'),
 ]
 API_KEY = re.compile(r'authentication failed for api key (\S+)')
+
+
+def without_key(line):
+    """the line with an API key cut to its first 4 characters, as it may be kept in the state"""
+    return API_KEY.sub(lambda found: 'authentication failed for api key ' + found.group(1)[:4], line)
 
 
 def an_address(text):
@@ -541,7 +607,7 @@ def collect_logins(settings, state, now):
     first = state.first('login')
     st = state.get('login')
     place = st.setdefault('log', {})
-    lines = follow(place, day_file(AUDIT_LOG, now))
+    lines = follow(place, day_file(AUDIT_LOG, now), unfold=True, redact=without_key)
     fails = st.get('fails') if isinstance(st.get('fails'), dict) else {}
     for line in lines:
         failure = login_failure(line)
@@ -659,6 +725,21 @@ def description(settings, uuid):
     return ''
 
 
+def ipsec_up(conn):
+    """An IPsec connection is up when one of its IKE sessions is ESTABLISHED with at least one child SA
+    INSTALLED. `configctl ipsec list status` (list_status.py) puts each IKE SA strongSwan's list-sas
+    gives under the connection's "sas", with its "state" and its "child-sas" by name, each with its own
+    "state"; a session still CONNECTING (a peer that does not answer, strongSwan retrying) is not up."""
+    for sa in conn.get('sas') or []:
+        if not isinstance(sa, dict) or str(sa.get('state', '')).upper() != 'ESTABLISHED':
+            continue
+        children = sa.get('child-sas')
+        children = children.values() if isinstance(children, dict) else children if isinstance(children, list) else []
+        if any(isinstance(c, dict) and str(c.get('state', '')).upper() == 'INSTALLED' for c in children):
+            return True
+    return False
+
+
 def vpn_reads(settings, entries, now):
     """({key: (name, 'up' or 'down')} of every connection this read could see, the key prefixes of the
     sources that answered, and the prefixes to leave as they are - a server that did not answer)"""
@@ -669,7 +750,7 @@ def vpn_reads(settings, entries, now):
         for cid, conn in ipsec.items():
             if isinstance(conn, dict):
                 name = description(settings, cid) or str(conn.get('remote-addrs') or cid)
-                reads[f'ipsec|{cid}'] = ('IPsec ' + name, 'up' if conn.get('sas') else 'down')
+                reads[f'ipsec|{cid}'] = ('IPsec ' + name, 'up' if ipsec_up(conn) else 'down')
     wg = configctl('wireguard', 'show')
     if isinstance(wg, dict) and wg.get('status') == 'ok':
         answered.append('wg|')
@@ -786,7 +867,11 @@ HEX_DIGITS = set('0123456789abcdef')
 FILTER_GENERAL = 'rulenr,subrulenr,anchorname,rid,interface,reason,action,dir,ipversion'.split(',')
 FILTER_V4 = FILTER_GENERAL + 'tos,ecn,ttl,id,offset,ipflags,protonum,protoname,length,src,dst'.split(',')
 FILTER_V6 = FILTER_GENERAL + 'class,flow,hoplimit,protoname,protonum,length,src,dst'.split(',')
-BLOCKLIST_OUT = re.compile(r'^Block Lists: blocklists_(\S+) out$')
+# os-blocklists' outbound rule, which pf matches after outbound NAT (so behind NAT it logs the firewall's
+# own address, left out below), and the floating rule its next release adds for every command-and-
+# control feed, `block in log quick ... to <blocklists_<id>>`, which matches where the packet enters
+# the firewall, before NAT, with the device's own address
+BLOCKLIST_OUT = re.compile(r'^Block Lists: blocklists_(\S+) (?:out|from inside)$')
 _rules = {'mtime': None, 'labels': {}}
 
 
@@ -879,7 +964,7 @@ def device_of(settings, address):
 def collect_c2(settings, state, now):
     first = state.first('c2')
     st = state.get('c2')
-    lines = follow(st.setdefault('log', {}), day_file(FILTER_LOG, now))
+    lines = follow(st.setdefault('log', {}), day_file(FILTER_LOG, now), unfold=True)
     infected = nr.load_json(nr.INFECTED_FILE, {})
     infected = infected if isinstance(infected, dict) else {}
     kept = {a: e for a, e in infected.items() if isinstance(e, dict) and now - (e.get('last') or 0) < INFECTED_DAYS * 86400}
@@ -900,7 +985,10 @@ def collect_c2(settings, state, now):
             continue
         if nets is None:
             nets, own = nr.local_networks(), own_addresses()
-        source = rec.get('src', '')
+        try:
+            source = str(ipaddress.ip_address(rec.get('src', '')))
+        except ValueError:
+            continue
         if source in own or not nr.started_inside(source, nets):
             continue
         stamp = nr.line_time(line) or now
@@ -1019,7 +1107,8 @@ def collect_xgs_anomaly(settings, state, now, send, first):
         at = time_of(rec.get('at'), now)
         kind, host = str(rec.get('kind') or 'anomaly'), str(rec.get('host') or settings.hostname())
         source = str(rec.get('source') or 'os-xgs-npu')
-        notify(settings, state, 'anomaly', f'{source}|{rec["id"]}', subject_of(t, settings, 'xgs_anomaly_subject', kind=kind, host=host),
+        # the anomaly's kind (sent, received, opened, scan, sweep...) is a fact, not a subject
+        notify(settings, state, 'anomaly', f'{source}|{rec["id"]}', subject_of(t, settings, 'xgs_anomaly_subject', host=host),
                t['xgs_anomaly_text'].format(source=source, time=local_time(at), message=str(rec.get('message') or '')),
                {'id': rec['id'], 'kind': kind, 'host': host, 'source': source}, at=at, now=now, quiet=0, priority='high',
                tags=['warning'])

@@ -148,6 +148,6 @@
  "infected_intro": "Son 7 günde bir komuta ve kontrol listesine ulaşmaya çalışan cihazlar. Güvenlik duvarı engelledi; bu cihazları denetleyin.",
  "blocklist": "Liste",
  "last_seen": "Son görülme",
- "xgs_anomaly_subject": "{host} üzerinde {kind} — {title}",
+ "xgs_anomaly_subject": "{host} kaynaklı olağandışı trafik — {title}",
  "xgs_anomaly_text": "{source} {time} saatinde bildirdi: {message}"
 }

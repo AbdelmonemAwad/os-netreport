@@ -365,6 +365,23 @@ check('logins: a new day: the rest of the old file, then the new one', [(s['fact
                                                                        for s in sent_by(alerts.collect_logins)],
       [('203.0.113.21', 5)])
 
+# syslog-ng's suppress(): five identical lines within seconds are the first, then "repeated 4 times"
+FOLD = "Last message '%s' repeated %d times, suppressed by syslog-ng on fw.example.com"
+GUI_FAIL = 'user labuser failed authentication for WebGui on Local Database via Local Database at 203.0.113.22'
+append(audit(), syslog_line(CLOCK + 20, 'audit', GUI_FAIL) + syslog_line(CLOCK + 25, 'audit', FOLD % (GUI_FAIL[:20], 4)))
+check('logins: a line syslog-ng folded counts as many times as it was repeated',
+      [(s['facts']['address'], s['facts']['count']) for s in sent_by(alerts.collect_logins)], [('203.0.113.22', 5)])
+append(audit(), syslog_line(CLOCK + 20, 'audit', GUI_FAIL.replace('.22', '.23')))
+sent_by(alerts.collect_logins)
+append(audit(), syslog_line(CLOCK + 20, 'audit', FOLD % (GUI_FAIL[:20], 4)))
+check('logins: ... also when the fold is read the minute after its line',
+      [(s['facts']['address'], s['facts']['count']) for s in sent_by(alerts.collect_logins)], [('203.0.113.23', 5)])
+append(audit(), syslog_line(CLOCK + 20, 'audit', GUI_FAIL.replace('.22', '.24')) +
+       syslog_line(CLOCK + 21, 'sshd', 'Connection closed by 192.0.2.9 port 50000') +
+       syslog_line(CLOCK + 25, 'audit', FOLD % ('something else entire', 4)) +
+       syslog_line(CLOCK + 26, 'sshd', FOLD % (GUI_FAIL[:20], 4)))
+check('logins: a fold of another message, or of another program, counts nothing', sent_by(alerts.collect_logins), [])
+
 # IPS
 alerts.EVE_LOG = os.path.join(TOP, 'eve.json')
 
@@ -410,9 +427,18 @@ EXTRA['xml'] = ('<Swanctl><Connections><Connection uuid="00000000-0000-4000-8000
                 '<name>Laptop</name><pubkey>EXAMPLEPUBKEY=</pubkey></client></clients></client></wireguard>')
 
 
+def ike(state='ESTABLISHED', child='INSTALLED'):
+    """one IKE SA as list_status.py puts it under a connection's "sas" (strongSwan's list-sas)"""
+    return [{'uniqueid': '1', 'version': '2', 'state': state, 'remote-host': '198.51.100.1',
+             'child-sas': {'example-1': {'name': 'example', 'state': child, 'mode': 'TUNNEL'}} if child else {}}]
+
+
 def vpn(office=True, branch=False, handshake=10, alice=True, ipsec=True):
-    ANSWERS['ipsec'] = {'00000000-0000-4000-8000-000000000001': {'remote-addrs': '198.51.100.1', 'sas': [{}] if office else []},
-                        '00000000-0000-4000-8000-000000000002': {'remote-addrs': '198.51.100.2', 'sas': [{}] if branch else []}
+    def sas(value):
+        return ike() if value is True else [] if value is False else value
+
+    ANSWERS['ipsec'] = {'00000000-0000-4000-8000-000000000001': {'remote-addrs': '198.51.100.1', 'sas': sas(office)},
+                        '00000000-0000-4000-8000-000000000002': {'remote-addrs': '198.51.100.2', 'sas': sas(branch)}
                         } if ipsec else None
     ANSWERS['wireguard'] = {'status': 'ok', 'records': [
         {'if': 'wg0', 'type': 'interface', 'public-key': 'SERVERKEY='},
@@ -444,6 +470,22 @@ check('VPN: an OpenVPN client gone from its server is down; the peer is back',
       [('OpenVPN srv1: alice', 'down'), ('WireGuard Laptop', 'back')])
 vpn()
 check('VPN: and back when it returns', [s['facts']['state'] for s in sent_by(alerts.collect_vpn, 2)], ['back'])
+vpn(branch=ike('CONNECTING', child=None))
+check('VPN: an IKE session still connecting is not up', sent_by(alerts.collect_vpn, 3), [])
+vpn(branch=[])
+check('VPN: ... so when strongSwan gives up, a tunnel never up is not reported down', sent_by(alerts.collect_vpn, 3), [])
+vpn(branch=ike(child='INSTALLING'))
+sent_by(alerts.collect_vpn, 3)
+check('VPN: established without an installed child SA is not up either', alerts.State().get('vpn')[
+    'ipsec|00000000-0000-4000-8000-000000000002']['seen_up'], False)
+vpn(branch=ike())
+sent_by(alerts.collect_vpn, 2)
+vpn(branch=ike('CONNECTING', child=None))
+check('VPN: up is ESTABLISHED with an INSTALLED child SA; then connecting again is down',
+      [(s['facts']['connection'], s['facts']['state']) for s in sent_by(alerts.collect_vpn, 2)],
+      [('IPsec 198.51.100.2', 'down')])
+vpn()
+sent_by(alerts.collect_vpn, 2)
 EXTRA['xml'] = ''
 
 # watchdog
@@ -479,7 +521,8 @@ alerts.FILTER_LOG = os.path.join(TOP, 'filter_{day}.log')
 alerts.RULES_DEBUG = os.path.join(TOP, 'rules.debug')
 alerts.FEEDS_FILE = os.path.join(TOP, 'feeds.json')
 nr.INFECTED_FILE = os.path.join(STATE, 'infected.json')
-nr.local_networks = lambda: [ipaddress.ip_network('192.0.2.0/24')]
+REAL_LOCAL_NETWORKS = nr.local_networks
+nr.local_networks = lambda: [ipaddress.ip_network('192.0.2.0/24'), ipaddress.ip_network('2001:db8:1::/64')]
 alerts.own_addresses = lambda: {'192.0.2.1'}
 RID = {'feodo out': 'a' * 32, 'feodo in': 'b' * 32, 'spamhaus_drop out': 'c' * 32, 'et_compromised out': 'd' * 32}
 
@@ -554,6 +597,36 @@ check('C2: with c2_alert off, no alert, but the device is listed', (sent_by(aler
       ([], ['192.0.2.80']))
 GENERAL['c2_alert'] = '1'
 
+# behind outbound NAT pf matches the "out" rule after NAT; os-blocklists' "from inside" rule sees the device
+INSIDE = '2' * 32
+with open(alerts.RULES_DEBUG, 'a', encoding='utf-8') as fh:
+    for family in ('inet', 'inet6'):
+        fh.write('block in log quick %s from any to <blocklists_feodo> label "%s" # Block Lists: blocklists_feodo from inside\n'
+                 % (family, INSIDE))
+os.utime(alerts.RULES_DEBUG, (time.time() + 10, time.time() + 10))
+blocked('192.0.2.90', rid=INSIDE)
+append(alerts.day_file(alerts.FILTER_LOG, CLOCK + 60), syslog_line(
+    CLOCK + 30, 'filterlog', '86,,,%s,igb1,match,block,in,6,0x00,0x00000,64,tcp,6,80,2001:db8:1::50,2001:db8:ff::66,'
+    '51515,443,0,S,1,,64800,,mss' % INSIDE))
+check('C2: the "from inside" rule names the device, IPv4 and IPv6',
+      sorted(s['facts']['address'] for s in sent_by(alerts.collect_c2)), ['192.0.2.90', '2001:db8:1::50'])
+blocked('192.0.2.91', rule='feodo in')
+check('C2: ... the inbound rule still does not', sent_by(alerts.collect_c2), [])
+
+IFCONFIG = ('em1: flags=8843<UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST> metric 0 mtu 1500\n'
+            '\tinet 192.0.2.1 netmask 0xffffff00 broadcast 192.0.2.255\n'
+            '\tinet6 fe80::1%em1 prefixlen 64 scopeid 0x2\n'
+            '\tinet6 2001:db8:1::1 prefixlen 64\n'
+            'lo0: flags=8049<UP,LOOPBACK,RUNNING,MULTICAST> metric 0 mtu 16384\n'
+            '\tinet6 ::1 prefixlen 128\n'
+            '\tinet6 fe80::1%lo0 prefixlen 64 scopeid 0x5\n'
+            '\tinet 127.0.0.1 netmask 0xff000000\n')
+saved_run = nr.run
+nr.run = lambda cmd, *args, **kwargs: IFCONFIG
+check('local_networks(): IPv4 and IPv6 prefixes, never fe80::/10 or ::1', [str(n) for n in REAL_LOCAL_NETWORKS()],
+      ['192.0.2.0/24', '2001:db8:1::/64', '127.0.0.0/8'])
+nr.run = saved_run
+
 # ---------------------------------------------------------------- 5. what other XGS plugins leave
 
 alerts.XGS_OUTBOX = os.path.join(TOP, 'xgs', 'alerts')
@@ -590,8 +663,9 @@ check('XGS: the anomaly file\'s first run only records its last id', nr.load_jso
 anomaly(1, 2, 3, 4)
 sent = sent_by(alerts.collect_xgs)
 check('XGS: an anomaly above the last id is sent', [(s['subject'], s['text']) for s in sent],
-      [('traffic spike on fw.example.com — Example network', 'os-xgs-npu reported at %s: Example message 4.'
+      [('Unusual traffic from fw.example.com — Example network', 'os-xgs-npu reported at %s: Example message 4.'
         % alerts.local_time(CLOCK - 60))])
+check('XGS: the anomaly\'s kind is in its facts, not its subject', sent[0]['facts']['kind'], 'traffic spike')
 anomaly(1, 2, 3, 4, 5, 6)
 check('XGS: each new one once', [s['facts']['id'] for s in sent_by(alerts.collect_xgs, 2)], [5, 6])
 anomaly(1, 2)
