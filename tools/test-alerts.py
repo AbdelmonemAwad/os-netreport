@@ -260,6 +260,15 @@ check('... so neither the header nor the token goes to the host it names', posts
 check('... and the path (a secret) and a user:password are in no history line',
       [h['detail'] for h in history()[:1] if 'example-secret-token' in h['detail'] or 'example-password' in h['detail']], [])
 reset()
+try:
+    alerts.post(BASE + '/fail', b'{}', {'Content-Type': 'application/json'})
+    reply = None
+except Exception as exc:
+    reply = exc
+check('an HTTP error is handed on with its status, its reply already closed',
+      (alerts.error_text(reply), getattr(getattr(reply, 'fp', None), 'closed', True)), ('HTTP 500 Internal Server Error', True))
+del reply
+reset()
 settings = config(alert_webhook_url=BASE + '/slow', alert_ntfy_server='')
 started = time.monotonic()
 results = alerts.test_alert(settings)

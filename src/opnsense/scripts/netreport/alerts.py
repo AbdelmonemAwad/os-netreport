@@ -277,6 +277,14 @@ def post(url, body, headers):
         try:
             box['status'] = post_now(request, sockets)
         except BaseException as exc:                # handed to the caller
+            if isinstance(exc, urllib.error.HTTPError):
+                # an HTTPError holds the reply open, and the traceback a cycle that keeps it until
+                # the garbage collector closes it (http.client then printed "I/O operation on
+                # closed file"): its status and headers are kept, its body is not needed
+                try:
+                    exc.close()
+                except Exception:
+                    pass
             box['error'] = exc
     worker = threading.Thread(target=run, name='alert-post', daemon=True)
     worker.start()
@@ -289,7 +297,7 @@ def post(url, body, headers):
                 pass
         raise RequestTimeout(f'no answer within {REQUEST_LIMIT} s')
     if 'error' in box:
-        raise box['error']
+        raise box.pop('error')
     return box['status']
 
 
