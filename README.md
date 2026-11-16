@@ -104,6 +104,11 @@ Limits on each minute's pass, so that a storm or a pause does not flood the chan
   anomalies that failed after both, so the retries cannot crowd out what is new.
 - The whole pass has 45 seconds. Collectors not yet run by then wait for the next minute; their
   places in the logs do not move, so nothing is lost.
+- A channel that did not answer in time (the webhook or ntfy past its 15 seconds, the mail server
+  past its timeout) is not tried again for the rest of that minute's pass: its result for the
+  alerts after it is "skipped: it did not answer earlier this minute", so ten alerts cannot take
+  ten times 15 seconds. That is a failure like any other: os-xgs-npu's files and anomalies stay
+  kept for the next minute, when the channel is tried again.
 - When the last pass is more than 10 minutes old (the plugin was off, the firewall was down), the
   log readers - failed logins, intrusion alerts, command-and-control - start again from the end of
   their logs, as on a first run. And whatever they read, a log line whose own time is more than 10

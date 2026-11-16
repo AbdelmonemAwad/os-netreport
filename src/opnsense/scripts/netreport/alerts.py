@@ -109,6 +109,7 @@ REQUEST_LIMIT = 15              # seconds, a whole request: connecting, sending,
 NOT_SET = 'not set'
 SENT = 'sent'
 HELD = 'held'                   # past a collector's cap this run: in the history only, or left for the next minute
+SKIPPED_SLOW = 'skipped: it did not answer earlier this minute'
 COLLECTOR_CAP = 10              # alerts one collector sends in one run; the rest are summed up in one more
 PASS_DEADLINE = 45              # seconds: collectors not yet run by then wait for the next minute
 STALE_AFTER = 10 * 60           # a pass older than this, or a log line older than this, is not alerted on
@@ -147,6 +148,8 @@ class State:
         self.data = data if isinstance(data, dict) else {}
         # this run only: the collector running, how many alerts it has handed on, and how many held
         self.running, self.handed, self.held, self.held_subjects = None, 0, 0, []
+        # this run only: the channels that timed out, not tried again in it
+        self.slow = set()
 
     def first(self, name):
         """whether this collector has never run: its first run only records where things are"""
@@ -458,21 +461,36 @@ def held_line(subject, held, subjects):
         nr.log(f'alert "{subject}": the history could not be written: {exc}')
 
 
-def deliver(settings, alert, record=None):
+def timed_out(exc):
+    """whether a channel's error is that it did not answer in time"""
+    if isinstance(exc, urllib.error.URLError) and not isinstance(exc, urllib.error.HTTPError):
+        exc = exc.reason
+    return isinstance(exc, (RequestTimeout, socket.timeout, TimeoutError))
+
+
+def deliver(settings, alert, record=None, slow=None):
     """Hand one alert to every channel; returns {"mail": ..., "webhook": ..., "ntfy": ...}.
 
     The try is a line in the history (and, when nothing took it, in the system log) unless record,
-    given the results, says no: a retry that fails again is silent."""
+    given the results, says no: a retry that fails again is silent.
+
+    slow is the pass's set of channels that timed out: one that did is not tried again in that pass
+    (SKIPPED_SLOW, a failure: what is kept until sent stays kept), so that ten alerts to a server
+    that does not answer cannot take ten times REQUEST_LIMIT."""
     results, rcpt = {}, []
-    try:
-        results['mail'], rcpt = by_mail(settings, alert)
-    except Exception as exc:
-        results['mail'] = error_text(exc)
-    for name, channel in (('webhook', by_webhook), ('ntfy', by_ntfy)):
+    for name, channel in (('mail', by_mail), ('webhook', by_webhook), ('ntfy', by_ntfy)):
+        if slow is not None and name in slow:
+            results[name] = SKIPPED_SLOW
+            continue
         try:
-            results[name] = channel(settings, alert)
+            if name == 'mail':
+                results[name], rcpt = channel(settings, alert)
+            else:
+                results[name] = channel(settings, alert)
         except Exception as exc:
             results[name] = error_text(exc)
+            if slow is not None and timed_out(exc):
+                slow.add(name)
     if record is not None and not record(results):
         return results
     tried = [name for name, result in results.items() if result != NOT_SET]
@@ -525,7 +543,7 @@ def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=
             sent[mark] = now
             return {name: HELD for name in ('mail', 'webhook', 'ntfy')}
         state.handed += 1
-    results = deliver(settings, alert, record)
+    results = deliver(settings, alert, record, getattr(state, 'slow', None))
     if state is not None:
         sent[mark] = now
         state.save()
@@ -1673,6 +1691,7 @@ def run_collectors(settings, state, now, clock=time.monotonic):
             if isinstance(st, dict) and isinstance(st.get('log'), dict):
                 st['log'].pop('path', None)
     started = clock()
+    state.slow = set()
     t = nr.texts(settings.get('language'))
     for name, collect in COLLECTORS:
         if clock() - started > PASS_DEADLINE:

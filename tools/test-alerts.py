@@ -1238,6 +1238,43 @@ for name in os.listdir(alerts.XGS_OUTBOX):
 GENERAL.update(alert_ntfy_server=BASE + '/ntfy/')
 MAIL['fail'] = None
 
+# a channel that timed out is not tried again in the same pass
+reset()
+GENERAL.update(alert_webhook_url=BASE + '/drip', alert_ntfy_server='')
+alerts.REQUEST_LIMIT = 1
+for i in range(3):
+    outbox('s%02d.json' % i, subject='Example slow alert %d' % i)
+history_before = len(history())
+started = time.monotonic()
+try:
+    run_pass([('xgs', alerts.collect_xgs)])
+finally:
+    alerts.REQUEST_LIMIT = 15
+    GENERAL.update(alert_webhook_url=BASE + '/hook', alert_ntfy_server=BASE + '/ntfy/')
+took = time.monotonic() - started
+check('slow channel: once it timed out, skipped for the rest of the pass',
+      ([h['detail'] for h in reversed(history()[:len(history()) - history_before])], len(posts('/drip')), took < 4),
+      (['mail: sent; webhook: no answer within 1 s; ntfy: not set',
+        'mail: sent; webhook: skipped: it did not answer earlier this minute; ntfy: not set',
+        'mail: sent; webhook: skipped: it did not answer earlier this minute; ntfy: not set'], 1, True))
+for name in os.listdir(alerts.XGS_OUTBOX):
+    os.unlink(os.path.join(alerts.XGS_OUTBOX, name))
+MAIL['fail'] = 'example mail failure'
+GENERAL.update(alert_webhook_url=BASE + '/drip', alert_ntfy_server='')
+alerts.REQUEST_LIMIT = 1
+outbox('s10.json', subject='Example slow alert 10')
+outbox('s11.json', subject='Example slow alert 11')
+try:
+    run_pass([('xgs', alerts.collect_xgs)])
+finally:
+    alerts.REQUEST_LIMIT = 15
+    GENERAL.update(alert_webhook_url=BASE + '/hook', alert_ntfy_server=BASE + '/ntfy/')
+    MAIL['fail'] = None
+check('slow channel: ... what is kept until sent stays kept', sorted(os.listdir(alerts.XGS_OUTBOX)), ['s10.json', 's11.json'])
+check('slow channel: ... and the next pass tries it again', ([s['subject'] for s in run_pass([('xgs', alerts.collect_xgs)])],
+                                                             os.listdir(alerts.XGS_OUTBOX)),
+      (['Example slow alert 10', 'Example slow alert 11'], []))
+
 TICK = [0.0]
 RAN2 = []
 
