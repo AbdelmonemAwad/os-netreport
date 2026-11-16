@@ -10,6 +10,7 @@ would have gone out is kept and compared.
 import base64
 import datetime
 import importlib
+import ipaddress
 import json
 import os
 import shutil
@@ -471,6 +472,87 @@ reset_record('boot-3', [], watchdog=True)
 check('watchdog: "watchdog": true is enough', [s['facts']['boot'] for s in sent_by(alerts.collect_watchdog)], ['boot-3'])
 reset_record('boot-4', [(3, 'example reason')])
 check('watchdog: another reset is not an alert', sent_by(alerts.collect_watchdog), [])
+
+# ---------------------------------------------------------------- 4. command-and-control lists
+
+alerts.FILTER_LOG = os.path.join(TOP, 'filter_{day}.log')
+alerts.RULES_DEBUG = os.path.join(TOP, 'rules.debug')
+alerts.FEEDS_FILE = os.path.join(TOP, 'feeds.json')
+nr.INFECTED_FILE = os.path.join(STATE, 'infected.json')
+nr.local_networks = lambda: [ipaddress.ip_network('192.0.2.0/24')]
+alerts.own_addresses = lambda: {'192.0.2.1'}
+RID = {'feodo out': 'a' * 32, 'feodo in': 'b' * 32, 'spamhaus_drop out': 'c' * 32, 'et_compromised out': 'd' * 32}
+
+
+def rules(rid=RID):
+    with open(alerts.RULES_DEBUG, 'w', encoding='utf-8') as fh:
+        fh.write('# example ruleset\npass in quick on em1 inet from any to any label "%s" # Default allow LAN\n' % ('e' * 32))
+        for what, label in rid.items():
+            feed, way = what.split()
+            fh.write('block drop %s log quick inet from any to <blocklists_%s> label "%s" # Block Lists: blocklists_%s %s\n'
+                     % (way, feed, label, feed, way))
+
+
+def blocked(src, dst='198.51.100.66', rule='feodo out', n=1, action='block', rid=None):
+    label = rid or RID[rule]
+    line = syslog_line(CLOCK + 30, 'filterlog', '85,,,%s,igb0,match,%s,out,4,0x0,,63,0,0,DF,6,tcp,60,%s,%s,51515,443,0,S,'
+                       '1,,64240,,mss' % (label, action, src, dst))
+    append(alerts.day_file(alerts.FILTER_LOG, CLOCK + 60), line * n)
+
+
+rules()
+nr.save_json(nr.DEVICES_FILE, {'02:00:00:00:00:02': {'ip': '192.0.2.50', 'name': 'laptop', 'first_seen': NOW, 'last_seen': NOW}})
+reset()
+blocked('192.0.2.50', n=2)
+check('C2: the first run sends nothing', sent_by(alerts.collect_c2), [])
+check('C2: and writes no infected.json', os.path.exists(nr.INFECTED_FILE), False)
+blocked('192.0.2.50', n=3)
+blocked('192.0.2.1')                                    # the firewall's own address names no device
+blocked('203.0.113.7')                                  # not one of the firewall's networks
+blocked('192.0.2.60', rule='feodo in')                  # the inbound rule
+blocked('192.0.2.61', rule='spamhaus_drop out')         # a list that is not command-and-control
+blocked('192.0.2.62', action='pass')
+blocked('192.0.2.63', rid='f' * 32)                     # a rule this ruleset does not know
+sent = sent_by(alerts.collect_c2)
+check('C2: a device of the local network on a C2 list: one alert at once', [s['facts']['address'] for s in sent], ['192.0.2.50'])
+check('C2: its name, MAC, list and destination', sent[0]['text'] if sent else None,
+      'laptop (192.0.2.50) (MAC 02:00:00:00:00:02) tried to connect to 198.51.100.66, an address on feodo, at %s. The '
+      'firewall blocked it. The device may be infected: check it.' % alerts.local_time(CLOCK - 30))
+infected = nr.load_json(nr.INFECTED_FILE, {})
+check('C2: infected.json, as its docstring says', (sorted(infected), sorted(infected['192.0.2.50']),
+                                                   infected['192.0.2.50']['count'], infected['192.0.2.50']['mac']),
+      (['192.0.2.50'], ['count', 'first', 'last', 'list', 'mac', 'name'], 3, '02:00:00:00:00:02'))
+blocked('192.0.2.50', n=2)
+check('C2: the same device again: counted, no second alert', (sent_by(alerts.collect_c2),
+                                                              nr.load_json(nr.INFECTED_FILE, {})['192.0.2.50']['count']), ([], 5))
+alerts.save_json(alerts.FEEDS_FILE, {'feodo': {'name': 'abuse.ch Feodo Tracker', 'c2': False},
+                                     'et_compromised': {'name': 'Example C2 list', 'c2': True}})
+blocked('192.0.2.70')
+blocked('192.0.2.71', rule='et_compromised out')
+check('C2: feeds.json marking "c2" decides the lists, by their names', [(s['facts']['address'], s['facts']['list_name'])
+                                                                     for s in sent_by(alerts.collect_c2)],
+      [('192.0.2.71', 'Example C2 list')])
+os.unlink(alerts.FEEDS_FILE)
+rules(dict(RID, **{'feodo out': '1' * 32}))
+os.utime(alerts.RULES_DEBUG, (time.time() + 5, time.time() + 5))
+blocked('192.0.2.72', rid='1' * 32)
+check('C2: a changed ruleset is read again', [s['facts']['address'] for s in sent_by(alerts.collect_c2)], ['192.0.2.72'])
+check('C2: the report lists the infected devices', [x in nr.infected_table(nr.texts('en_US'), {}) for x in
+                                                    ('Infected devices', 'laptop (192.0.2.50)', '02:00:00:00:00:02')],
+      [True, True, True])
+infected = nr.load_json(nr.INFECTED_FILE, {})
+infected['192.0.2.50']['last'] = int(CLOCK - 8 * 86400)
+alerts.save_json(nr.INFECTED_FILE, infected)
+minute(alerts.collect_c2)
+check('C2: an entry older than 7 days is dropped', sorted(nr.load_json(nr.INFECTED_FILE, {})), ['192.0.2.71', '192.0.2.72'])
+alerts.save_json(nr.INFECTED_FILE, {})
+check('C2: no infected device, no table', nr.infected_table(nr.texts('en_US'), {}), '')
+GENERAL['c2_alert'] = '0'
+blocked('192.0.2.80', rid='1' * 32)
+check('C2: with c2_alert off, no alert, but the device is listed', (sent_by(alerts.collect_c2),
+                                                                    sorted(nr.load_json(nr.INFECTED_FILE, {}))),
+      ([], ['192.0.2.80']))
+GENERAL['c2_alert'] = '1'
 
 # One collector failing stops neither the others nor the reports: the scheduler with a collector that
 # raises before one that records.

@@ -141,5 +141,11 @@
  "vpn_back_subject": "La VPN {name} ha vuelto — {title}",
  "vpn_back_text": "La conexión VPN {name} volvió a las {time}, tras {duration} caída.",
  "wd_subject": "El watchdog de hardware reinició el cortafuegos — {title}",
- "wd_text": "El cortafuegos fue reiniciado por su watchdog de hardware (registro de {time}). Motivos que registró el hardware: {reasons}."
+ "wd_text": "El cortafuegos fue reiniciado por su watchdog de hardware (registro de {time}). Motivos que registró el hardware: {reasons}.",
+ "c2_subject": "Un dispositivo intentó contactar un servidor de mando y control — {title}",
+ "c2_text": "{device} (MAC {mac}) intentó conectar con {dst}, una dirección de {list}, a las {time}. El cortafuegos lo bloqueó. El dispositivo puede estar infectado: revíselo.",
+ "infected": "Dispositivos infectados",
+ "infected_intro": "Dispositivos que intentaron contactar una lista de mando y control en los últimos 7 días. El cortafuegos los bloqueó; revise estos dispositivos.",
+ "blocklist": "Lista",
+ "last_seen": "Visto por última vez"
 }

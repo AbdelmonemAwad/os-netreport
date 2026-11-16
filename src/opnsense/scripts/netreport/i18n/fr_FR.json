@@ -141,5 +141,11 @@
  "vpn_back_subject": "Le VPN {name} est rétabli — {title}",
  "vpn_back_text": "La connexion VPN {name} est revenue à {time}, après {duration} de coupure.",
  "wd_subject": "Le chien de garde matériel a redémarré le pare-feu — {title}",
- "wd_text": "Le pare-feu a été redémarré par son chien de garde matériel (enregistrement de {time}). Raisons notées par le matériel : {reasons}."
+ "wd_text": "Le pare-feu a été redémarré par son chien de garde matériel (enregistrement de {time}). Raisons notées par le matériel : {reasons}.",
+ "c2_subject": "Un appareil a tenté de joindre un serveur de commande et contrôle — {title}",
+ "c2_text": "{device} (MAC {mac}) a tenté de se connecter à {dst}, une adresse de {list}, à {time}. Le pare-feu l’a bloqué. L’appareil est peut-être infecté : vérifiez-le.",
+ "infected": "Appareils infectés",
+ "infected_intro": "Appareils qui ont tenté de joindre une liste de commande et contrôle au cours des 7 derniers jours. Le pare-feu les a bloqués ; vérifiez ces appareils.",
+ "blocklist": "Liste",
+ "last_seen": "Vu pour la dernière fois"
 }

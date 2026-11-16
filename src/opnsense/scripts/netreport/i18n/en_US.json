@@ -141,5 +141,11 @@
  "vpn_back_subject": "VPN {name} is back — {title}",
  "vpn_back_text": "VPN connection {name} came back at {time}, after {duration} down.",
  "wd_subject": "The hardware watchdog restarted the firewall — {title}",
- "wd_text": "The firewall was restarted by its hardware watchdog (record of {time}). Reasons the hardware recorded: {reasons}."
+ "wd_text": "The firewall was restarted by its hardware watchdog (record of {time}). Reasons the hardware recorded: {reasons}.",
+ "c2_subject": "A device tried to reach a command-and-control server — {title}",
+ "c2_text": "{device} (MAC {mac}) tried to connect to {dst}, an address on {list}, at {time}. The firewall blocked it. The device may be infected: check it.",
+ "infected": "Infected devices",
+ "infected_intro": "Devices that tried to reach a command-and-control list in the last 7 days. The firewall blocked them; check these devices.",
+ "blocklist": "List",
+ "last_seen": "Last seen"
 }

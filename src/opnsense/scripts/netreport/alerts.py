@@ -41,6 +41,21 @@ remembers between runs - the quiet times, and each collector's place - is in
 A channel that fails does not stop the others. ntfy has no default server: it is off until a
 server and a topic are set, because a public server by default would send the firewall's events
 out by itself.
+
+The collectors, run each minute by netreport.py's scheduler: gateways down and back, repeated
+failed logins, Suricata alerts, VPN tunnels down and back, a reset the hardware watchdog caused,
+a device reaching a command-and-control list, and the alerts other XGS plugins leave for this one.
+Each one's first run only records where things are, so an install does not alert on old history.
+
+/var/db/netreport/infected.json - written here, read by os-portguard to isolate a device:
+
+    {"<address>": {"first": <unix time>, "last": <unix time>, "count": <blocked connections>,
+                   "list": "<os-blocklists feed id>", "mac": "<mac or empty>", "name": "<name or empty>"}}
+
+    one entry per address of the firewall's own networks (never one of the firewall's own addresses)
+    that os-blocklists blocked on its way to a command-and-control list; "first" and "last" are
+    the times of the first and the latest blocked connection, and an entry whose "last" is older
+    than 7 days is dropped. Written whole (a temporary file renamed over it).
 """
 
 import datetime
@@ -749,6 +764,162 @@ def collect_watchdog(settings, state, now):
            quiet=0, priority='high', tags=['warning'])
 
 
+# ---------------------------------------------------------------- a device reaching a command-and-control list
+
+FILTER_LOG = '/var/log/filter/filter_{day}.log'
+RULES_DEBUG = '/tmp/rules.debug'
+FEEDS_FILE = '/usr/local/opnsense/scripts/blocklists/feeds.json'
+C2_FALLBACK = ('feodo',)        # until os-blocklists marks its feeds with "c2": abuse.ch Feodo Tracker
+INFECTED_DAYS = 7
+HEX_DIGITS = set('0123456789abcdef')
+# filterlog's CSV, as OPNsense's own reader (scripts/filter/read_log.py) names its fields
+FILTER_GENERAL = 'rulenr,subrulenr,anchorname,rid,interface,reason,action,dir,ipversion'.split(',')
+FILTER_V4 = FILTER_GENERAL + 'tos,ecn,ttl,id,offset,ipflags,protonum,protoname,length,src,dst'.split(',')
+FILTER_V6 = FILTER_GENERAL + 'class,flow,hoplimit,protoname,protonum,length,src,dst'.split(',')
+BLOCKLIST_OUT = re.compile(r'^Block Lists: blocklists_(\S+) out$')
+_rules = {'mtime': None, 'labels': {}}
+
+
+def rule_labels():
+    """rule label (its hash or uuid) -> description, from the running ruleset, the way OPNsense's
+    read_log.py fetch_rule_details() reads it; read again when the file changes"""
+    try:
+        mtime = os.stat(RULES_DEBUG).st_mtime
+    except OSError:
+        return {}
+    if _rules['mtime'] != mtime:
+        labels = {}
+        with open(RULES_DEBUG, 'rt', encoding='utf-8', errors='replace') as fh:
+            for line in fh:
+                if ' label ' not in line:
+                    continue
+                lbl = line.split(' label ')[-1]
+                if lbl.count('"') >= 2:
+                    rid = lbl.split('"')[1]
+                    if len(rid) >= 32 and set(rid.replace('-', '')).issubset(HEX_DIGITS):
+                        labels[rid] = ''.join(lbl.split('"')[2:]).strip().strip('# : ')
+        _rules.update(mtime=mtime, labels=labels)
+    return _rules['labels']
+
+
+def filter_record(line):
+    """one filterlog line as a dict of its fields, and the last field (where an older format puts the rule)"""
+    if 'filterlog' not in line:
+        return None
+    found = re.search(r'filterlog[^:]*:', line)
+    if found and re.search(r'filterlog\[\d*\]:', line):
+        parts = line[found.end():].strip().split(',')          # RFC 3164
+    else:
+        parts = line.split()[-1].strip().split(',')             # RFC 5424
+    if len(parts) < len(FILTER_GENERAL):
+        return None
+    rec = dict(zip(FILTER_GENERAL, parts))
+    fields = {'4': FILTER_V4, '6': FILTER_V6}.get(rec['ipversion'])
+    if not fields:
+        return None
+    rec.update(zip(fields[len(FILTER_GENERAL):], parts[len(FILTER_GENERAL):len(fields)]))
+    rec['_last'] = parts[-1]
+    return rec
+
+
+def rule_label(rec, labels):
+    if rec.get('rid', '0') != '0':
+        return labels.get(rec['rid'], '')
+    last = rec.get('_last', '')
+    if len(last) >= 32 and set(last.replace('-', '')).issubset(HEX_DIGITS):
+        return labels.get(last, '')
+    return ''
+
+
+def c2_lists():
+    """{feed id: its name} of the command-and-control lists: the feeds of os-blocklists' feeds.json marked
+    "c2": true, or, while none carries that key, feodo"""
+    feeds = nr.load_json(FEEDS_FILE, None)
+    feeds = feeds if isinstance(feeds, dict) else {}
+    if any(isinstance(f, dict) and 'c2' in f for f in feeds.values()):
+        ids = [i for i, f in feeds.items() if isinstance(f, dict) and f.get('c2') is True]
+    else:
+        ids = list(C2_FALLBACK)
+    return {i: str((feeds.get(i) or {}).get('name') or i) for i in ids}
+
+
+def own_addresses():
+    """the firewall's own addresses: a blocked connection from one of them names no device"""
+    found = set()
+    for word in re.findall(r'inet6? ([0-9A-Fa-f:.]+)', nr.run('/sbin/ifconfig -a')):
+        try:
+            found.add(str(ipaddress.ip_address(word)))
+        except ValueError:
+            continue
+    return found
+
+
+def device_of(settings, address):
+    """(name, mac) of an address of the local network, as the device scan and the host names know it"""
+    name = nr.hostnames(settings).get(address, '')
+    mac, seen = '', -1
+    devices = nr.load_json(nr.DEVICES_FILE, {})
+    for m, d in (devices.items() if isinstance(devices, dict) else []):
+        if isinstance(d, dict) and d.get('ip') == address and (d.get('last_seen') or 0) > seen:
+            mac, seen = m, d.get('last_seen') or 0
+            name = name or d.get('name') or ''
+    return name, mac
+
+
+def collect_c2(settings, state, now):
+    first = state.first('c2')
+    st = state.get('c2')
+    lines = follow(st.setdefault('log', {}), day_file(FILTER_LOG, now))
+    infected = nr.load_json(nr.INFECTED_FILE, {})
+    infected = infected if isinstance(infected, dict) else {}
+    kept = {a: e for a, e in infected.items() if isinstance(e, dict) and now - (e.get('last') or 0) < INFECTED_DAYS * 86400}
+    changed = len(kept) != len(infected)
+    infected = kept
+    hits = {}
+    lists = labels = nets = own = None
+    for line in ([] if first else lines):
+        if 'block' not in line:
+            continue
+        rec = filter_record(line)
+        if not rec or rec.get('action') != 'block':
+            continue
+        if labels is None:
+            labels, lists = rule_labels(), c2_lists()
+        found = BLOCKLIST_OUT.match(rule_label(rec, labels))
+        if not found or found.group(1) not in lists:
+            continue
+        if nets is None:
+            nets, own = nr.local_networks(), own_addresses()
+        source = rec.get('src', '')
+        if source in own or not nr.started_inside(source, nets):
+            continue
+        stamp = nr.line_time(line) or now
+        hit = hits.setdefault(source, {'count': 0, 'first': stamp, 'last': stamp})
+        hit['count'] += 1
+        hit.update(last=max(hit['last'], stamp), first=min(hit['first'], stamp), list=found.group(1), dst=rec.get('dst', ''))
+    t = nr.texts(settings.get('language'))
+    for source, hit in sorted(hits.items()):
+        name, mac = device_of(settings, source)
+        entry = infected.get(source)
+        new = entry is None
+        if new:
+            entry = infected[source] = {'first': int(hit['first']), 'last': 0, 'count': 0}
+        entry.update(last=int(max(entry.get('last') or 0, hit['last'])), count=int(entry.get('count') or 0) + hit['count'],
+                     list=hit['list'], mac=mac or entry.get('mac', ''), name=name or entry.get('name', ''))
+        changed = True
+        if not new or not wanted(settings, 'c2_alert'):
+            continue
+        device = nr.label(source, {source: entry['name']} if entry['name'] else {})
+        facts = {'address': source, 'name': entry['name'], 'mac': entry['mac'], 'list': hit['list'],
+                 'list_name': lists[hit['list']], 'destination': hit['dst'], 'count': hit['count'],
+                 'first': iso_time(hit['first'])}
+        notify(settings, state, 'c2', source, subject_of(t, settings, 'c2_subject'),
+               t['c2_text'].format(device=device, mac=entry['mac'] or t['unknown'], dst=hit['dst'], list=lists[hit['list']],
+                                   time=local_time(hit['first'])), facts, now=now, priority='urgent', tags=['skull'])
+    if changed:
+        save_json(nr.INFECTED_FILE, infected)
+
+
 # ---------------------------------------------------------------- collectors
 
 # (name, function(settings, state, now)): run each minute by netreport.py's scheduler, each on its
@@ -759,6 +930,7 @@ COLLECTORS = [
     ('ips', collect_ips),
     ('vpn', collect_vpn),
     ('watchdog', collect_watchdog),
+    ('c2', collect_c2),
 ]
 
 

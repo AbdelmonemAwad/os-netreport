@@ -128,5 +128,11 @@
  "vpn_back_subject": "VPN {name} 已恢复 — {title}",
  "vpn_back_text": "VPN 连接 {name} 于 {time} 恢复，断开了 {duration}。",
  "wd_subject": "硬件看门狗重启了防火墙 — {title}",
- "wd_text": "防火墙被硬件看门狗重启（{time} 的记录）。硬件记录的原因：{reasons}。"
+ "wd_text": "防火墙被硬件看门狗重启（{time} 的记录）。硬件记录的原因：{reasons}。",
+ "c2_subject": "有设备尝试连接命令与控制服务器 — {title}",
+ "c2_text": "{device}（MAC {mac}）于 {time} 尝试连接 {list} 中的地址 {dst}。防火墙已拦截。该设备可能已被感染：请检查。",
+ "infected": "受感染的设备",
+ "infected_intro": "过去 7 天内尝试连接命令与控制列表的设备。防火墙已拦截；请检查这些设备。",
+ "blocklist": "列表",
+ "last_seen": "最后出现"
 }

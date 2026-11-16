@@ -141,5 +141,11 @@
  "vpn_back_subject": "A VPN {name} voltou — {title}",
  "vpn_back_text": "A conexão VPN {name} voltou às {time}, depois de {duration} fora.",
  "wd_subject": "O watchdog de hardware reiniciou o firewall — {title}",
- "wd_text": "O firewall foi reiniciado pelo watchdog de hardware (registro de {time}). Motivos registrados pelo hardware: {reasons}."
+ "wd_text": "O firewall foi reiniciado pelo watchdog de hardware (registro de {time}). Motivos registrados pelo hardware: {reasons}.",
+ "c2_subject": "Um dispositivo tentou contatar um servidor de comando e controle — {title}",
+ "c2_text": "{device} (MAC {mac}) tentou se conectar a {dst}, um endereço de {list}, às {time}. O firewall bloqueou. O dispositivo pode estar infectado: verifique-o.",
+ "infected": "Dispositivos infectados",
+ "infected_intro": "Dispositivos que tentaram contatar uma lista de comando e controle nos últimos 7 dias. O firewall os bloqueou; verifique esses dispositivos.",
+ "blocklist": "Lista",
+ "last_seen": "Visto pela última vez"
 }

@@ -141,5 +141,11 @@
  "vpn_back_subject": "VPN {name} er tilbake — {title}",
  "vpn_back_text": "VPN-tilkoblingen {name} kom tilbake {time}, etter {duration} nede.",
  "wd_subject": "Maskinvare-watchdogen startet brannmuren på nytt — {title}",
- "wd_text": "Brannmuren ble startet på nytt av maskinvare-watchdogen (registrert {time}). Årsaker maskinvaren registrerte: {reasons}."
+ "wd_text": "Brannmuren ble startet på nytt av maskinvare-watchdogen (registrert {time}). Årsaker maskinvaren registrerte: {reasons}.",
+ "c2_subject": "En enhet prøvde å nå en kommando-og-kontroll-server — {title}",
+ "c2_text": "{device} (MAC {mac}) prøvde å koble til {dst}, en adresse på {list}, {time}. Brannmuren blokkerte det. Enheten kan være infisert: sjekk den.",
+ "infected": "Infiserte enheter",
+ "infected_intro": "Enheter som de siste 7 dagene prøvde å nå en kommando-og-kontroll-liste. Brannmuren blokkerte dem; sjekk disse enhetene.",
+ "blocklist": "Liste",
+ "last_seen": "Sist sett"
 }

@@ -141,5 +141,11 @@
  "vpn_back_subject": "{name} VPN bağlantısı geri geldi — {title}",
  "vpn_back_text": "{name} VPN bağlantısı {duration} kesintiden sonra {time} saatinde geri geldi.",
  "wd_subject": "Donanım watchdog’u güvenlik duvarını yeniden başlattı — {title}",
- "wd_text": "Güvenlik duvarı donanım watchdog’u tarafından yeniden başlatıldı ({time} kaydı). Donanımın kaydettiği nedenler: {reasons}."
+ "wd_text": "Güvenlik duvarı donanım watchdog’u tarafından yeniden başlatıldı ({time} kaydı). Donanımın kaydettiği nedenler: {reasons}.",
+ "c2_subject": "Bir cihaz komuta ve kontrol sunucusuna ulaşmaya çalıştı — {title}",
+ "c2_text": "{device} (MAC {mac}) {time} saatinde {list} listesindeki {dst} adresine bağlanmaya çalıştı. Güvenlik duvarı engelledi. Cihaz virüslü olabilir: denetleyin.",
+ "infected": "Virüslü cihazlar",
+ "infected_intro": "Son 7 günde bir komuta ve kontrol listesine ulaşmaya çalışan cihazlar. Güvenlik duvarı engelledi; bu cihazları denetleyin.",
+ "blocklist": "Liste",
+ "last_seen": "Son görülme"
 }

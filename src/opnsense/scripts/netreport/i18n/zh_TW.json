@@ -128,5 +128,11 @@
  "vpn_back_subject": "VPN {name} 已恢復 — {title}",
  "vpn_back_text": "VPN 連線 {name} 於 {time} 恢復，中斷了 {duration}。",
  "wd_subject": "硬體看門狗重新啟動了防火牆 — {title}",
- "wd_text": "防火牆被硬體看門狗重新啟動（{time} 的紀錄）。硬體記錄的原因：{reasons}。"
+ "wd_text": "防火牆被硬體看門狗重新啟動（{time} 的紀錄）。硬體記錄的原因：{reasons}。",
+ "c2_subject": "有裝置嘗試連線命令與控制伺服器 — {title}",
+ "c2_text": "{device}（MAC {mac}）於 {time} 嘗試連線 {list} 中的位址 {dst}。防火牆已封鎖。該裝置可能已遭感染：請檢查。",
+ "infected": "受感染的裝置",
+ "infected_intro": "過去 7 天內嘗試連線命令與控制清單的裝置。防火牆已封鎖；請檢查這些裝置。",
+ "blocklist": "清單",
+ "last_seen": "最後出現"
 }

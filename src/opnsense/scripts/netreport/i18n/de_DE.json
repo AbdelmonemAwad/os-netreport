@@ -141,5 +141,11 @@
  "vpn_back_subject": "VPN {name} ist zurück — {title}",
  "vpn_back_text": "Die VPN-Verbindung {name} ist um {time} zurückgekommen, nach {duration} Ausfall.",
  "wd_subject": "Der Hardware-Watchdog hat die Firewall neu gestartet — {title}",
- "wd_text": "Die Firewall wurde von ihrem Hardware-Watchdog neu gestartet (Eintrag von {time}). Von der Hardware festgehaltene Gründe: {reasons}."
+ "wd_text": "Die Firewall wurde von ihrem Hardware-Watchdog neu gestartet (Eintrag von {time}). Von der Hardware festgehaltene Gründe: {reasons}.",
+ "c2_subject": "Ein Gerät wollte einen Steuerserver erreichen — {title}",
+ "c2_text": "{device} (MAC {mac}) wollte um {time} {dst} erreichen, eine Adresse auf {list}. Die Firewall hat es gesperrt. Das Gerät ist womöglich infiziert: Prüfen Sie es.",
+ "infected": "Infizierte Geräte",
+ "infected_intro": "Geräte, die in den letzten 7 Tagen eine Liste von Steuerservern erreichen wollten. Die Firewall hat sie gesperrt; prüfen Sie diese Geräte.",
+ "blocklist": "Liste",
+ "last_seen": "Zuletzt gesehen"
 }

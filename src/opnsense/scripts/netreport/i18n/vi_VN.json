@@ -141,5 +141,11 @@
  "vpn_back_subject": "VPN {name} đã có lại — {title}",
  "vpn_back_text": "Kết nối VPN {name} có lại lúc {time}, sau {duration} bị mất.",
  "wd_subject": "Watchdog phần cứng đã khởi động lại tường lửa — {title}",
- "wd_text": "Tường lửa đã được watchdog phần cứng khởi động lại (ghi nhận lúc {time}). Lý do phần cứng ghi lại: {reasons}."
+ "wd_text": "Tường lửa đã được watchdog phần cứng khởi động lại (ghi nhận lúc {time}). Lý do phần cứng ghi lại: {reasons}.",
+ "c2_subject": "Một thiết bị đã cố kết nối tới máy chủ điều khiển — {title}",
+ "c2_text": "{device} (MAC {mac}) đã cố kết nối tới {dst}, một địa chỉ trong {list}, lúc {time}. Tường lửa đã chặn. Thiết bị có thể bị nhiễm: hãy kiểm tra.",
+ "infected": "Thiết bị bị nhiễm",
+ "infected_intro": "Các thiết bị đã cố kết nối tới danh sách máy chủ điều khiển trong 7 ngày qua. Tường lửa đã chặn; hãy kiểm tra các thiết bị này.",
+ "blocklist": "Danh sách",
+ "last_seen": "Lần cuối thấy"
 }

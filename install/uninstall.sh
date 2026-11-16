@@ -20,6 +20,9 @@ rm -f /var/db/netreport/i18n-owned.json
 # the alerts' places in the logs they follow (alerts.py): a later install starts from where the logs
 # are then, and does not send what was written while this plugin was away
 rm -f /var/db/netreport/alerts-state.json
+# the devices it found reaching a command-and-control list: with nothing to keep it current, the
+# list would stay for os-portguard to read as if it were current
+rm -f /var/db/netreport/infected.json
 # the menu file place-menu.sh wrote, which no list of the package's files names
 rm -f /usr/local/opnsense/mvc/app/models/OPNsense/NetReport/Menu/Menu.xml
 rmdir /usr/local/opnsense/mvc/app/models/OPNsense/NetReport/Menu 2> /dev/null || true

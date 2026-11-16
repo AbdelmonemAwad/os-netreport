@@ -69,6 +69,7 @@ STATE_DIR = '/var/db/netreport'
 STATE_FILE = os.path.join(STATE_DIR, 'state.json')
 DEVICES_FILE = os.path.join(STATE_DIR, 'devices.json')
 HISTORY_FILE = os.path.join(STATE_DIR, 'history.json')
+INFECTED_FILE = os.path.join(STATE_DIR, 'infected.json')     # written by alerts.py, its format there
 ARCHIVE_DIR = os.path.join(STATE_DIR, 'archive')
 LOCK_FILE = '/var/run/netreport.lock'
 CATCH_UP = 12 * 3600            # send a missed report up to 12 hours late (firewall was off or rebooting)
@@ -742,6 +743,28 @@ def kpis(items):
         f'<div class="kpi"><b>{v}</b><span>{esc(k)}</span>{x}</div>' for k, v, x in items) + '</div>'
 
 
+def infected_table(t, names):
+    """the devices that tried to reach a command-and-control list (infected.json), or nothing"""
+    infected = load_json(INFECTED_FILE, {})
+    rows = sorted(((a, e) for a, e in (infected.items() if isinstance(infected, dict) else []) if isinstance(e, dict)),
+                  key=lambda x: -(x[1].get('last') or 0))
+    if not rows:
+        return ''
+
+    def when(ts):
+        return f'<span class="ltr">{datetime.datetime.fromtimestamp(ts):%Y-%m-%d %H:%M}</span>' if ts else ''
+
+    def who(address, entry):
+        name = names.get(address) or entry.get('name')
+        return f'{name} ({address})' if name else address
+
+    return (f'<h3 class="bad">{esc(t["infected"])}</h3><p class="muted">{esc(t["infected_intro"])}</p>' +
+            table(t, [t['device'], 'MAC', t['blocklist'], t['times'], t['first_seen'], t['last_seen']], [
+                [esc(who(a, e)),
+                 f'<span class="ltr">{esc(e.get("mac") or "")}</span>', esc(e.get('list') or ''),
+                 f'{int(e.get("count") or 0):,}', when(e.get('first')), when(e.get('last'))] for a, e in rows]))
+
+
 def build_report(settings, sched, start, end):
     """returns subject, html, plain text and the list of issues (level, text)"""
     t = texts(sched.get('language'))
@@ -849,6 +872,7 @@ def build_report(settings, sched, start, end):
             [f'<span class="ltr">{esc(s)}</span>', f'{n:,}'] for s, n in ids['out_sigs']])
         body += table(t, [t['address'], t['times']], [
             [f'<span class="ltr">{esc(ip)}</span>', f'{n:,}'] for ip, n in ids['out_hosts']])
+    body += infected_table(t, names)
     ids_general = settings.root.find('./OPNsense/IDS/general')
     if ids_general is not None and ids_general.findtext('enabled') == '1' and ids_general.findtext('ips') != '1':
         body += f'<p class="muted">{esc(t["ids_note"])}</p>'

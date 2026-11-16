@@ -141,5 +141,11 @@
  "vpn_back_subject": "VPN {name} je zpět — {title}",
  "vpn_back_text": "Spojení VPN {name} se obnovilo v {time} po {duration} výpadku.",
  "wd_subject": "Hardwarový watchdog restartoval firewall — {title}",
- "wd_text": "Firewall restartoval jeho hardwarový watchdog (záznam z {time}). Důvody zaznamenané hardwarem: {reasons}."
+ "wd_text": "Firewall restartoval jeho hardwarový watchdog (záznam z {time}). Důvody zaznamenané hardwarem: {reasons}.",
+ "c2_subject": "Zařízení se pokusilo spojit s řídicím serverem — {title}",
+ "c2_text": "{device} (MAC {mac}) se v {time} pokusilo spojit s {dst}, adresou ze seznamu {list}. Firewall to zablokoval. Zařízení může být napadené: zkontrolujte ho.",
+ "infected": "Napadená zařízení",
+ "infected_intro": "Zařízení, která se za posledních 7 dní pokusila spojit se seznamem řídicích serverů. Firewall je zablokoval; tato zařízení zkontrolujte.",
+ "blocklist": "Seznam",
+ "last_seen": "Naposledy"
 }

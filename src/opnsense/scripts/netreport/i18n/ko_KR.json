@@ -128,5 +128,11 @@
  "vpn_back_subject": "VPN {name} 복구 — {title}",
  "vpn_back_text": "VPN 연결 {name}이(가) {duration} 동안 끊긴 뒤 {time}에 복구되었습니다.",
  "wd_subject": "하드웨어 워치독이 방화벽을 재시작했습니다 — {title}",
- "wd_text": "방화벽이 하드웨어 워치독에 의해 재시작되었습니다({time} 기록). 하드웨어가 기록한 원인: {reasons}."
+ "wd_text": "방화벽이 하드웨어 워치독에 의해 재시작되었습니다({time} 기록). 하드웨어가 기록한 원인: {reasons}.",
+ "c2_subject": "기기가 명령·제어 서버에 접속하려 했습니다 — {title}",
+ "c2_text": "{device}(MAC {mac})이(가) {time}에 {list}에 있는 주소 {dst}에 접속하려 했습니다. 방화벽이 차단했습니다. 기기가 감염되었을 수 있으니 확인하세요.",
+ "infected": "감염된 기기",
+ "infected_intro": "지난 7일 동안 명령·제어 목록에 접속하려 한 기기입니다. 방화벽이 차단했습니다. 이 기기들을 확인하세요.",
+ "blocklist": "목록",
+ "last_seen": "마지막 확인"
 }
