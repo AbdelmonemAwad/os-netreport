@@ -1435,8 +1435,9 @@ def read_outbox(path):
             return None, None
         data = fh.read(OUTBOX_FILE_MAX)
     try:
-        return json.loads(data.decode('utf-8')), opened
-    except ValueError:
+        # every string cleaned of lone surrogates once, here: none reaches a mail, the system log or the history
+        return nr.no_surrogates(json.loads(data.decode('utf-8'))), opened
+    except (ValueError, RecursionError):
         return None, opened
 
 
@@ -1475,6 +1476,7 @@ def collect_xgs_outbox(settings, state, now, send, names):
     failing = state.get('xgs').setdefault('outbox_failing', {})
     for name in names:
         path = os.path.join(XGS_OUTBOX, name)
+        shown = nr.no_surrogates(name)      # a name that is not UTF-8 holds surrogates (Python's surrogateescape)
         item, info = read_outbox(path)
         if info is None:
             continue
@@ -1492,7 +1494,7 @@ def collect_xgs_outbox(settings, state, now, send, names):
                                  facts, at=time_of(item.get('at'), mtime), now=now, quiet=0, priority='high',
                                  tags=['warning'], record=retried(retry), defer=True)
             except Exception as exc:
-                nr.log(f'{XGS_OUTBOX}/{name} could not be sent: {exc}')
+                nr.log(f'{XGS_OUTBOX}/{shown} could not be sent: {exc}')
                 results = None
             if was_sent(results):
                 failing.pop(name, None)
@@ -1503,8 +1505,8 @@ def collect_xgs_outbox(settings, state, now, send, names):
         if now - mtime >= OUTBOX_MAX_AGE:
             failing.pop(name, None)
             if remove_same(path, info):
-                dropped(str(item.get('subject') or name) if isinstance(item, dict) else name,
-                        f'{XGS_OUTBOX}/{name} dropped: not sent within 24 hours')
+                dropped(str(item.get('subject') or shown) if isinstance(item, dict) else shown,
+                        f'{XGS_OUTBOX}/{shown} dropped: not sent within 24 hours')
 
 
 PENDING_MAX = 1000              # anomalies kept for a retry at most
@@ -1551,6 +1553,8 @@ def collect_xgs_anomaly(settings, state, now, send, first):
     cannot be sent, or a run killed half way, loses none of the anomalies after it."""
     st = state.get('xgs')
     pending = [p for p in st.get('pending') or [] if isinstance(p, dict) and isinstance(p.get('rec'), dict)]
+    for p in pending:
+        p['rec'] = nr.no_surrogates(p['rec'])      # one kept by an older version may hold a lone surrogate
     st['pending'] = pending
     old = list(pending)
     try:
@@ -1562,8 +1566,9 @@ def collect_xgs_anomaly(settings, state, now, send, first):
         records = []
         for line in lines:
             try:
-                rec = json.loads(line)
-            except ValueError:
+                # cleaned of lone surrogates once, here, as an outbox file is (read_outbox())
+                rec = nr.no_surrogates(json.loads(line))
+            except (ValueError, RecursionError):
                 continue
             if isinstance(rec, dict) and isinstance(rec.get('id'), int) and not isinstance(rec.get('id'), bool):
                 records.append(rec)

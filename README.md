@@ -179,6 +179,9 @@ otherwise above. What the layer remembers - quiet times, log offsets, states - i
     after it. `at` is ISO 8601 or Unix seconds (milliseconds are recognised); an anomaly with a
     time that is not one, or none a date can hold (a number of hundreds of digits), is sent with
     the time it was read.
+  - In both, a lone surrogate (a `\ud800` escape, which no mail, system log or web page can
+    carry) is replaced by `?` where the file or the line is read, in every key and value, so such
+    an alert is sent like any other.
 - **Written for os-portguard**: `/var/db/netreport/infected.json`,
   `{"<address>": {"first", "last", "count", "list", "mac", "name"}}` - the addresses of the
   firewall's own networks that os-blocklists blocked on their way to a command-and-control list

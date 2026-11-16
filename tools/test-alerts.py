@@ -8,8 +8,12 @@ would have gone out is kept and compared.
 
     python3 tools/test-alerts.py"""
 import base64
+import contextlib
 import datetime
+import email
+import email.header
 import importlib
+import io
 import ipaddress
 import json
 import os
@@ -350,6 +354,66 @@ for connect in (smtplib.SMTP, smtplib.SMTP_SSL):
         STALLED.append((type(exc).__name__, alerts.timed_out(exc)))
 check('a mail server that never answers (plain, TLS) is a timeout for the slow channels', STALLED,
       [('SMTPServerDisconnected', True), ('TimeoutError', True)])
+
+SMTP_GOT = []                   # the messages a test mail server took whole: [(mode, the message's bytes)]
+
+
+def smtp_server(mode='ok', delay=0):
+    """A plain mail server on 127.0.0.1; returns its port. It takes every message (SMTP_GOT has it as
+    soon as the final dot is in); 'slow-dot' then waits delay seconds before its 250, 'slow-quit'
+    before its answer to QUIT."""
+    listener = socket.socket()
+    listener.bind(('127.0.0.1', 0))
+    listener.listen(5)
+
+    def serve(conn):
+        f = conn.makefile('rb')
+
+        def say(text):
+            conn.sendall((text + '\r\n').encode())
+        try:
+            say('220 mail.example.com ESMTP')
+            while True:
+                line = f.readline()
+                if not line:
+                    return
+                cmd = line.decode(errors='replace').strip().upper()
+                if cmd.startswith(('EHLO', 'HELO')):
+                    say('250 mail.example.com')
+                elif cmd == 'DATA':
+                    say('354 go on')
+                    body = b''
+                    while not body.endswith(b'\r\n.\r\n'):
+                        chunk = f.readline()
+                        if not chunk:
+                            return
+                        body += chunk
+                    SMTP_GOT.append((mode, body))
+                    if mode == 'slow-dot':
+                        time.sleep(delay)
+                    say('250 queued')
+                elif cmd == 'QUIT':
+                    if mode == 'slow-quit':
+                        time.sleep(delay)
+                    say('221 bye')
+                    return
+                else:
+                    say('250 ok')
+        except OSError:
+            pass
+        finally:
+            conn.close()
+
+    def accept():
+        while True:
+            conn, _ = listener.accept()
+            threading.Thread(target=serve, args=(conn,), daemon=True).start()
+    threading.Thread(target=accept, daemon=True).start()
+    return listener.getsockname()[1]
+
+
+def smtp_settings(port):
+    return {'host': '127.0.0.1', 'port': port, 'security': 'none', 'user': '', 'password': '', 'sender': 'fw@example.com'}
 
 reset()
 settings = config()
@@ -1251,6 +1315,54 @@ anomalies((FIRST + 1, stamp(CLOCK)))
 check('anomaly: ... and the next one goes, its id kept', ([s['facts']['id'] for s in run_pass([('xgs', alerts.collect_xgs)])],
                                                           nr.load_json(alerts.STATE_FILE, {})['xgs']['last_id']),
       ([FIRST + 1], FIRST + 1))
+# a lone surrogate anywhere in what os-xgs-npu leaves - a subject, a text, a fact's key or value, a
+# host - is cleaned where it is read: the real mail (its MIME message built by send_mail) goes out
+# with mail the only channel, nothing logged carries one, and the history command prints
+FIRST += 2
+SMTP_PORT = smtp_server()
+del SMTP_GOT[:]
+del LOGGED[:]
+GENERAL.update(alert_webhook_url='', alert_ntfy_server='')
+nr.send_mail, nr.mail_settings = REAL_SEND_MAIL, lambda settings: smtp_settings(SMTP_PORT)
+outbox('surrogate.json', subject='Example \ud800 subject', text='Example \udfff text.', facts={'po\ud800rt': 'ex\ud800ample0'})
+with open(alerts.XGS_ANOMALY, 'w', encoding='utf-8', newline='\n') as fh:
+    fh.write('{"id": %d, "at": %d, "host": "fw\\ud800.example.com", "kind": "scan", "message": "Example \\ud800 name.", '
+             '"source": "os-xgs-npu"}\n' % (FIRST, int(CLOCK)))
+history_before = len(history())
+try:
+    run_pass([('xgs', alerts.collect_xgs)])
+finally:
+    nr.send_mail, nr.mail_settings = fake_send_mail, fake_mail_settings
+    GENERAL.update(alert_webhook_url=BASE + '/hook', alert_ntfy_server=BASE + '/ntfy/')
+mailed = [email.message_from_bytes(body) for _, body in SMTP_GOT]
+check('lone surrogate: the real mail is built and taken by the server, for the file and the anomaly',
+      (sorted(str(email.header.make_header(email.header.decode_header(m['Subject']))) for m in mailed),
+       os.listdir(alerts.XGS_OUTBOX), nr.load_json(alerts.STATE_FILE, {})['xgs'].get('pending')),
+      (['Example ? subject', 'Unusual traffic from fw?.example.com — Example network'], [], []))
+check('lone surrogate: ... the history says sent, and nothing logged carries one',
+      ([h['status'] for h in history()[:len(history()) - history_before]], [line for line in LOGGED
+                                                                            if line != line.encode('utf-8', 'replace').decode('utf-8')]),
+      (['alert', 'alert'], []))
+# a history line an older version wrote with one in it: the history command prints it, as ASCII, and
+# with no surrogate escape (PHP's json_decode() refuses the whole list for one)
+nr.add_history({'schedule': 'Example \ud800 old', 'subject': 'Example \ud800 old', 'recipients': '', 'archive': '',
+                'status': 'alert', 'detail': 'mail: sent'})
+out = io.BytesIO()
+wrapper = io.TextIOWrapper(out, encoding='utf-8', errors='strict')
+saved_argv = sys.argv
+sys.argv = ['netreport.py', 'history']
+try:
+    with contextlib.redirect_stdout(wrapper):
+        nr.main()
+    wrapper.flush()
+    printed = out.getvalue().decode('ascii')
+    shown = (json.loads(printed)[0]['subject'], '\\ud8' in printed.lower() or '\\udf' in printed.lower())
+except Exception as exc:
+    shown = type(exc).__name__
+finally:
+    sys.argv = saved_argv
+check('lone surrogate: the history command prints an old line holding one, in ASCII, with no surrogate escape', shown,
+      ('Example ? old', False))
 # a time too large for a float (a 400-digit integer) is the time the item was read; none stops another
 BIG = 10 ** 400
 outbox('big1.json', subject='Example big 1', at=BIG)

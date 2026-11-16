@@ -163,6 +163,19 @@ def save_json(path, data):
         raise
 
 
+def no_surrogates(value):
+    """value with every string in it - the keys of a dict too, through dicts and lists - made one that
+    UTF-8 can carry: a lone surrogate (a \\ud800 escape in JSON that was read) becomes "?". A mail's
+    headers and body, the system log and the history page cannot take one."""
+    if isinstance(value, str):
+        return value.encode('utf-8', 'replace').decode('utf-8')
+    if isinstance(value, dict):
+        return {no_surrogates(k): no_surrogates(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [no_surrogates(v) for v in value]
+    return value
+
+
 def log(msg):
     syslog.openlog('netreport', facility=syslog.LOG_USER)
     syslog.syslog(syslog.LOG_NOTICE, msg)
@@ -1198,7 +1211,9 @@ def main():
         except Exception as exc:
             print(json.dumps({'status': 'failed', 'detail': str(exc)}, ensure_ascii=False))
     elif cmd == 'history':
-        print(json.dumps(load_json(HISTORY_FILE, []), ensure_ascii=False))
+        # an older line may hold a lone surrogate: printed as UTF-8 it raises, and as an escape PHP's
+        # json_decode() refuses the whole list - the page would show no history at all
+        print(json.dumps(no_surrogates(load_json(HISTORY_FILE, [])), ensure_ascii=True))
     elif cmd == 'view':
         if re.match(r'^[0-9A-Za-z_-]+\.html$', arg) and os.path.exists(os.path.join(ARCHIVE_DIR, arg)):
             print(open(os.path.join(ARCHIVE_DIR, arg), encoding='utf-8').read())
