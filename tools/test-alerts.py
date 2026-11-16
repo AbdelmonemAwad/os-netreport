@@ -554,6 +554,75 @@ check('C2: with c2_alert off, no alert, but the device is listed', (sent_by(aler
       ([], ['192.0.2.80']))
 GENERAL['c2_alert'] = '1'
 
+# ---------------------------------------------------------------- 5. what other XGS plugins leave
+
+alerts.XGS_OUTBOX = os.path.join(TOP, 'xgs', 'alerts')
+alerts.XGS_ANOMALY = os.path.join(TOP, 'xgs', 'anomaly', 'alerts.jsonl')
+reset()
+check('XGS: neither directory: nothing, and no error', sent_by(alerts.collect_xgs), [])
+state = alerts.State()                  # the anomaly file's first run is the one that finds it
+del state.data['xgs']
+state.save()
+
+
+def outbox(name, **item):
+    record = {'source': 'os-xgs-npu', 'kind': 'npu_fault', 'at': stamp(CLOCK), 'subject': 'Example NPU fault',
+              'text': 'The example NPU stopped answering.', 'facts': {'port': 'example0'}}
+    record.update(item)
+    alerts.save_json(os.path.join(alerts.XGS_OUTBOX, name), record)
+
+
+def anomaly(*ids):
+    os.makedirs(os.path.dirname(alerts.XGS_ANOMALY), exist_ok=True)
+    with open(alerts.XGS_ANOMALY, 'w', encoding='utf-8', newline='\n') as fh:
+        for i in ids:
+            fh.write(json.dumps({'id': i, 'at': stamp(CLOCK), 'host': 'fw.example.com', 'kind': 'traffic spike',
+                                 'message': 'Example message %d.' % i, 'source': 'os-xgs-npu'}) + '\n')
+
+
+outbox('0001.json')
+anomaly(1, 2, 3)
+sent = sent_by(alerts.collect_xgs)
+check('XGS: an alert file left for this plugin is sent, as it is', [(s['kind'], s['subject'], s['facts']) for s in sent],
+      [('npu_fault', 'Example NPU fault', {'port': 'example0', 'source': 'os-xgs-npu'})])
+check('XGS: and removed once sent', os.listdir(alerts.XGS_OUTBOX), [])
+check('XGS: the anomaly file\'s first run only records its last id', nr.load_json(alerts.STATE_FILE, {})['xgs']['last_id'], 3)
+anomaly(1, 2, 3, 4)
+sent = sent_by(alerts.collect_xgs)
+check('XGS: an anomaly above the last id is sent', [(s['subject'], s['text']) for s in sent],
+      [('traffic spike on fw.example.com — Example network', 'os-xgs-npu reported at %s: Example message 4.'
+        % alerts.local_time(CLOCK - 60))])
+anomaly(1, 2, 3, 4, 5, 6)
+check('XGS: each new one once', [s['facts']['id'] for s in sent_by(alerts.collect_xgs, 2)], [5, 6])
+anomaly(1, 2)
+check('XGS: ids below the kept one: the file was started again, read from 0', [s['facts']['id'] for s in sent_by(alerts.collect_xgs)],
+      [1, 2])
+
+GENERAL.update(alert_webhook_url=BASE + '/fail', alert_ntfy_server='')
+reset()
+MAIL['fail'] = 'example mail failure'
+outbox('0002.json')
+minute(alerts.collect_xgs)
+check('XGS: every channel failed: the file is kept', os.listdir(alerts.XGS_OUTBOX), ['0002.json'])
+minute(alerts.collect_xgs)
+check('XGS: and tried again the next minute', len(posts('/fail')), 2)
+os.utime(os.path.join(alerts.XGS_OUTBOX, '0002.json'), (CLOCK - 25 * 3600, CLOCK - 25 * 3600))
+minute(alerts.collect_xgs)
+check('XGS: after 24 hours it is removed, with a line in the history', (os.listdir(alerts.XGS_OUTBOX), history()[0]['detail']),
+      ([], '%s/0002.json dropped: not sent within 24 hours' % alerts.XGS_OUTBOX))
+GENERAL.update(alert_webhook_url=BASE + '/hook', alert_ntfy_server=BASE + '/ntfy/')
+reset()
+GENERAL['xgs_alert'] = '0'
+anomaly(1, 2, 3)
+outbox('0003.json')
+check('XGS: with xgs_alert off, nothing is sent', sent_by(alerts.collect_xgs), [])
+check('XGS: ... the file waits, and the anomaly id moves on', (os.listdir(alerts.XGS_OUTBOX),
+                                                                nr.load_json(alerts.STATE_FILE, {})['xgs']['last_id']),
+      (['0003.json'], 3))
+GENERAL['xgs_alert'] = '1'
+check('XGS: on again, the waiting file goes', ([s['kind'] for s in sent_by(alerts.collect_xgs)], os.listdir(alerts.XGS_OUTBOX)),
+      (['npu_fault'], []))
+
 # One collector failing stops neither the others nor the reports: the scheduler with a collector that
 # raises before one that records.
 RAN = []

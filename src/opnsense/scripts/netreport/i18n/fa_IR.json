@@ -147,5 +147,7 @@
  "infected": "دستگاه‌های آلوده",
  "infected_intro": "دستگاه‌هایی که در ۷ روز گذشته کوشیدند به فهرست فرمان و کنترل برسند. فایروال آن‌ها را مسدود کرد؛ این دستگاه‌ها را بررسی کنید.",
  "blocklist": "فهرست",
- "last_seen": "آخرین بار"
+ "last_seen": "آخرین بار",
+ "xgs_anomaly_subject": "{kind} روی {host} — {title}",
+ "xgs_anomaly_text": "{source} در {time} گزارش داد: {message}"
 }

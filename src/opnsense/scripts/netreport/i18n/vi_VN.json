@@ -147,5 +147,7 @@
  "infected": "Thiết bị bị nhiễm",
  "infected_intro": "Các thiết bị đã cố kết nối tới danh sách máy chủ điều khiển trong 7 ngày qua. Tường lửa đã chặn; hãy kiểm tra các thiết bị này.",
  "blocklist": "Danh sách",
- "last_seen": "Lần cuối thấy"
+ "last_seen": "Lần cuối thấy",
+ "xgs_anomaly_subject": "{kind} trên {host} — {title}",
+ "xgs_anomaly_text": "{source} báo lúc {time}: {message}"
 }

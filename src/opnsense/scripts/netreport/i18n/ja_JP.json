@@ -134,5 +134,7 @@
  "infected": "感染した機器",
  "infected_intro": "過去 7 日間に C2 リストへ接続しようとした機器です。ファイアウォールがブロックしました。これらの機器を確認してください。",
  "blocklist": "リスト",
- "last_seen": "最終確認"
+ "last_seen": "最終確認",
+ "xgs_anomaly_subject": "{host} で {kind} — {title}",
+ "xgs_anomaly_text": "{source} が {time} に報告: {message}"
 }

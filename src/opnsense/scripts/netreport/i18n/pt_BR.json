@@ -147,5 +147,7 @@
  "infected": "Dispositivos infectados",
  "infected_intro": "Dispositivos que tentaram contatar uma lista de comando e controle nos últimos 7 dias. O firewall os bloqueou; verifique esses dispositivos.",
  "blocklist": "Lista",
- "last_seen": "Visto pela última vez"
+ "last_seen": "Visto pela última vez",
+ "xgs_anomaly_subject": "{kind} em {host} — {title}",
+ "xgs_anomaly_text": "{source} informou às {time}: {message}"
 }

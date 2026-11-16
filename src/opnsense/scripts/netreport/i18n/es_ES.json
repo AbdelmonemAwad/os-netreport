@@ -147,5 +147,7 @@
  "infected": "Dispositivos infectados",
  "infected_intro": "Dispositivos que intentaron contactar una lista de mando y control en los últimos 7 días. El cortafuegos los bloqueó; revise estos dispositivos.",
  "blocklist": "Lista",
- "last_seen": "Visto por última vez"
+ "last_seen": "Visto por última vez",
+ "xgs_anomaly_subject": "{kind} en {host} — {title}",
+ "xgs_anomaly_text": "{source} informó a las {time}: {message}"
 }

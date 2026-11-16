@@ -134,5 +134,7 @@
  "infected": "受感染的裝置",
  "infected_intro": "過去 7 天內嘗試連線命令與控制清單的裝置。防火牆已封鎖；請檢查這些裝置。",
  "blocklist": "清單",
- "last_seen": "最後出現"
+ "last_seen": "最後出現",
+ "xgs_anomaly_subject": "{host} 上的 {kind} — {title}",
+ "xgs_anomaly_text": "{source} 於 {time} 回報：{message}"
 }

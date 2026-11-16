@@ -147,5 +147,7 @@
  "infected": "Заражені пристрої",
  "infected_intro": "Пристрої, що за останні 7 днів намагалися зв’язатися зі списком серверів керування. Брандмауер їх заблокував; перевірте ці пристрої.",
  "blocklist": "Список",
- "last_seen": "Востаннє"
+ "last_seen": "Востаннє",
+ "xgs_anomaly_subject": "{kind} на {host} — {title}",
+ "xgs_anomaly_text": "{source} повідомив о {time}: {message}"
 }

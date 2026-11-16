@@ -147,5 +147,7 @@
  "infected": "Infiserte enheter",
  "infected_intro": "Enheter som de siste 7 dagene prøvde å nå en kommando-og-kontroll-liste. Brannmuren blokkerte dem; sjekk disse enhetene.",
  "blocklist": "Liste",
- "last_seen": "Sist sett"
+ "last_seen": "Sist sett",
+ "xgs_anomaly_subject": "{kind} på {host} — {title}",
+ "xgs_anomaly_text": "{source} meldte {time}: {message}"
 }

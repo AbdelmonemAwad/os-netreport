@@ -147,5 +147,7 @@
  "infected": "Napadená zařízení",
  "infected_intro": "Zařízení, která se za posledních 7 dní pokusila spojit se seznamem řídicích serverů. Firewall je zablokoval; tato zařízení zkontrolujte.",
  "blocklist": "Seznam",
- "last_seen": "Naposledy"
+ "last_seen": "Naposledy",
+ "xgs_anomaly_subject": "{kind} na {host} — {title}",
+ "xgs_anomaly_text": "{source} ohlásil v {time}: {message}"
 }

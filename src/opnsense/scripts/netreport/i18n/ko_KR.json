@@ -134,5 +134,7 @@
  "infected": "감염된 기기",
  "infected_intro": "지난 7일 동안 명령·제어 목록에 접속하려 한 기기입니다. 방화벽이 차단했습니다. 이 기기들을 확인하세요.",
  "blocklist": "목록",
- "last_seen": "마지막 확인"
+ "last_seen": "마지막 확인",
+ "xgs_anomaly_subject": "{host}의 {kind} — {title}",
+ "xgs_anomaly_text": "{source}이(가) {time}에 보고: {message}"
 }

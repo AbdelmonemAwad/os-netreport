@@ -56,6 +56,16 @@ Each one's first run only records where things are, so an install does not alert
     that os-blocklists blocked on its way to a command-and-control list; "first" and "last" are
     the times of the first and the latest blocked connection, and an entry whose "last" is older
     than 7 days is dropped. Written whole (a temporary file renamed over it).
+
+Taken from os-xgs-npu, when it is installed (neither existing is normal):
+
+    /var/db/os-xgs-npu/alerts/*.json - one alert a file, {"source", "kind", "at", "subject", "text",
+    "facts"}: sent, then removed; kept while every channel fails and tried again the next minute,
+    and removed with a line in the history after 24 hours.
+
+    /var/db/os-xgs-npu/anomaly/alerts.jsonl - one {"id", "at", "host", "kind", "message", "source"} a
+    line, "id" counting up from 1 and never reused: what is above the last id sent is sent; ids all
+    below it mean the file was started again, and it is read from 0.
 """
 
 import datetime
@@ -920,6 +930,110 @@ def collect_c2(settings, state, now):
         save_json(nr.INFECTED_FILE, infected)
 
 
+# ---------------------------------------------------------------- alerts other XGS plugins leave for this one
+
+XGS_OUTBOX = '/var/db/os-xgs-npu/alerts'
+XGS_ANOMALY = '/var/db/os-xgs-npu/anomaly/alerts.jsonl'
+OUTBOX_MAX_AGE = 86400
+
+
+def time_of(value, default):
+    """an ISO 8601 time or Unix seconds, as Unix seconds"""
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return float(value)
+    try:
+        return datetime.datetime.fromisoformat(str(value).replace('Z', '+00:00')).timestamp()
+    except (TypeError, ValueError):
+        return default
+
+
+def channels_set(settings):
+    return (settings.get('alert_mail') == '1' or bool(settings.get('alert_webhook_url')) or
+            bool(settings.get('alert_ntfy_server') and settings.get('alert_ntfy_topic')))
+
+
+def collect_xgs_outbox(settings, state, now, send):
+    """(a) one JSON file per alert - {"source", "kind", "at", "subject", "text", "facts"} - taken and
+    removed once a channel has it; kept while every channel fails, and dropped after 24 hours"""
+    if not os.path.isdir(XGS_OUTBOX):
+        return
+    for name in sorted(os.listdir(XGS_OUTBOX)):
+        path = os.path.join(XGS_OUTBOX, name)
+        if not name.endswith('.json') or not os.path.isfile(path):
+            continue
+        try:
+            mtime = os.stat(path).st_mtime
+        except OSError:
+            continue
+        item = nr.load_json(path, None)
+        usable = isinstance(item, dict) and bool(item.get('subject') or item.get('text'))
+        if usable and send and channels_set(settings):
+            facts = item.get('facts') if isinstance(item.get('facts'), dict) else {}
+            facts = dict(facts, source=str(item.get('source') or ''))
+            results = notify(settings, state, str(item.get('kind') or 'xgs'), name,
+                             str(item.get('subject') or item.get('text'))[:300], str(item.get('text') or item.get('subject')),
+                             facts, at=time_of(item.get('at'), mtime), now=now, quiet=0, priority='high', tags=['warning'])
+            if results and SENT in results.values():
+                os.unlink(path)
+                continue
+        if now - mtime >= OUTBOX_MAX_AGE:
+            os.unlink(path)
+            subject = str(item.get('subject') or name) if isinstance(item, dict) else name
+            nr.add_history({'schedule': subject, 'subject': subject, 'recipients': '', 'archive': '', 'status': 'failed',
+                            'detail': f'{XGS_OUTBOX}/{name} dropped: not sent within 24 hours'})
+
+
+def collect_xgs_anomaly(settings, state, now, send, first):
+    """(b) one JSON object a line - {"id", "at", "host", "kind", "message", "source"} - "id" counting up
+    from 1: what is above the last id sent is sent; a file whose ids are all below it was started again"""
+    st = state.get('xgs')
+    try:
+        with open(XGS_ANOMALY, encoding='utf-8', errors='replace') as fh:
+            lines = fh.read().splitlines()
+    except OSError:
+        return
+    records = []
+    for line in lines:
+        try:
+            rec = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(rec, dict) and isinstance(rec.get('id'), int) and not isinstance(rec.get('id'), bool):
+            records.append(rec)
+    top = max((r['id'] for r in records), default=0)
+    last = st.get('last_id')
+    if first:
+        st['last_id'] = top
+        return
+    last = last if isinstance(last, int) else 0
+    if top < last:
+        last = 0                        # the file was started again
+    t = nr.texts(settings.get('language'))
+    for rec in sorted(records, key=lambda r: r['id']):
+        if rec['id'] <= last:
+            continue
+        last = rec['id']
+        st['last_id'] = last
+        if not send:
+            continue
+        at = time_of(rec.get('at'), now)
+        kind, host = str(rec.get('kind') or 'anomaly'), str(rec.get('host') or settings.hostname())
+        source = str(rec.get('source') or 'os-xgs-npu')
+        notify(settings, state, 'anomaly', f'{source}|{rec["id"]}', subject_of(t, settings, 'xgs_anomaly_subject', kind=kind, host=host),
+               t['xgs_anomaly_text'].format(source=source, time=local_time(at), message=str(rec.get('message') or '')),
+               {'id': rec['id'], 'kind': kind, 'host': host, 'source': source}, at=at, now=now, quiet=0, priority='high',
+               tags=['warning'])
+    st['last_id'] = last
+
+
+def collect_xgs(settings, state, now):
+    first = state.first('xgs')
+    state.get('xgs')
+    send = wanted(settings, 'xgs_alert')
+    collect_xgs_outbox(settings, state, now, send)
+    collect_xgs_anomaly(settings, state, now, send, first)
+
+
 # ---------------------------------------------------------------- collectors
 
 # (name, function(settings, state, now)): run each minute by netreport.py's scheduler, each on its
@@ -931,6 +1045,7 @@ COLLECTORS = [
     ('vpn', collect_vpn),
     ('watchdog', collect_watchdog),
     ('c2', collect_c2),
+    ('xgs', collect_xgs),
 ]
 
 
