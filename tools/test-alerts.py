@@ -284,6 +284,55 @@ alerts.REQUEST_LIMIT = 15
 check('a server that drips its headers is cut at the limit on the whole request',
       (results['webhook'], took < 6, results['mail']), ('no answer within 3 s', True, 'sent'))
 
+# a name that takes long to look up: the request is cut at the limit and goes no further after it
+import socket  # noqa: E402
+saved_getaddrinfo = socket.getaddrinfo
+
+
+def slow_lookup(host, *args, **kwargs):
+    if host == 'slow.example.com':
+        time.sleep(4)
+        host = '127.0.0.1'
+    return saved_getaddrinfo(host, *args, **kwargs)
+
+
+reset()
+socket.getaddrinfo = slow_lookup
+alerts.REQUEST_LIMIT = 2
+try:
+    started = time.monotonic()
+    try:
+        alerts.post(BASE.replace('127.0.0.1', 'slow.example.com') + '/late', b'{}', {})
+        late = 'sent'
+    except Exception as exc:
+        late = alerts.error_text(exc)
+    took = time.monotonic() - started
+    time.sleep(4)                                           # the lookup is over; the worker would go on
+finally:
+    socket.getaddrinfo = saved_getaddrinfo
+    alerts.REQUEST_LIMIT = 15
+check('a slow name lookup is cut at the limit, and the request is not sent after it',
+      (late, took < 4, posts('/late')), ('no answer within 2 s', True, []))
+saved_post_now = alerts.post_now
+
+
+def post_now_just_late(request, sockets):
+    time.sleep(alerts.REQUEST_LIMIT + 0.3)
+    return 200
+
+
+alerts.post_now = post_now_just_late
+alerts.REQUEST_LIMIT = 1
+try:
+    try:
+        just = alerts.post(BASE + '/hook', b'{}', {})
+    except Exception as exc:
+        just = alerts.error_text(exc)
+finally:
+    alerts.post_now = saved_post_now
+    alerts.REQUEST_LIMIT = 15
+check('a status that comes in the second after the cut is kept', just, 200)
+
 reset()
 settings = config()
 saved_history = nr.add_history

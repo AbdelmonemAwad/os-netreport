@@ -119,6 +119,9 @@ Limits on each minute's pass, so that a storm or a pause does not flood the chan
   firewall like a password, not shown again, and left as it is when the field is saved empty), a
   10 second timeout on each step and 15 seconds for the whole request (as for ntfy: a server that
   answers a byte at a time cannot hold the minute's pass), and the server's certificate checked.
+  The 15 seconds count from the start: the name lookup, the connect and the TLS handshake are cut
+  too, and a request cut while its name was still being looked up is not sent once it is found,
+  so an alert counted as failed does not arrive later (and twice, with its retry).
 - **ntfy** (`alert_ntfy_server` and `alert_ntfy_topic`, both empty = off): the plain text POSTed to
   `<server>/<topic>` with ntfy's `Title`, `Priority` and `Tags` headers, and `alert_ntfy_token` as
   a bearer token when set. There is no default server, on purpose: a public server by default

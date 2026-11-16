@@ -243,13 +243,57 @@ class RequestTimeout(Exception):
     pass
 
 
+class Sockets(list):
+    """the sockets of one request, each put here as it is made; cut says the caller has given up on it"""
+
+    def __init__(self):
+        super().__init__()
+        self.cut = threading.Event()
+
+
+def connector(sockets):
+    """socket.create_connection() as http.client calls it, but each socket goes into sockets when it is
+    made, before it connects, so that a cut can shut it whatever the request is doing (the TCP
+    connect, the TLS handshake); and a request already cut (its name took long to look up, its
+    connect long to answer) goes no further"""
+    cut = getattr(sockets, 'cut', None)
+
+    def given_up():
+        if cut is not None and cut.is_set():
+            raise RequestTimeout('the request was given up')
+
+    def create(address, timeout=None, source_address=None, *args, **kwargs):
+        host, port = address[0], address[1]
+        error = None
+        for family, kind, proto, _, where in socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM):
+            sock = socket.socket(family, kind, proto)
+            sockets.append(sock)
+            try:
+                given_up()
+                if isinstance(timeout, (int, float)):
+                    sock.settimeout(timeout)
+                if source_address:
+                    sock.bind(source_address)
+                sock.connect(where)
+                given_up()
+                return sock
+            except OSError as exc:
+                sock.close()
+                error = exc
+            except BaseException:
+                sock.close()
+                raise
+        raise error or OSError(f'no address found for {host}')
+    return create
+
+
 def opener(sockets):
-    """urllib's opener, redirects not followed, that puts each socket it connects in sockets"""
+    """urllib's opener, redirects not followed, that puts each socket it makes in sockets"""
     def watched(cls):
         class Watched(cls):
-            def connect(self):
-                super().connect()
-                sockets.append(self.sock)
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self._create_connection = connector(sockets)
         return Watched
 
     class Http(urllib.request.HTTPHandler):
@@ -267,11 +311,15 @@ def opener(sockets):
 def post(url, body, headers):
     """POST body; the HTTP status, or an exception. urllib's timeout is per socket operation, so a
     server that answers a byte at a time could hold the run for long: the whole request has
-    REQUEST_LIMIT seconds, after which its socket is shut and the try is a failure."""
+    REQUEST_LIMIT seconds, after which its sockets are shut (from the moment each is made: the
+    connect and the TLS handshake are cut too) and the try is a failure - unless it ends in the
+    second given to the worker after the cut, before its sockets are shut. A request cut while its
+    name was looked up goes no further once it has the address, so it cannot arrive after it was
+    counted a failure."""
     if not url.lower().startswith(('https://', 'http://')):
         raise ValueError('the address must start with https:// or http://')
     request = urllib.request.Request(url, data=body, headers=headers, method='POST')
-    sockets, box = [], {}
+    sockets, box = Sockets(), {}
 
     def run():
         try:
@@ -290,12 +338,17 @@ def post(url, body, headers):
     worker.start()
     worker.join(REQUEST_LIMIT)
     if worker.is_alive():
-        for sock in list(sockets):
-            try:
-                sock.shutdown(socket.SHUT_RDWR)
-            except OSError:
-                pass
-        raise RequestTimeout(f'no answer within {REQUEST_LIMIT} s')
+        # no new connection from here; what is under way has one second more to end, then is shut
+        # (shut first, a reply cut short could read as whole: its status line and no more headers)
+        sockets.cut.set()
+        worker.join(1)
+        if worker.is_alive():
+            for sock in list(sockets):
+                try:
+                    sock.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
+            raise RequestTimeout(f'no answer within {REQUEST_LIMIT} s')
     if 'error' in box:
         raise box.pop('error')
     return box['status']
