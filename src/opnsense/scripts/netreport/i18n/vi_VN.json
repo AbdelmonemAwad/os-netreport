@@ -116,5 +116,7 @@
   "Tháng Mười Một",
   "Tháng Mười Hai"
  ],
- "list_sep": ", "
+ "list_sep": ", ",
+ "test_alert_subject": "Cảnh báo thử — {title}",
+ "test_alert_text": "Đây là cảnh báo thử từ {host}. Nếu bạn nhận được, cảnh báo đến được kênh này."
 }

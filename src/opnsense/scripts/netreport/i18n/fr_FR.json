@@ -116,5 +116,7 @@
   "novembre",
   "décembre"
  ],
- "list_sep": ", "
+ "list_sep": ", ",
+ "test_alert_subject": "Alerte de test — {title}",
+ "test_alert_text": "Ceci est une alerte de test de {host}. Si elle est arrivée, les alertes passent par ce canal."
 }

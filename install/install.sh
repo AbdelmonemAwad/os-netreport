@@ -17,6 +17,7 @@ rm -rf /usr/local/opnsense/scripts/netreport/release-keys
 cp -R "${HERE}/src/" /usr/local/
 chmod 644 /usr/local/opnsense/scripts/netreport/release-keys/*.pub
 chmod 755 /usr/local/opnsense/scripts/netreport/netreport.py
+chmod 755 /usr/local/opnsense/scripts/netreport/alerts.py
 chmod 755 /usr/local/opnsense/scripts/netreport/merge_ui_translations.py
 chmod 755 /usr/local/etc/rc.syshook.d/start/60-netreport
 chmod 644 /usr/local/etc/cron.d/netreport
@@ -31,6 +32,7 @@ for f in $(find "${HERE}/src" -name '*.php'); do
     php -l "$f" > /dev/null
 done
 python3 -m py_compile /usr/local/opnsense/scripts/netreport/netreport.py
+python3 -m py_compile /usr/local/opnsense/scripts/netreport/alerts.py
 
 # Where the page goes in the menu: XGS when os-xgs-npu is installed, Reporting when it is not.
 # OPNsense's menu file takes no condition, so place-menu.sh writes it from menu/ and says which.

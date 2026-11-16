@@ -116,5 +116,7 @@
   "Kasım",
   "Aralık"
  ],
- "list_sep": ", "
+ "list_sep": ", ",
+ "test_alert_subject": "Test uyarısı — {title}",
+ "test_alert_text": "Bu, {host} kaynaklı bir test uyarısıdır. Ulaştıysa uyarılar bu kanaldan geliyor demektir."
 }

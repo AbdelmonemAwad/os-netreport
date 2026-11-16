@@ -44,6 +44,11 @@ jobs:
       - name: self-update.py takes a release only as signed
         run: python3 tools/test-self-update.py
 
+      # The alert layer and its collectors (alerts.py) against logs, files and answers made up in the
+      # test, the webhook and ntfy a server on 127.0.0.1: nothing of a firewall needed.
+      - name: alerts.py sends what it should, once
+        run: python3 tools/test-alerts.py
+
   syntax:
     name: syntax
     runs-on: ubuntu-latest

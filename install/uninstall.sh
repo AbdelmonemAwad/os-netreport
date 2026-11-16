@@ -17,6 +17,9 @@ rm -f /usr/local/opnsense/service/conf/actions.d/actions_netreport.conf
 rm -rf /usr/local/opnsense/scripts/netreport
 # the merge's record of the GUI strings it wrote; the history beside it in /var/db/netreport stays
 rm -f /var/db/netreport/i18n-owned.json
+# the alerts' places in the logs they follow (alerts.py): a later install starts from where the logs
+# are then, and does not send what was written while this plugin was away
+rm -f /var/db/netreport/alerts-state.json
 # the menu file place-menu.sh wrote, which no list of the package's files names
 rm -f /usr/local/opnsense/mvc/app/models/OPNsense/NetReport/Menu/Menu.xml
 rmdir /usr/local/opnsense/mvc/app/models/OPNsense/NetReport/Menu 2> /dev/null || true

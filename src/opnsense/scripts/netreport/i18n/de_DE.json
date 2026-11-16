@@ -116,5 +116,7 @@
   "November",
   "Dezember"
  ],
- "list_sep": ", "
+ "list_sep": ", ",
+ "test_alert_subject": "Testbenachrichtigung — {title}",
+ "test_alert_text": "Dies ist eine Testbenachrichtigung von {host}. Ist sie angekommen, erreichen Benachrichtigungen diesen Kanal."
 }

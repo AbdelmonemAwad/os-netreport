@@ -27,7 +27,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 Network report for OPNsense, mailed as HTML in any of the GUI languages (texts in i18n/<locale>.json).
 
-  netreport.py scheduler        run from cron every minute: send due reports, watch for new devices
+  netreport.py scheduler        run from cron every minute: send due reports, run the alert collectors
+                                (alerts.py), watch for new devices
   netreport.py send <uuid>      send one schedule now (prints JSON)
   netreport.py preview <uuid>   print the rendered report
   netreport.py testmail         send a short test message (prints JSON)
@@ -175,6 +176,10 @@ class Settings:
         'smtp_port': '465', 'smtp_security': 'ssl', 'smtp_auth': '1', 'wan_interface': 'wan', 'lan_interface': 'lan',
         'vpn_interfaces': '', 'new_device_alert': '1', 'temp_warn': '75', 'disk_warn': '85', 'loss_warn': '5',
         'backup_warn': '2', 'monthly_cap': '0', 'keep_days': '90',
+        # alerts (alerts.py): all on by default; a channel is used once it is set
+        'alerts': '1', 'alert_mail': '1', 'gateway_alert': '1', 'login_alert': '1', 'login_fail_count': '5',
+        'ips_alert': '1', 'ips_severity': '1', 'vpn_alert': '1', 'watchdog_alert': '1', 'c2_alert': '1',
+        'xgs_alert': '1',
     }
 
     def __init__(self):
@@ -1043,6 +1048,8 @@ def deliver(settings, sched, forced=False):
 
 
 def new_device_alert(settings, db, macs):
+    """the devices that joined the network for the first time, through the alert layer (alerts.py)"""
+    import alerts
     t = texts(settings.get('language'))
     names = hostnames(settings)
     rows = [[esc(label(db[m].get('ip', ''), names)), f'<span class="ltr">{esc(m)}</span>', esc(db[m].get('vendor', ''))]
@@ -1054,16 +1061,11 @@ def new_device_alert(settings, db, macs):
             f'<p>{esc(t["alert_intro"])}</p>{table(t, [t["device"], "MAC", t["vendor"]], rows)}'
             f'<p class="muted">{esc(t["alert_hint"])}</p></div></div></body></html>')
     text = '\n'.join([subject, ''] + [f'- {db[m].get("ip", "")} {m} {db[m].get("vendor", "")}' for m in macs])
-    entry = {'schedule': subject, 'subject': subject, 'recipients': '', 'archive': ''}
-    try:
-        ms = mail_settings(settings)
-        rcpt = recipients_for(settings, None, ms)
-        entry['recipients'] = ', '.join(rcpt)
-        send_mail(ms, rcpt, subject, page, text)
-        entry.update(status='alert', detail=', '.join(macs))
-    except Exception as exc:
-        entry.update(status='failed', detail=str(exc))
-    add_history(entry)
+    facts = {'devices': [{'mac': m, 'ip': db[m].get('ip', ''), 'name': names.get(db[m].get('ip', ''), ''),
+                          'vendor': db[m].get('vendor', '')} for m in macs]}
+    # each set of new devices is its own alert: no quiet time holds it back
+    alerts.notify(settings, None, 'new_device', ','.join(macs), subject, text, facts=facts, page=page, quiet=0,
+                  tags=['new'])
 
 
 def scheduler():
@@ -1075,6 +1077,21 @@ def scheduler():
     settings = Settings()
     if settings.get('enabled') != '1':
         return
+
+    # The alert collectors first, so that a report being built does not hold an alert back; each in
+    # its own try, so that one failing stops neither the others nor the reports.
+    try:
+        import alerts
+        alert_state = alerts.State()
+        for name, collect in alerts.COLLECTORS:
+            try:
+                collect(settings, alert_state, time.time())
+            except Exception as exc:
+                log(f'alert collector {name} failed: {exc}')
+        alert_state.save()
+    except Exception as exc:
+        log(f'alerts failed: {exc}')
+
     state = load_json(STATE_FILE, {})
     last_sent = state.setdefault('last_sent', {})
     now = datetime.datetime.now()
@@ -1097,7 +1114,7 @@ def scheduler():
 
     if now.minute % DEVICE_SCAN_MINUTES == 0:
         db, new, _ = update_devices(settings)
-        if new and settings.get('new_device_alert') == '1':
+        if new and settings.get('alerts') == '1' and settings.get('new_device_alert') == '1':
             new_device_alert(settings, db, new)
 
 
@@ -1105,6 +1122,8 @@ def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else ''
     arg = sys.argv[2] if len(sys.argv) > 2 else ''
     os.makedirs(STATE_DIR, exist_ok=True)
+    # alerts.py imports this module by its name: the one running is the one it gets
+    sys.modules.setdefault('netreport', sys.modules[__name__])
     if cmd == 'scheduler':
         scheduler()
     elif cmd in ('send', 'preview'):

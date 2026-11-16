@@ -116,5 +116,7 @@
   "Listopad",
   "Prosinec"
  ],
- "list_sep": ", "
+ "list_sep": ", ",
+ "test_alert_subject": "Zkušební upozornění — {title}",
+ "test_alert_text": "Toto je zkušební upozornění z {host}. Pokud dorazilo, upozornění tímto kanálem procházejí."
 }
