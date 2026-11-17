@@ -113,7 +113,8 @@ Limits on each minute's pass, so that a storm or a pause does not flood the chan
   when the channel is tried again. Every other alert (a gateway or VPN down, failed logins, the
   intrusion, watchdog and command-and-control alerts) is not kept for a retry, so it is tried on
   every channel all the same - on a channel that ran out of time earlier in that pass, with 3
-  seconds, so that a server that does not answer costs each of them seconds.
+  seconds (the mail 3 for its connect and 3 for its message), so that a server that does not
+  answer costs each of them seconds.
 - When the last pass is more than 10 minutes old (the plugin was off, the firewall was down), the
   log readers - failed logins, intrusion alerts, command-and-control - start again from the end of
   their logs, as on a first run. And whatever they read, a log line whose own time is more than 10
@@ -142,11 +143,12 @@ has 60 seconds to say it took it (a server may take long to, while it has it). A
 in the cron process ends the try then, so a server that answers a byte at a time, or never, cannot
 hold the minute's pass; the result is "no answer within 15 s" (or 60). A channel that ran out of
 time earlier in the same pass has 3 seconds for the alerts not kept until sent ("no answer within
-3 s"). A try that ran out goes no further, but a server may have taken the alert before its answer
-was due: an alert counted as failed can still arrive, and arrive twice with its retry. Once the
-mail server has taken the message the timer stops, and a QUIT has 5 seconds of its own: one it is
-slow to answer, or does not answer, is not a failure. The system's name lookup is the one step the
-timer cannot cut: it ends at the resolver's own timeouts.
+3 s"), the mail 3 for its connect and 3 for its message. A try that ran out goes no further, but a
+server may have taken the alert before its answer was due: an alert counted as failed can still
+arrive, and arrive twice with its retry. Once the mail server has taken the message the timer
+stops, and the QUIT has 5 seconds in all: one it is slow to answer, or does not answer, is not a
+failure, and only the first piece of its answer is read. The system's name lookup is the one step
+the timer cannot cut: it ends at the resolver's own timeouts.
 
 A webhook or ntfy server that answers with a redirect is not followed (the header or the token
 would go along to whatever host it names): any 3xx is a failure, "the server answered with a
@@ -182,9 +184,12 @@ otherwise above. What the layer remembers - quiet times, log offsets, states - i
     below it mean the file was started again, and it is read from the start. An anomaly no
     channel took is kept and tried again each minute like the files above (the same history
     lines), and dropped after 24 hours. At most 1000 are kept waiting; past that the oldest are
-    dropped, and one line in the history and the system log says how many. The last id moves one anomaly at a time, as each is
-    taken, so one that cannot be sent (it stays pending) or a run stopped half way loses none
-    after it. `at` is ISO 8601 or Unix seconds (milliseconds are recognised); an anomaly with a
+    dropped, and one line in the history and the system log says how many. The last id moves one
+    anomaly at a time, as each is taken, so one that cannot be sent (it stays pending) or a run
+    stopped half way loses none after it. While the alert state cannot be saved (a full `/var`), no
+    anomaly is sent: the next run would read the state as it was and send it again, each minute.
+    They wait, and go once it can be saved; at most the one sent as the disk filled goes
+    twice. `at` is ISO 8601 or Unix seconds (milliseconds are recognised); an anomaly with a
     time that is not one, or none a date can hold (a number of hundreds of digits), is sent with
     the time it was read.
   - In both, a lone surrogate (a `\ud800` escape, which no mail, system log or web page can

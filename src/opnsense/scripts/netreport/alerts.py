@@ -157,6 +157,9 @@ class State:
         self.running, self.handed, self.held, self.held_subjects = None, 0, 0, []
         # this run only: the channels that timed out, not tried again in it
         self.slow = set()
+        # this run only: whether the last save of the state failed (a full /var: the state on disk is
+        # behind), and whether a save was tried at all (can_keep())
+        self.unsaved, self.save_tried = False, False
 
     def first(self, name):
         """whether this collector has never run: its first run only records where things are"""
@@ -259,15 +262,21 @@ def timer_usable():
     return hasattr(signal, 'setitimer') and threading.current_thread() is threading.main_thread()
 
 
-TIMER = {'on': False, 'limit': None}    # the timer limited() runs, while it runs: rearm() moves it
+TIMER = {'on': False, 'limit': None, 'done': False}    # the timer limited() runs: rearm() moves it
 
 
 def rearm(seconds):
-    """Inside limited(): the running try's timer set to end seconds from now; 0 stops it, so that
-    nothing more can fire. Outside limited(), or where there is no timer, nothing happens."""
-    if TIMER['on'] and timer_usable():
-        TIMER['limit'] = seconds
-        signal.setitimer(signal.ITIMER_REAL, seconds, TIMER_REPEAT if seconds else 0)
+    """Inside limited(): the running try's timer set to end seconds from now. 0 stops it for good:
+    the try is done (the mail server took the message), and a tick already on its way does nothing.
+    Outside limited(), or where there is no timer, nothing happens."""
+    if not (TIMER['on'] and timer_usable()):
+        return
+    if not seconds:
+        TIMER['done'] = True
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        return
+    signal.setitimer(signal.ITIMER_REAL, seconds, TIMER_REPEAT)
+    TIMER['limit'] = seconds
 
 
 def limited(what, *args, limit=None):
@@ -277,10 +286,11 @@ def limited(what, *args, limit=None):
     handler's exception interrupts a blocking call (PEP 475): the connect, the TLS handshake, a send
     or a recv - every step of HTTP, HTTPS and mail - and the code that was running goes no further,
     so nothing of the try is sent after it was counted a failure. After the first, the timer goes
-    off again every TIMER_REPEAT seconds while the try is still unwinding, so that a step on the way
-    out (smtplib's QUIT to a server that does not answer) cannot hold it either. The previous
-    handler and timer are put back. One thing the timer cannot cut: the system's name lookup,
-    which goes on to its own resolver timeouts before the timer's exception is raised.
+    off again every TIMER_REPEAT seconds while the try is still unwinding, should anything on the
+    way out catch the first and go on. rearm() moves it, or stops it for good (by_mail(), once the
+    mail server took the message). The previous handler and timer are put back. One thing the timer
+    cannot cut: the system's name lookup, which goes on to its own resolver timeouts before the
+    timer's exception is raised.
 
     Where there is no setitimer (Windows: the tests there) or this is not the main thread, what runs
     without it: each socket operation then has its own timeout (HTTP_TIMEOUT, the mail's 60 s), but
@@ -291,11 +301,11 @@ def limited(what, *args, limit=None):
     live = [True]
 
     def on_alarm(signum, frame):
-        if live[0]:
+        if live[0] and not TIMER['done']:
             raise RequestTimeout(f'no answer within {TIMER["limit"]:g} s')
 
     previous = signal.signal(signal.SIGALRM, on_alarm)
-    TIMER.update(on=True, limit=limit)
+    TIMER.update(on=True, limit=limit, done=False)
     old_delay, old_interval = signal.setitimer(signal.ITIMER_REAL, limit, TIMER_REPEAT)
     started = time.monotonic()
     try:
@@ -305,7 +315,7 @@ def limited(what, *args, limit=None):
             live[0] = False
     finally:
         live[0] = False
-        TIMER.update(on=False, limit=None)
+        TIMER.update(on=False, limit=None, done=False)
         signal.setitimer(signal.ITIMER_REAL, 0)
         signal.signal(signal.SIGALRM, previous)
         if old_delay:
@@ -362,7 +372,8 @@ def header_text(value):
 def by_mail(settings, alert, data_limit=None):
     """The connect, TLS and login run under limited()'s time; from the moment the message goes the
     timer has data_limit (MAIL_LIMIT unless given) for the server to take it, and once it did the timer
-    stops: a QUIT after that has its own socket timeout and cannot make the mail a failure."""
+    stops for good: the QUIT after that has QUIT_TIMEOUT in all, and cannot make the mail a
+    failure."""
     if settings.get('alert_mail') != '1':
         return NOT_SET, []
     ms = nr.mail_settings(settings)
@@ -504,12 +515,31 @@ def deliver(settings, alert, record=None, slow=None, kept=False):
 
 
 def save_or_log(state, what):
-    """state.save(), a failure (a full /var) logged: what was delivered stays delivered, and the
-    next item is still tried"""
+    """state.save(), a failure (a full /var) logged, not raised: what was delivered stays delivered.
+    Returns whether it saved; until one succeeds again, state.unsaved says the state on disk is
+    behind (can_keep())."""
+    state.save_tried = True
     try:
         state.save()
     except Exception as exc:
+        state.unsaved = True
         nr.log(f'{what}: the alert state could not be saved: {exc}')
+        return False
+    state.unsaved = False
+    return True
+
+
+def can_keep(state, what):
+    """Whether an anomaly may go out: only while the alert state can be saved. One sent while it
+    cannot would be sent again each minute, the next run reading the state as it was. The first in
+    a run, if nothing has saved the state yet, saves it as it is, to know; a save that failed, then
+    or after any alert, says no until one succeeds. The anomalies wait for a run that can save; at
+    most the one sent as the disk filled goes out twice."""
+    if state.unsaved:
+        return False
+    if not state.save_tried:
+        return save_or_log(state, what)
+    return True
 
 
 def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=None, now=None,
@@ -1593,7 +1623,8 @@ def collect_xgs_anomaly(settings, state, now, send, first):
 
     The last id moves, and the anomaly goes into the pending list, one anomaly at a time and before
     it is sent; it leaves the list once sent. Every alert sent saves the state, so a record that
-    cannot be sent, or a run killed half way, loses none of the anomalies after it."""
+    cannot be sent, or a run killed half way, loses none of the anomalies after it; and while the
+    state cannot be saved (a full /var), none is sent (can_keep())."""
     st = state.get('xgs')
     pending = [p for p in st.get('pending') or [] if isinstance(p, dict) and isinstance(p.get('rec'), dict)]
     for p in pending:
@@ -1627,6 +1658,8 @@ def collect_xgs_anomaly(settings, state, now, send, first):
             for rec in sorted(records, key=lambda r: r['id']):
                 if rec['id'] <= st['last_id']:
                     continue
+                if send and not can_keep(state, XGS_ANOMALY):
+                    break                   # the state cannot be saved: the rest waits for a run that can
                 st['last_id'] = rec['id']
                 if not send:
                     continue
@@ -1645,7 +1678,7 @@ def retry_anomalies(settings, state, now, send, old):
     """the anomalies pending before this run, tried again while the cap leaves room"""
     pending = state.get('xgs').setdefault('pending', [])
     for p in old:
-        if send and channels_set(settings) and room(state):
+        if send and channels_set(settings) and room(state) and can_keep(state, XGS_ANOMALY):
             result = try_anomaly(settings, state, p, now, p.get('failed', True))
             if result == SENT:
                 without(pending, p)

@@ -1028,12 +1028,14 @@ def recipients_for(settings, sched, ms):
     return rcpt
 
 
-QUIT_TIMEOUT = 5                # seconds for a mail server's answer to QUIT, once it took the message
+QUIT_TIMEOUT = 5                # seconds in all for QUIT, once the mail server took the message
 
 
 def send_mail(ms, rcpt, subject, page, text, attach_name=None, before_send=None, after_send=None):
     """before_send() runs as the message is about to go, after_send() once the server took it (the alert
-    layer moves and stops its time limit there); a QUIT then has QUIT_TIMEOUT, and its failure is not one."""
+    layer moves and stops its time limit there). The QUIT then has QUIT_TIMEOUT in all - not smtplib's
+    quit(), which reads a reply's continuation lines for as long as a server sends them - and whatever
+    it gets, the mail was sent."""
     msg = MIMEMultipart('mixed')
     msg['Subject'] = Header(subject, 'utf-8')
     msg['From'] = formataddr((str(Header('OPNsense', 'utf-8')), ms['sender']))
@@ -1067,12 +1069,18 @@ def send_mail(ms, rcpt, subject, page, text, attach_name=None, before_send=None,
         server.close()
         raise
     # the server has the message: a QUIT that fails or is slow does not make it a failure (it would be
-    # mailed again with its retry)
+    # mailed again with its retry). It has QUIT_TIMEOUT in all, for its send and the first piece of
+    # the answer, which is all that is read
     try:
         if server.sock is not None:
+            end = time.monotonic() + QUIT_TIMEOUT
             server.sock.settimeout(QUIT_TIMEOUT)
-        server.quit()
+            server.sock.sendall(b'QUIT\r\n')
+            server.sock.settimeout(max(end - time.monotonic(), 0.001))
+            server.sock.recv(512)
     except Exception:
+        pass
+    finally:
         server.close()
 
 
