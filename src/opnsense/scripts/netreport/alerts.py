@@ -106,8 +106,8 @@ QUIET = {}                      # kind -> seconds, where a kind wants other than
 QUIET_KEEP = 2 * 86400          # how long a sent key is remembered at all
 HTTP_TIMEOUT = 10               # seconds, each socket operation of a request
 REQUEST_LIMIT = 15              # seconds, a channel's whole try: connecting, sending, the reply (limited())
-MAIL_LIMIT = 60                 # seconds, the mail's whole try: smtplib's own socket timeout, so a server that
-                                # is slow to say 250 after the message is not cut while it holds it
+MAIL_LIMIT = 60                 # seconds for a mail server to take the message, from the moment it is sent
+                                # (by_mail: the connect, TLS and login have REQUEST_LIMIT like any try)
 SLOW_LIMIT = 3                  # seconds, a channel that already ran out of time in this pass, for an alert
                                 # that is not kept until sent (one that is skips it: deliver())
 TIMER_REPEAT = 0.5              # seconds, the timer again while a try past its limit unwinds
@@ -259,6 +259,17 @@ def timer_usable():
     return hasattr(signal, 'setitimer') and threading.current_thread() is threading.main_thread()
 
 
+TIMER = {'on': False, 'limit': None}    # the timer limited() runs, while it runs: rearm() moves it
+
+
+def rearm(seconds):
+    """Inside limited(): the running try's timer set to end seconds from now; 0 stops it, so that
+    nothing more can fire. Outside limited(), or where there is no timer, nothing happens."""
+    if TIMER['on'] and timer_usable():
+        TIMER['limit'] = seconds
+        signal.setitimer(signal.ITIMER_REAL, seconds, TIMER_REPEAT if seconds else 0)
+
+
 def limited(what, *args, limit=None):
     """what(*args), a channel's whole try, with limit seconds to end (REQUEST_LIMIT when not given).
 
@@ -281,9 +292,10 @@ def limited(what, *args, limit=None):
 
     def on_alarm(signum, frame):
         if live[0]:
-            raise RequestTimeout(f'no answer within {limit:g} s')
+            raise RequestTimeout(f'no answer within {TIMER["limit"]:g} s')
 
     previous = signal.signal(signal.SIGALRM, on_alarm)
+    TIMER.update(on=True, limit=limit)
     old_delay, old_interval = signal.setitimer(signal.ITIMER_REAL, limit, TIMER_REPEAT)
     started = time.monotonic()
     try:
@@ -293,6 +305,7 @@ def limited(what, *args, limit=None):
             live[0] = False
     finally:
         live[0] = False
+        TIMER.update(on=False, limit=None)
         signal.setitimer(signal.ITIMER_REAL, 0)
         signal.signal(signal.SIGALRM, previous)
         if old_delay:
@@ -346,14 +359,18 @@ def header_text(value):
         return '=?UTF-8?B?' + b64encode(value.encode('utf-8', 'replace')).decode('ascii') + '?='
 
 
-def by_mail(settings, alert):
+def by_mail(settings, alert, data_limit=None):
+    """The connect, TLS and login run under limited()'s time; from the moment the message goes the
+    timer has data_limit (MAIL_LIMIT unless given) for the server to take it, and once it did the timer
+    stops: a QUIT after that has its own socket timeout and cannot make the mail a failure."""
     if settings.get('alert_mail') != '1':
         return NOT_SET, []
     ms = nr.mail_settings(settings)
     rcpt = nr.recipients_for(settings, None, ms)
     t = nr.texts(settings.get('language'))
+    data_limit = MAIL_LIMIT if data_limit is None else data_limit
     nr.send_mail(ms, rcpt, alert['subject'], alert.get('html') or page_of(t, alert['subject'], alert['text']),
-                 alert['text'])
+                 alert['text'], before_send=lambda: rearm(data_limit), after_send=lambda: rearm(0))
     return SENT, rcpt
 
 
@@ -448,18 +465,19 @@ def deliver(settings, alert, record=None, slow=None, kept=False):
     take ten times REQUEST_LIMIT. Any other alert - a gateway down, failed logins... - would be lost
     by a skip: it is tried on every channel, but on a channel in slow with SLOW_LIMIT seconds, so a
     server that does not answer costs each of them seconds, not REQUEST_LIMIT. The mail has
-    MAIL_LIMIT (a mail server may take long to say 250 after the message, while it holds it)."""
+    MAIL_LIMIT from the moment its message goes (a mail server may take long to say 250 after it,
+    while it holds it); its connect, TLS and login have REQUEST_LIMIT like the others."""
     results, rcpt = {}, []
     for name, channel in (('mail', by_mail), ('webhook', by_webhook), ('ntfy', by_ntfy)):
-        limit = MAIL_LIMIT if name == 'mail' else REQUEST_LIMIT
+        limit, data_limit = REQUEST_LIMIT, MAIL_LIMIT
         if slow is not None and name in slow:
             if kept:
                 results[name] = SKIPPED_SLOW
                 continue
-            limit = min(limit, SLOW_LIMIT)
+            limit = data_limit = min(REQUEST_LIMIT, SLOW_LIMIT)
         try:
             if name == 'mail':
-                results[name], rcpt = limited(channel, settings, alert, limit=limit)
+                results[name], rcpt = limited(channel, settings, alert, data_limit, limit=limit)
             else:
                 results[name] = limited(channel, settings, alert, limit=limit)
         except Exception as exc:
@@ -483,6 +501,15 @@ def deliver(settings, alert, record=None, slow=None, kept=False):
     if not sent:
         nr.log(f'alert "{alert["subject"]}" was not sent: {detail}')
     return results
+
+
+def save_or_log(state, what):
+    """state.save(), a failure (a full /var) logged: what was delivered stays delivered, and the
+    next item is still tried"""
+    try:
+        state.save()
+    except Exception as exc:
+        nr.log(f'{what}: the alert state could not be saved: {exc}')
 
 
 def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=None, now=None,
@@ -526,12 +553,8 @@ def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=
     results = deliver(settings, alert, record, getattr(state, 'slow', None), kept=defer)
     if state is not None:
         sent[mark] = now
-        try:
-            state.save()
-        except Exception as exc:
-            # the alert went out (or did not) all the same: a full disk must not make every caller
-            # take it for a failure and send it again each minute
-            nr.log(f'alert "{subject}": the alert state could not be saved: {exc}')
+        # a full disk must not make every caller take the alert for a failure and send it again
+        save_or_log(state, f'alert "{subject}"')
     return results
 
 
@@ -1612,7 +1635,7 @@ def collect_xgs_anomaly(settings, state, now, send, first):
                 result = try_anomaly(settings, state, entry, now, False)
                 if result == SENT:
                     without(pending, entry)
-                    state.save()
+                    save_or_log(state, f'{XGS_ANOMALY} id {rec["id"]}')
                 else:
                     entry['failed'] = result != HELD
     return old
@@ -1626,7 +1649,7 @@ def retry_anomalies(settings, state, now, send, old):
             result = try_anomaly(settings, state, p, now, p.get('failed', True))
             if result == SENT:
                 without(pending, p)
-                state.save()
+                save_or_log(state, f'{XGS_ANOMALY} id {p["rec"].get("id")}')
                 continue
             p['failed'] = p.get('failed', True) or result != HELD
         if now - (p.get('since') or now) >= OUTBOX_MAX_AGE:
@@ -1711,7 +1734,7 @@ def run_collectors(settings, state, now, clock=time.monotonic):
                 nr.log(f'alert collector {name}: the summary alert failed: {exc}')
     state.past_deadline = None
     state.data['last_pass'] = now
-    state.save()
+    save_or_log(state, 'alert collectors')
 
 
 # ---------------------------------------------------------------- commands

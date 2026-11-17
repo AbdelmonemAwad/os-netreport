@@ -106,10 +106,10 @@ Limits on each minute's pass, so that a storm or a pause does not flood the chan
   places in the logs unmoved; and past it os-xgs-npu's files and anomalies, the alerts kept until
   they are sent, wait for the next minute too. An alert of any other kind a collector has already
   read is still sent - so a pass can run past 45 seconds, by the time its channels take.
-- A channel that did not answer in time (its 15 seconds, see Channels) is not tried again for the
+- A channel that did not answer in time (see Channels) is not tried again for the
   rest of that minute's pass for os-xgs-npu's files and anomalies, the alerts kept until they are
   sent: their result is "skipped: it did not answer earlier this minute", so ten of them cannot
-  take ten times 15 seconds. That is a failure like any other: they stay kept for the next minute,
+  take ten times its time. That is a failure like any other: they stay kept for the next minute,
   when the channel is tried again. Every other alert (a gateway or VPN down, failed logins, the
   intrusion, watchdog and command-and-control alerts) is not kept for a retry, so it is tried on
   every channel all the same - on a channel that ran out of time earlier in that pass, with 3
@@ -137,14 +137,16 @@ Limits on each minute's pass, so that a storm or a pause does not flood the chan
 
 Each channel's try has a time in all, whatever it is doing - the connect, the TLS handshake,
 sending, or waiting for the reply or the mail server's greeting: 15 seconds for the webhook's and
-ntfy's POST, 60 for the mail (a mail server may take long to say it took the message, while it
-has it). A real-time timer in the cron process ends the try then, so a server that answers a byte
-at a time, or never, cannot hold the minute's pass; the result is "no answer within 15 s" (or
-60). A try that ran out goes no further, but a server may have taken the alert before its answer
+ntfy's POST, and for the mail up to its message; from the moment the message goes, the mail server
+has 60 seconds to say it took it (a server may take long to, while it has it). A real-time timer
+in the cron process ends the try then, so a server that answers a byte at a time, or never, cannot
+hold the minute's pass; the result is "no answer within 15 s" (or 60). A channel that ran out of
+time earlier in the same pass has 3 seconds for the alerts not kept until sent ("no answer within
+3 s"). A try that ran out goes no further, but a server may have taken the alert before its answer
 was due: an alert counted as failed can still arrive, and arrive twice with its retry. Once the
-mail server has taken the message, a QUIT it is slow to answer, or does not answer, is not a
-failure. The system's name lookup is the one step the timer cannot cut: it ends at the
-resolver's own timeouts.
+mail server has taken the message the timer stops, and a QUIT has 5 seconds of its own: one it is
+slow to answer, or does not answer, is not a failure. The system's name lookup is the one step the
+timer cannot cut: it ends at the resolver's own timeouts.
 
 A webhook or ntfy server that answers with a redirect is not followed (the header or the token
 would go along to whatever host it names): any 3xx is a failure, "the server answered with a

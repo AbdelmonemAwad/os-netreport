@@ -143,10 +143,14 @@ def fake_mail_settings(settings):
             'sender': 'fw@example.com'}
 
 
-def fake_send_mail(ms, rcpt, subject, page, text, attach_name=None):
+def fake_send_mail(ms, rcpt, subject, page, text, attach_name=None, before_send=None, after_send=None):
+    if before_send:
+        before_send()
     MAILS.append({'to': rcpt, 'subject': subject, 'html': page, 'text': text})
     if MAIL.get('during'):
         MAIL.pop('during')()
+    if after_send:
+        after_send()
 
 
 REAL_SEND_MAIL = nr.send_mail
@@ -1489,7 +1493,7 @@ REAL_LIMITED = alerts.limited
 
 
 def spy_limited(what, *args, limit=None):
-    SEEN_LIMITS.append((what.__name__, limit))
+    SEEN_LIMITS.append((what.__name__, limit, args[2] if what.__name__ == 'by_mail' and len(args) > 2 else None))
     return REAL_LIMITED(what, *args, limit=limit)
 
 
@@ -1504,9 +1508,11 @@ finally:
     alerts.limited = REAL_LIMITED
     alerts.REQUEST_LIMIT, alerts.HTTP_TIMEOUT, alerts.SLOW_LIMIT = saved_limits
     GENERAL.update(alert_webhook_url=BASE + '/hook', alert_ntfy_server=BASE + '/ntfy/')
-check('limits: the mail has MAIL_LIMIT; the webhook its limit, then SLOW_LIMIT once it timed out',
-      ([lim for name, lim in SEEN_LIMITS if name == 'by_mail'], [lim for name, lim in SEEN_LIMITS if name == 'by_webhook']),
-      ([alerts.MAIL_LIMIT] * 4, [5, 1, 1]))
+check('limits: the mail has the request limit up to its message and MAIL_LIMIT for it; the webhook its limit, then '
+      'SLOW_LIMIT once it timed out',
+      ([(lim, data) for name, lim, data in SEEN_LIMITS if name == 'by_mail'],
+       [lim for name, lim, data in SEEN_LIMITS if name == 'by_webhook']),
+      ([(5, alerts.MAIL_LIMIT)] * 4, [5, 1, 1]))
 
 # a mail server that took the message: a QUIT that is slow past the limit, or that closes without an answer, is
 # not a failure (the message would be mailed again with its retry)
@@ -1525,6 +1531,53 @@ if alerts.timer_usable():
               (got, [m for m, _ in SMTP_GOT], time.monotonic() - started < 2.5), (None, [mode], True))
 else:
     print('skip: no real-time timer here (Windows): the QUIT under the limit is tested where there is one')
+
+# the real send_mail under the limit: the connect has the request limit, the message MAIL_LIMIT, and a QUIT its own
+# socket timeout once the server took it
+if alerts.timer_usable():
+    del SMTP_GOT[:]
+    port = smtp_server('slow-dot', delay=3)
+    started = time.monotonic()
+    try:
+        got = alerts.limited(REAL_SEND_MAIL, smtp_settings(port), ['admin@example.com'], 'Example', '<p>x</p>', 'x', None,
+                             lambda: alerts.rearm(alerts.MAIL_LIMIT), lambda: alerts.rearm(0), limit=1)
+    except Exception as exc:
+        got = alerts.error_text(exc)
+    check('mail: a server that takes 3 s to say it took the message, under a 1 s connect limit: sent',
+          (got, [m for m, _ in SMTP_GOT], 2.5 < time.monotonic() - started < 5), (None, ['slow-dot'], True))
+    del SMTP_GOT[:]
+    port = smtp_server('slow-quit', delay=8)
+    saved_quit, nr.QUIT_TIMEOUT = nr.QUIT_TIMEOUT, 1
+    started = time.monotonic()
+    try:
+        got = alerts.limited(REAL_SEND_MAIL, smtp_settings(port), ['admin@example.com'], 'Example', '<p>x</p>', 'x', None,
+                             lambda: alerts.rearm(alerts.MAIL_LIMIT), lambda: alerts.rearm(0), limit=20)
+    except Exception as exc:
+        got = alerts.error_text(exc)
+    finally:
+        nr.QUIT_TIMEOUT = saved_quit
+    check('mail: a QUIT that takes 8 s once the server took the message ends at its own timeout, sent',
+          (got, [m for m, _ in SMTP_GOT], time.monotonic() - started < 3), (None, ['slow-quit'], True))
+else:
+    print('skip: no real-time timer here (Windows): the mail under the limit is tested where there is one')
+
+# a state that cannot be saved (a full /var) while anomalies go out: every one is still sent, none twice
+reset()
+FIRST += 10
+anomalies((FIRST, stamp(CLOCK)), (FIRST + 1, stamp(CLOCK)), (FIRST + 2, stamp(CLOCK)))
+REAL_SAVE = alerts.State.save
+
+
+def full_disk(self):
+    raise OSError(28, 'No space left on device')
+
+
+alerts.State.save = full_disk
+try:
+    sent_ids = [x['facts']['id'] for x in run_pass([('xgs', alerts.collect_xgs)])]
+finally:
+    alerts.State.save = REAL_SAVE
+check('a full disk while anomalies go out: each is sent once, the collector goes on', sent_ids, [FIRST, FIRST + 1, FIRST + 2])
 
 # past the pass deadline: what is kept until sent waits for the next minute; any other alert is still sent
 TICK3 = [0.0]

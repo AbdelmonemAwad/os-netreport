@@ -1028,7 +1028,12 @@ def recipients_for(settings, sched, ms):
     return rcpt
 
 
-def send_mail(ms, rcpt, subject, page, text, attach_name=None):
+QUIT_TIMEOUT = 5                # seconds for a mail server's answer to QUIT, once it took the message
+
+
+def send_mail(ms, rcpt, subject, page, text, attach_name=None, before_send=None, after_send=None):
+    """before_send() runs as the message is about to go, after_send() once the server took it (the alert
+    layer moves and stops its time limit there); a QUIT then has QUIT_TIMEOUT, and its failure is not one."""
     msg = MIMEMultipart('mixed')
     msg['Subject'] = Header(subject, 'utf-8')
     msg['From'] = formataddr((str(Header('OPNsense', 'utf-8')), ms['sender']))
@@ -1053,13 +1058,19 @@ def send_mail(ms, rcpt, subject, page, text, attach_name=None):
     try:
         if ms['user'] and ms['password']:
             server.login(ms['user'], ms['password'])
+        if before_send:
+            before_send()
         server.sendmail(ms['sender'], rcpt, msg.as_string())
+        if after_send:
+            after_send()
     except BaseException:
         server.close()
         raise
     # the server has the message: a QUIT that fails or is slow does not make it a failure (it would be
     # mailed again with its retry)
     try:
+        if server.sock is not None:
+            server.sock.settimeout(QUIT_TIMEOUT)
         server.quit()
     except Exception:
         server.close()
