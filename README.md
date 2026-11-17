@@ -164,10 +164,12 @@ otherwise above. What the layer remembers - quiet times, log offsets, states - i
 `/var/db/netreport/alerts-state.json`.
 
 While `/var` is full that file cannot be saved, and each minute's run reads as if the one before
-had not been: a failed-login or intrusion alert goes again each minute while its log lines are
-less than 10 minutes old, then nothing; a gateway that goes down is not said until there is room
-again, then on the second read after it, with the first as its time; os-xgs-npu's alert files go
-once each (a file is removed once sent), and its anomalies wait (below).
+had not been: a failed-login, intrusion or command-and-control alert goes again each minute while
+its log lines are less than 10 minutes old, then nothing (`infected.json` cannot be written
+either); a gateway or a VPN tunnel that goes down is not said until there is room again, then on
+the second read after it, with the first as its time; a reset the hardware watchdog caused is not
+said until there is room, then once; os-xgs-npu's alert files go once each (a file is removed once
+sent), and its anomalies wait (below).
 
 ### Files shared with other plugins
 
@@ -195,8 +197,10 @@ once each (a file is removed once sent), and its anomalies wait (below).
     stopped half way loses none after it (the one it was sending is tried again, after the new
     ones). While the alert state cannot be saved (a full `/var`), no anomaly is sent: the next run
     would read the state as it was and send it again, each minute. Each new one is saved as
-    waiting before it goes, so at most the one sent as the disk filled goes twice; they go once
-    there is room, and only then are those 24 hours old dropped. `at` is ISO 8601 or Unix seconds
+    waiting before it goes, so one in flight when the disk fills goes again once there is room,
+    and none more often. Once there is room they go, ten a minute at most (the collector's cap),
+    and those kept 24 hours are dropped then, one line in the history saying how many. `at` is
+    ISO 8601 or Unix seconds
     (milliseconds are recognised); an anomaly with a time that is not one, or none a date can hold (a number of hundreds of digits), is sent with
     the time it was read.
   - In both, a lone surrogate (a `\ud800` escape, which no mail, system log or web page can

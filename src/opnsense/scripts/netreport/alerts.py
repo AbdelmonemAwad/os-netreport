@@ -540,11 +540,14 @@ def can_keep(state, what, first=False):
     can be saved. One sent while it cannot would be sent again each minute, the next run reading the
     state as it was; once a save failed in a run, none goes for the rest of it.
 
-    first, for a new anomaly: the state is saved before it goes, as it will be if the send goes and
-    the save after it fails - the anomaly already pending, the last id past it - so that it goes at
-    most twice: retried once, when there is room. The state with it pending is larger than after
-    the send, so a disk with room for the first save has room for the second. A retry or a drop
-    only makes the state smaller: one save a run is enough, the first if nothing has saved it yet."""
+    first, for a new anomaly or a watchdog reset: the state is saved before it goes, as it will be if
+    the send goes and the save after it fails - the anomaly already pending and the last id past it,
+    the reset's boot recorded - so that it goes at most twice: once more when there is room again. The
+    save after an anomaly's send (its caller's, as it takes it off the list: notify() saves nothing
+    for an alert kept until sent) holds a smaller state than the one before it, so a disk whose free
+    space only this plugin changes has room for it. Free space other writes take in between (a log
+    on /var) can still fail it: the anomaly in flight then goes again once there is room. A retry or a
+    drop only makes the state smaller: one save a run is enough, the first if nothing has saved it."""
     if state.unsaved:
         return False
     if first or not state.save_tried:
@@ -564,6 +567,10 @@ def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=
     collector keeps until it is sent (defer: an outbox file, an anomaly) is then simply left for the
     next minute - no history line, no quiet time; any other is counted, and named, in the collector's
     one history line and summary alert for what it held (run_collectors).
+
+    An alert kept until it is sent leaves no quiet-time mark (it has no quiet time) and is not saved
+    here: its caller saves the state as it takes the alert off its list, so that the save after a send
+    is smaller than the one before it (can_keep()), and a failed retry writes nothing.
     """
     now = time.time() if now is None else now
     quiet = QUIET.get(kind, QUIET_DEFAULT) if quiet is None else quiet
@@ -591,7 +598,7 @@ def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=
             return {name: HELD for name in ('mail', 'webhook', 'ntfy')}
         state.handed += 1
     results = deliver(settings, alert, record, getattr(state, 'slow', None), kept=defer)
-    if state is not None:
+    if state is not None and not defer:
         sent[mark] = now
         # a full disk must not make every caller take the alert for a failure and send it again
         save_or_log(state, f'alert "{subject}"')
@@ -1256,6 +1263,7 @@ def collect_watchdog(settings, state, now):
     boot = str(record.get('boot'))
     if st.get('boot') == boot:
         return
+    old_boot = st.get('boot')
     st['boot'] = boot
     bits = [b for b in record.get('bits') or [] if isinstance(b, dict)]
     if 'watchdog' in record:
@@ -1266,6 +1274,14 @@ def collect_watchdog(settings, state, now):
         # a record kept before os-watchdog wrote the field: bit 25 among its bits
         by_watchdog = any(str(b.get('bit')) == str(WATCHDOG_BIT) for b in bits)
     if first or not by_watchdog or not wanted(settings, 'watchdog_alert'):
+        return
+    # the boot saved before the alert goes: one sent while the state cannot be saved would go again
+    # each minute (it has no quiet time), the next run reading the boot before
+    if not can_keep(state, 'watchdog', first=True):
+        if old_boot is None:
+            st.pop('boot', None)
+        else:
+            st['boot'] = old_boot
         return
     t = nr.texts(settings.get('language'))
     reasons = [str(b.get('reason') or b.get('bit')) for b in bits] or [t['unknown']]
@@ -1717,8 +1733,14 @@ def retry_anomalies(settings, state, now, send, old):
         return
     for p in expired:
         without(pending, p)
-        dropped(f'{XGS_ANOMALY} id {p["rec"].get("id")}', f'{XGS_ANOMALY} id {p["rec"].get("id")} dropped: '
-                'not sent within 24 hours')
+    # one line in the history however many (it keeps 500): a single one by its id, as before
+    ids = [str(p['rec'].get('id')) for p in expired]
+    if len(ids) == 1:
+        dropped(f'{XGS_ANOMALY} id {ids[0]}', f'{XGS_ANOMALY} id {ids[0]} dropped: not sent within 24 hours')
+    elif ids:
+        shown = ', '.join(ids[:HELD_SHOWN]) + (', …' if len(ids) > HELD_SHOWN else '')
+        dropped(f'{XGS_ANOMALY}: {len(ids)} anomalies dropped',
+                f'{XGS_ANOMALY}: {len(ids)} anomalies dropped, not sent within 24 hours: ids {shown}')
     over = len(pending) - PENDING_MAX
     if over > 0:
         # the oldest go: said once, with how many, in the system log and the history

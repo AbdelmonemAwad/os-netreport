@@ -774,9 +774,10 @@ check('IPS: a rotated eve.json is read from its start', [s['facts']['signature']
 # VPN
 ANSWERS = {}
 alerts.configctl = lambda *args: ANSWERS.get(args[0])
-EXTRA['xml'] = ('<Swanctl><Connections><Connection uuid="00000000-0000-4000-8000-000000000001"><description>Office'
+VPN_XML = ('<Swanctl><Connections><Connection uuid="00000000-0000-4000-8000-000000000001"><description>Office'
                 '</description></Connection></Connections></Swanctl><wireguard><client><clients><client uuid="x">'
                 '<name>Laptop</name><pubkey>EXAMPLEPUBKEY=</pubkey></client></clients></client></wireguard>')
+EXTRA['xml'] = VPN_XML
 
 
 def ike(state='ESTABLISHED', child='INSTALLED'):
@@ -1680,23 +1681,30 @@ check('a disk that fills as anomalies go: the first goes, then none while it is 
 # a disk with room for the state as it is, and not for one more sent mark: saved as pending before it goes, the
 # anomaly needs more room than its send leaves, so nothing goes until there is room - not the same one each minute
 REAL_SAVE_JSON = alerts.save_json
-ROOM = {'bytes': None}
+FREE = {'bytes': None}                  # the disk's free bytes beside the state file
 
 
 def tight_disk(path, data):
-    if path == alerts.STATE_FILE and ROOM['bytes'] is not None and \
-            len(json.dumps(data, indent=1, ensure_ascii=True)) > ROOM['bytes']:
+    """save_json on a disk with FREE bytes: the new file is written whole beside the old one before the
+    rename, so a save needs room for all of it; the old one's room comes back after"""
+    if path != alerts.STATE_FILE or FREE['bytes'] is None:
+        return REAL_SAVE_JSON(path, data)
+    size = len(json.dumps(data, indent=1, ensure_ascii=True))
+    old = os.path.getsize(path) if os.path.exists(path) else 0
+    if size > FREE['bytes']:
         raise OSError(28, 'No space left on device')
     REAL_SAVE_JSON(path, data)
+    FREE['bytes'] += old - size
 
 
 anomalies((FIRST + 6, stamp(CLOCK)), (FIRST + 7, stamp(CLOCK)))
-ROOM['bytes'] = len(json.dumps(nr.load_json(alerts.STATE_FILE, {}), indent=1, ensure_ascii=True)) + 20
+FREE['bytes'] = len(json.dumps(nr.load_json(alerts.STATE_FILE, {}), indent=1, ensure_ascii=True)) + 20
 alerts.save_json = tight_disk
 try:
     tight = [xgs_pass(), xgs_pass()]
 finally:
     alerts.save_json = REAL_SAVE_JSON
+    FREE['bytes'] = None
 check('a disk with room for the state but not for one more mark: no anomaly goes, not one each minute; with room '
       'again each once', tight + [xgs_pass(), xgs_pass()], [[], [], [FIRST + 6, FIRST + 7], []])
 # anomalies kept for a retry, on a full disk: none tried while it is full, each once when there is room
@@ -1747,6 +1755,133 @@ finally:
 check('one kept for a retry 24 hours, on a full disk: not dropped while it is full; with room again dropped once',
       (drops_full, sum(h['detail'] == drop_line for h in history()), nr.load_json(alerts.STATE_FILE, {})['xgs'].get('pending')),
       (0, 1, []))
+# the saves an anomaly pass makes: one before each anomaly that goes and one as it is taken off the list - none for
+# what the collector's cap or the pass deadline holds, none with no channel set - and one at the end of the pass
+SAVES = [0]
+
+
+def counted(self):
+    SAVES[0] += 1
+    REAL_SAVE(self)
+
+
+def pass_saves(collectors, clock=None):
+    SAVES[0] = 0
+    alerts.State.save = counted
+    try:
+        sent = [x['facts'].get('id') for x in run_pass(collectors, clock)]
+    finally:
+        alerts.State.save = REAL_SAVE
+    return sent, SAVES[0]
+
+
+anomalies(*[(FIRST + 20 + i, stamp(CLOCK)) for i in range(13)])
+sent13, saves13 = pass_saves([('xgs', alerts.collect_xgs)])
+check('13 new anomalies: 10 sent (the cap), 21 saves - before and after each sent, and the pass\'s', (len(sent13), saves13),
+      (10, 21))
+held = pass_saves([('xgs', alerts.collect_xgs)])
+check('... the 3 held go the next minute: 5 saves - one before the first retry, one after each, one at the end',
+      (sorted(held[0]), held[1]), ([FIRST + 30, FIRST + 31, FIRST + 32], 5))
+anomalies(*[(FIRST + 40 + i, stamp(CLOCK)) for i in range(3)])
+TICKS = iter([0.0, 0.0] + [100.0] * 50)      # the pass starts, the collector runs, then it is past
+late_pass = pass_saves([('xgs', alerts.collect_xgs)], clock=lambda: next(TICKS))
+check('past the pass deadline: nothing sent, the one save at the end (none before an anomaly the deadline holds)',
+      late_pass, ([], 1))
+TICKS = iter([0.0, 0.0] + [100.0] * 50)
+check('... and past it again, those three waiting for a retry: none tried, the one save at the end',
+      pass_saves([('xgs', alerts.collect_xgs)], clock=lambda: next(TICKS)), ([], 1))
+GENERAL.update(alert_mail='0', alert_webhook_url='', alert_ntfy_server='')
+try:
+    anomalies(*[(FIRST + 50 + i, stamp(CLOCK)) for i in range(3)])
+    none_set = pass_saves([('xgs', alerts.collect_xgs)])
+finally:
+    GENERAL.update(alert_mail='1', alert_webhook_url=BASE + '/hook', alert_ntfy_server=BASE + '/ntfy/')
+check('no channel set: nothing sent, the one save at the end', none_set, ([], 1))
+xgs_pass()
+xgs_pass()
+# a save that fails holds the anomalies for the rest of the pass, though a later one succeeds: they go the next minute
+
+
+def example_alert(settings, state, now):
+    alerts.notify(settings, state, 'example', 'sticky|%d' % now, 'Example sticky', 'Example text.', now=now, quiet=0)
+
+
+fails_once = {'left': 1}
+
+
+def first_fails(self):
+    if fails_once['left'] > 0:
+        fails_once['left'] -= 1
+        raise OSError(28, 'No space left on device')
+    REAL_SAVE(self)
+
+
+anomalies((FIRST + 60, stamp(CLOCK)))
+alerts.State.save = first_fails
+try:
+    sticky = [x['facts'].get('id') for x in run_pass([('a', example_alert), ('b', example_alert),
+                                                       ('xgs', alerts.collect_xgs)]) if x['kind'] == 'anomaly']
+finally:
+    alerts.State.save = REAL_SAVE
+check('a save that failed holds the anomalies for the rest of the pass, a later one succeeding; the next minute '
+      'they go', (sticky, xgs_pass()), ([], [FIRST + 60]))
+# the watchdog alert on a full disk: not said while it is full (its boot could not be kept, and it has no quiet time);
+# with room again, once
+reset_record('boot-full', [WD], watchdog=True)
+alerts.State.save = disk
+DISK['room'] = 0
+try:
+    wd_full = [[x['kind'] for x in run_pass([('watchdog', alerts.collect_watchdog)])] for _ in range(3)]
+finally:
+    alerts.State.save = REAL_SAVE
+wd_room = [[x['kind'] for x in run_pass([('watchdog', alerts.collect_watchdog)])] for _ in range(2)]
+check('a full disk: a watchdog reset is not said while it is full; with room again, once', (wd_full, wd_room),
+      ([[]] * 3, [['watchdog'], []]))
+# a command-and-control alert on a full disk (the state and infected.json): each minute while its lines are under
+# 10 minutes old, then nothing
+rules()                                 # the ruleset the lines name (later checks changed it)
+os.utime(alerts.RULES_DEBUG, (time.time() + 20, time.time() + 20))
+run_pass([('c2', alerts.collect_c2)])
+blocked('192.0.2.170', n=2)
+def full_json(path, data):
+    """alerts.save_json on the full disk: infected.json cannot be written either"""
+    if path == nr.INFECTED_FILE:
+        raise OSError(28, 'No space left on device')
+    return REAL_SAVE_JSON(path, data)
+
+
+alerts.State.save, alerts.save_json = disk, full_json
+try:
+    c2_full = [[x['facts']['address'] for x in run_pass([('c2', alerts.collect_c2)])] for _ in range(12)]
+finally:
+    alerts.State.save, alerts.save_json = REAL_SAVE, REAL_SAVE_JSON
+check('a full disk: a command-and-control alert goes again each minute while its lines are under 10 minutes old, then '
+      'not', c2_full, [['192.0.2.170']] * 10 + [[]] * 2)
+# a VPN tunnel that goes down on a full disk: as a gateway - nothing while it is full, then on the second read
+saved_extra = EXTRA['xml']
+EXTRA['xml'] = VPN_XML
+try:
+    # the readings made anew before each pass: the WireGuard peer's handshake ages with the clock
+    for _ in range(3):
+        vpn()
+        run_pass([('vpn', alerts.collect_vpn)])
+    alerts.State.save = disk
+    try:
+        vpn_full = []
+        for _ in range(3):
+            vpn(office=False)
+            vpn_full.append(run_pass([('vpn', alerts.collect_vpn)]))
+    finally:
+        alerts.State.save = REAL_SAVE
+    vpn_room = []
+    for _ in range(2):
+        vpn(office=False)
+        vpn_room.append([x['facts']['state'] for x in run_pass([('vpn', alerts.collect_vpn)])])
+finally:
+    EXTRA['xml'] = saved_extra
+    vpn()
+check('a full disk: a VPN tunnel down is not said while it is full; with room again, on the second read',
+      (vpn_full, vpn_room), ([[]] * 3, [[], ['down']]))
 # the other collectors on a full disk: what they remember cannot be saved, and each run reads as if the one before
 # had not been. Failed logins: the same alert each minute while their lines are less than 10 minutes old, then
 # nothing (the last pass kept is then over 10 minutes old too: the log is read from its end)
