@@ -1063,7 +1063,11 @@ def outbox(name, **item):
     record = {'source': 'os-xgs-npu', 'kind': 'npu_fault', 'at': stamp(CLOCK), 'subject': 'Example NPU fault',
               'text': 'The example NPU stopped answering.', 'facts': {'port': 'example0'}}
     record.update(item)
-    alerts.save_json(os.path.join(alerts.XGS_OUTBOX, name), record)
+    path = os.path.join(alerts.XGS_OUTBOX, name)
+    alerts.save_json(path, record)
+    # written at the test's clock, which runs up to a day ahead: a file's age is the collector's now less
+    # its time, and with the real one a file was 24 hours old when the test ran in the hour after midnight
+    os.utime(path, (CLOCK, CLOCK))
 
 
 def anomaly(*ids):
