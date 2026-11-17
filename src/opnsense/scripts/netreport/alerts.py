@@ -478,7 +478,7 @@ def deliver(settings, alert, record=None, slow=None, kept=False):
     given the results, says no: a retry that fails again is silent.
 
     slow is the pass's set of channels that timed out. An alert kept until it is sent (kept: an
-    outbox file, an anomaly) is not tried in that pass on a channel in it (SKIPPED_SLOW, a failure:
+    outbox file, an anomaly, a watchdog reset) is not tried in that pass on a channel in it (SKIPPED_SLOW, a failure:
     it stays kept for the next pass), so that ten of them to a server that does not answer cannot
     take ten times REQUEST_LIMIT. Any other alert - a gateway down, failed logins... - would be lost
     by a skip: it is tried on every channel, but on a channel in slow with SLOW_LIMIT seconds, so a
@@ -536,18 +536,22 @@ def save_or_log(state, what):
 
 
 def can_keep(state, what, first=False):
-    """Whether an anomaly may go out, or one kept for a retry be dropped: only while the alert state
-    can be saved. One sent while it cannot would be sent again each minute, the next run reading the
-    state as it was; once a save failed in a run, none goes for the rest of it.
+    """Whether an alert kept until it is sent (an anomaly, a watchdog reset) may go out, or one kept
+    for a retry be dropped, and whether a gateway's or a VPN tunnel's change may be said: only while
+    the alert state can be saved. One sent while it cannot would be sent again each minute, the next
+    run reading the state as it was; once a save failed in a run, none goes for the rest of it.
 
-    first, for a new anomaly or a watchdog reset: the state is saved before it goes, as it will be if
-    the send goes and the save after it fails - the anomaly already pending and the last id past it,
-    the reset's boot recorded - so that it goes at most twice: once more when there is room again. The
-    save after an anomaly's send (its caller's, as it takes it off the list: notify() saves nothing
-    for an alert kept until sent) holds a smaller state than the one before it, so a disk whose free
-    space only this plugin changes has room for it. Free space other writes take in between (a log
-    on /var) can still fail it: the anomaly in flight then goes again once there is room. A retry or a
-    drop only makes the state smaller: one save a run is enough, the first if nothing has saved it."""
+    first, before a new one is first tried: the state is saved as it will be if the send goes and the
+    save after it fails - the anomaly pending and the last id past it, the reset kept and its boot
+    recorded, the gateway's or tunnel's new state recorded - so that a disk full by then holds it
+    back. The save after the send (the caller's, as it takes the alert off its list: notify() saves
+    nothing for an alert kept until sent) holds no more than the one before it, but it can still
+    fail: the file it replaces may be smaller (the state grew earlier in the pass), and other writes -
+    the send's history line, a log on /var - take room in between. An anomaly or a reset in flight
+    then goes again once there is room; a gateway's or a tunnel's change, its new state kept, is not
+    said again. Before a retry or a drop one save a run is made, the first if nothing has saved it:
+    where a later save fails, a retried alert may go again, and a drop's history line be written
+    again, once there is room."""
     if state.unsaved:
         return False
     if first or not state.save_tried:
@@ -564,7 +568,7 @@ def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=
     the quiet time and not every minute. record is as deliver()'s.
 
     Past the running collector's cap the alert is not tried: HELD for every channel. An alert the
-    collector keeps until it is sent (defer: an outbox file, an anomaly) is then simply left for the
+    collector keeps until it is sent (defer: an outbox file, an anomaly, a watchdog reset) is then left for the
     next minute - no history line, no quiet time; any other is counted, and named, in the collector's
     one history line and summary alert for what it held (run_collectors).
 
@@ -682,6 +686,26 @@ def gateway_reads():
     return reads
 
 
+def kept_before(state, entries, key, before, what):
+    """Whether a change track() has just found may be said: the state is saved first (can_keep()), as
+    one said while it cannot be saved would be said again each minute, each run reading the reads
+    before it. When that save fails, the entry is put back as it was before this read (before: a copy,
+    or None for one followed from this read on), so that the change is said once there is room - when
+    its new state has held on two reads."""
+    if can_keep(state, what, first=True):
+        return True
+    if before is None:
+        entries.pop(key, None)
+    else:
+        entries[key] = before
+    return False
+
+
+def entry_copy(entries, key):
+    """a copy of a followed thing's entry, to put back (kept_before()); None for one not followed yet"""
+    return json.loads(json.dumps(entries[key])) if isinstance(entries.get(key), dict) else None
+
+
 def collect_gateways(settings, state, now):
     first = state.first('gateway')
     entries = state.get('gateway')
@@ -692,8 +716,9 @@ def collect_gateways(settings, state, now):
     send = wanted(settings, 'gateway_alert') and not first
     t = nr.texts(settings.get('language'))
     for name, read in sorted(reads.items()):
+        before = entry_copy(entries, name)
         said = track(entries, name, read, now, flapping=True)
-        if not said or not send:
+        if not said or not send or not kept_before(state, entries, name, before, 'gateway'):
             continue
         facts = {'gateway': name, 'state': said[0]}
         if said[0] == 'down':
@@ -1231,9 +1256,10 @@ def collect_vpn(settings, state, now):
     send = wanted(settings, 'vpn_alert') and not first
     t = nr.texts(settings.get('language'))
     for key, (name, read) in sorted(reads.items()):
+        before = entry_copy(entries, key)
         said = track(entries, key, read, now)
         entries[key]['name'] = name
-        if not said or not send:
+        if not said or not send or not kept_before(state, entries, key, before, 'vpn'):
             continue
         facts = {'connection': name, 'state': said[0]}
         if said[0] == 'down':
@@ -1252,17 +1278,37 @@ def collect_vpn(settings, state, now):
 
 RESET_REASON = '/var/db/os-watchdog/reset-reason.json'
 WATCHDOG_BIT = 25               # AMD: "the hardware watchdog expired"
+RESETS_KEPT = 10                # resets kept for a retry at most
 
 
-def collect_watchdog(settings, state, now):
-    first = state.first('watchdog')
-    st = state.get('watchdog')
-    record = nr.load_json(RESET_REASON, None)
-    if not isinstance(record, dict) or 'boot' not in record:
-        return
+def send_reset(settings, state, entry, now, was_failing):
+    """one kept reset to the channels, in the language set when it is tried: SENT, HELD (past the
+    collector's cap or the pass deadline, not tried) or 'failed'"""
+    t = nr.texts(settings.get('language'))
+    reasons = [str(r) for r in entry.get('reasons') or []] or [t['unknown']]
+    facts = {'boot': entry['boot'], 'reasons': reasons, 'value': entry.get('value'), 'read_at': entry.get('read_at')}
+    results = notify(settings, state, 'watchdog', entry['boot'], subject_of(t, settings, 'wd_subject'),
+                     t['wd_text'].format(time=local_time(time_of(entry.get('when'), now)),
+                                         reasons=t.get('list_sep', ', ').join(reasons)),
+                     facts, now=now, quiet=0, priority='high', tags=['warning'], record=retried(was_failing),
+                     defer=True)
+    return SENT if was_sent(results) else HELD if waits(results) else 'failed'
+
+
+def try_reset(settings, state, entry, now, was_failing):
+    """send_reset(); one that raises stays kept, as a failure"""
+    try:
+        return send_reset(settings, state, entry, now, was_failing)
+    except Exception as exc:
+        nr.log(f'watchdog reset of boot {entry.get("boot")} could not be sent: {exc}')
+        return 'failed'
+
+
+def new_reset(settings, state, st, record, now, alert):
+    """a boot os-watchdog has a new record of: recorded, and when the watchdog caused its reset (and
+    alert says to tell it), kept and tried - saved as kept first (can_keep()); where that save fails,
+    the boot is put back as it was, and the reset waits for a run that can save it"""
     boot = str(record.get('boot'))
-    if st.get('boot') == boot:
-        return
     old_boot = st.get('boot')
     st['boot'] = boot
     bits = [b for b in record.get('bits') or [] if isinstance(b, dict)]
@@ -1273,28 +1319,71 @@ def collect_watchdog(settings, state, now):
     else:
         # a record kept before os-watchdog wrote the field: bit 25 among its bits
         by_watchdog = any(str(b.get('bit')) == str(WATCHDOG_BIT) for b in bits)
-    if first or not by_watchdog or not wanted(settings, 'watchdog_alert'):
+    if not alert or not by_watchdog:
         return
-    # the boot saved before the alert goes: one sent while the state cannot be saved would go again
-    # each minute (it has no quiet time), the next run reading the boot before
-    if not can_keep(state, 'watchdog', first=True):
+    read_at = record.get('read_at')
+    entry = {'boot': boot, 'when': time_of(read_at, now), 'reasons': [str(b.get('reason') or b.get('bit')) for b in bits],
+             'value': record.get('value'), 'read_at': read_at, 'since': now, 'failed': False}
+    st['pending'].append(entry)
+    if may_hand_on(state) and channels_set(settings) and not can_keep(state, 'watchdog', first=True):
+        without(st['pending'], entry)
         if old_boot is None:
             st.pop('boot', None)
         else:
             st['boot'] = old_boot
         return
-    t = nr.texts(settings.get('language'))
-    reasons = [str(b.get('reason') or b.get('bit')) for b in bits] or [t['unknown']]
-    read_at = record.get('read_at')
-    try:
-        when = float(read_at) if isinstance(read_at, (int, float)) else \
-            datetime.datetime.fromisoformat(str(read_at).replace('Z', '+00:00')).timestamp()
-    except (TypeError, ValueError):
-        when = now
-    facts = {'boot': boot, 'reasons': reasons, 'value': record.get('value'), 'read_at': read_at}
-    notify(settings, state, 'watchdog', boot, subject_of(t, settings, 'wd_subject'),
-           t['wd_text'].format(time=local_time(when), reasons=t.get('list_sep', ', ').join(reasons)), facts, now=now,
-           quiet=0, priority='high', tags=['warning'])
+    result = try_reset(settings, state, entry, now, False)
+    if result == SENT:
+        without(st['pending'], entry)
+        save_or_log(state, 'watchdog')
+    else:
+        entry['failed'] = result != HELD
+
+
+def retry_resets(settings, state, st, now, send, old):
+    """the resets kept before this run, tried again while the cap leaves room; then those 24 hours
+    old dropped, and the oldest past RESETS_KEPT - only where the state can be saved, as the
+    anomalies' are (retry_anomalies())"""
+    pending = st['pending']
+    for p in old:
+        if send and channels_set(settings) and may_hand_on(state) and can_keep(state, 'watchdog'):
+            result = try_reset(settings, state, p, now, p.get('failed', True))
+            if result == SENT:
+                without(pending, p)
+                save_or_log(state, 'watchdog')
+                continue
+            p['failed'] = p.get('failed', True) or result != HELD
+    still = {id(p) for p in pending}
+    expired = [p for p in old if id(p) in still and now - (p.get('since') or now) >= OUTBOX_MAX_AGE]
+    if (expired or len(pending) - len(expired) > RESETS_KEPT) and not can_keep(state, 'watchdog'):
+        return
+    subject = subject_of(nr.texts(settings.get('language')), settings, 'wd_subject')
+    for p in expired:
+        without(pending, p)
+        dropped(subject, f'watchdog reset of boot {p.get("boot")} dropped: not sent within 24 hours')
+    over = len(pending) - RESETS_KEPT
+    if over > 0:
+        del pending[:over]
+        detail = f'watchdog: {over} resets dropped unsent, the oldest: more than {RESETS_KEPT} were waiting'
+        nr.log(detail)
+        dropped(subject, detail)
+
+
+def collect_watchdog(settings, state, now):
+    """A reset the hardware watchdog caused, from os-watchdog's record of the boot: one alert, kept
+    until a channel takes it - tried again each minute (silently after its first failure, as an
+    anomaly is) and dropped after 24 hours - so that one tried in the first minutes after the boot,
+    before the WAN is up, is not lost, nor one a run was killed sending. It is saved as kept, with its
+    boot, before it is first tried: while the state cannot be saved (a full /var), none goes."""
+    first = state.first('watchdog')
+    st = state.get('watchdog')
+    st['pending'] = [p for p in st.get('pending') or [] if isinstance(p, dict) and isinstance(p.get('boot'), str)]
+    old = list(st['pending'])
+    send = wanted(settings, 'watchdog_alert')
+    record = nr.load_json(RESET_REASON, None)
+    if isinstance(record, dict) and 'boot' in record and st.get('boot') != str(record.get('boot')):
+        new_reset(settings, state, st, record, now, send and not first)
+    retry_resets(settings, state, st, now, send, old)
 
 
 # ---------------------------------------------------------------- a device reaching a command-and-control list
