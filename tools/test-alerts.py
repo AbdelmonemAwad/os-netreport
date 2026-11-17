@@ -914,10 +914,10 @@ alerts.RESET_REASON = os.path.join(TOP, 'reset-reason.json')
 reset()
 
 
-def reset_record(boot, bits=(), watchdog=None):
+def reset_record(boot, bits=(), watchdog='absent'):
     record = {'boot': boot, 'read_at': stamp(CLOCK), 'value': '0x02000000', 'cleared': True, 'after': 0,
               'read_by': 'os-watchdog', 'bits': [{'bit': b, 'reason': r} for b, r in bits]}
-    if watchdog is not None:
+    if watchdog != 'absent':
         record['watchdog'] = watchdog
     alerts.save_json(alerts.RESET_REASON, record)
 
@@ -935,6 +935,11 @@ reset_record('boot-3', [], watchdog=True)
 check('watchdog: "watchdog": true is enough', [s['facts']['boot'] for s in sent_by(alerts.collect_watchdog)], ['boot-3'])
 reset_record('boot-4', [(3, 'example reason')])
 check('watchdog: another reset is not an alert', sent_by(alerts.collect_watchdog), [])
+reset_record('boot-5', [WD], watchdog=None)
+unknown = sent_by(alerts.collect_watchdog)
+reset_record('boot-6', [WD], watchdog=False)
+check('watchdog: where os-watchdog\'s record has the field, it rules: null (it cannot tell) or false, with bit 25 among '
+      'the bits, is not an alert', (unknown, sent_by(alerts.collect_watchdog)), ([], []))
 
 # ---------------------------------------------------------------- 4. command-and-control lists
 
@@ -977,6 +982,7 @@ blocked('192.0.2.60', rule='feodo in')                  # the inbound rule
 blocked('192.0.2.61', rule='spamhaus_drop out')         # a list that is not command-and-control
 blocked('192.0.2.62', action='pass')
 blocked('192.0.2.63', rid='f' * 32)                     # a rule this ruleset does not know
+blocked('192.0.2.64', dst='192.0.2.1')                  # to the firewall's own address, on a list: no server reached
 sent = sent_by(alerts.collect_c2)
 check('C2: a device of the local network on a C2 list: one alert at once', [s['facts']['address'] for s in sent], ['192.0.2.50'])
 check('C2: its name, MAC, list and destination', sent[0]['text'] if sent else None,
@@ -1308,10 +1314,10 @@ except KeyboardInterrupt:
 finally:
     alerts.send_anomaly = saved_send_anomaly
 kept = nr.load_json(alerts.STATE_FILE, {})['xgs']
-check('anomaly: a run killed half way has kept the last id of what it sent', (kept['last_id'], kept.get('pending')),
-      (FIRST + 5, []))
-check('anomaly: ... and the next sends the rest', [s['facts']['id'] for s in run_pass([('xgs', alerts.collect_xgs)])],
-      [FIRST + 6, FIRST + 7, FIRST + 8])
+check('anomaly: a run killed sending one has kept it pending, the last id past it',
+      (kept['last_id'], [p['rec']['id'] for p in kept.get('pending')]), (FIRST + 6, [FIRST + 6]))
+check('anomaly: ... and the next sends the rest, then that one', [s['facts']['id'] for s in run_pass([('xgs', alerts.collect_xgs)])],
+      [FIRST + 7, FIRST + 8, FIRST + 6])
 # an anomaly carrying a lone surrogate (a \ud800 escape in its line): the state is saved all the same
 FIRST += 10
 with open(alerts.XGS_ANOMALY, 'w', encoding='utf-8', newline='\n') as fh:
@@ -1670,7 +1676,119 @@ try:
 finally:
     alerts.State.save = REAL_SAVE
 check('a disk that fills as anomalies go: the first goes, then none while it is full; with room again only that one '
-      'goes twice', filling + [xgs_pass()], [[FIRST + 3], [], [FIRST + 3, FIRST + 4, FIRST + 5]])
+      'goes twice, after the others', filling + [xgs_pass()], [[FIRST + 3], [], [FIRST + 4, FIRST + 5, FIRST + 3]])
+# a disk with room for the state as it is, and not for one more sent mark: saved as pending before it goes, the
+# anomaly needs more room than its send leaves, so nothing goes until there is room - not the same one each minute
+REAL_SAVE_JSON = alerts.save_json
+ROOM = {'bytes': None}
+
+
+def tight_disk(path, data):
+    if path == alerts.STATE_FILE and ROOM['bytes'] is not None and \
+            len(json.dumps(data, indent=1, ensure_ascii=True)) > ROOM['bytes']:
+        raise OSError(28, 'No space left on device')
+    REAL_SAVE_JSON(path, data)
+
+
+anomalies((FIRST + 6, stamp(CLOCK)), (FIRST + 7, stamp(CLOCK)))
+ROOM['bytes'] = len(json.dumps(nr.load_json(alerts.STATE_FILE, {}), indent=1, ensure_ascii=True)) + 20
+alerts.save_json = tight_disk
+try:
+    tight = [xgs_pass(), xgs_pass()]
+finally:
+    alerts.save_json = REAL_SAVE_JSON
+check('a disk with room for the state but not for one more mark: no anomaly goes, not one each minute; with room '
+      'again each once', tight + [xgs_pass(), xgs_pass()], [[], [], [FIRST + 6, FIRST + 7], []])
+# anomalies kept for a retry, on a full disk: none tried while it is full, each once when there is room
+reset()
+MAIL['fail'] = 'example mail failure'
+GENERAL.update(alert_webhook_url=BASE + '/fail', alert_ntfy_server='')
+anomalies((FIRST + 8, stamp(CLOCK)), (FIRST + 9, stamp(CLOCK)))
+try:
+    xgs_pass()
+finally:
+    MAIL['fail'] = None
+    GENERAL.update(alert_webhook_url=BASE + '/hook', alert_ntfy_server=BASE + '/ntfy/')
+kept_for_retry = [p['rec']['id'] for p in nr.load_json(alerts.STATE_FILE, {})['xgs'].get('pending')]
+DISK['room'] = 0
+alerts.State.save = disk
+try:
+    waiting = [xgs_pass(), xgs_pass()]
+finally:
+    alerts.State.save = REAL_SAVE
+check('anomalies kept for a retry, on a full disk: none goes; with room again each once',
+      (kept_for_retry, waiting + [xgs_pass(), xgs_pass()]), ([FIRST + 8, FIRST + 9], [[], [], [FIRST + 8, FIRST + 9], []]))
+# one kept for a retry 24 hours, on a full disk: not dropped - a drop the state cannot keep would be made, and its
+# history line written, each minute; with room again, dropped once
+reset()
+MAIL['fail'] = 'example mail failure'
+GENERAL.update(alert_webhook_url=BASE + '/fail', alert_ntfy_server='')
+try:
+    anomalies((FIRST + 10, stamp(CLOCK)))
+    xgs_pass()
+    aged = nr.load_json(alerts.STATE_FILE, {})
+    for p in aged['xgs']['pending']:
+        p['since'] = CLOCK - 25 * 3600
+    alerts.save_json(alerts.STATE_FILE, aged)
+    drop_line = '%s id %d dropped: not sent within 24 hours' % (alerts.XGS_ANOMALY, FIRST + 10)
+    DISK['room'] = 0
+    alerts.State.save = disk
+    try:
+        xgs_pass()
+        xgs_pass()
+    finally:
+        alerts.State.save = REAL_SAVE
+    drops_full = sum(h['detail'] == drop_line for h in history())
+    xgs_pass()
+    xgs_pass()
+finally:
+    MAIL['fail'] = None
+    GENERAL.update(alert_webhook_url=BASE + '/hook', alert_ntfy_server=BASE + '/ntfy/')
+check('one kept for a retry 24 hours, on a full disk: not dropped while it is full; with room again dropped once',
+      (drops_full, sum(h['detail'] == drop_line for h in history()), nr.load_json(alerts.STATE_FILE, {})['xgs'].get('pending')),
+      (0, 1, []))
+# the other collectors on a full disk: what they remember cannot be saved, and each run reads as if the one before
+# had not been. Failed logins: the same alert each minute while their lines are less than 10 minutes old, then
+# nothing (the last pass kept is then over 10 minutes old too: the log is read from its end)
+run_pass([('login', alerts.collect_logins)])        # the reader up to date, saved
+reset()
+append(audit(), ''.join(syslog_line(CLOCK + 30, 'audit', gui_line('admin', '203.0.113.50')) for _ in range(5)))
+DISK['room'] = 0
+alerts.State.save = disk
+try:
+    logins_full = [[x['facts']['address'] for x in run_pass([('login', alerts.collect_logins)])] for _ in range(12)]
+finally:
+    alerts.State.save = REAL_SAVE
+check('a full disk: a failed-login alert goes again each minute while its lines are under 10 minutes old, then not',
+      logins_full, [['203.0.113.50']] * 10 + [[]] * 2)
+# an intrusion alert the same
+run_pass([('ips', alerts.collect_ips)])
+reset()
+append(alerts.EVE_LOG, eve('ET EXAMPLE full disk', src='203.0.113.51', sid=6100))
+alerts.State.save = disk
+try:
+    ips_full = [[x['facts']['src'] for x in run_pass([('ips', alerts.collect_ips)])] for _ in range(12)]
+finally:
+    alerts.State.save = REAL_SAVE
+check('a full disk: an intrusion alert the same', ips_full, [['203.0.113.51']] * 10 + [[]] * 2)
+# a gateway that goes down: two reads in a row are needed and neither is kept, so nothing while the disk is full;
+# with room again, down on the second read, since the first
+GATEWAYS.clear()
+GATEWAYS.update({'WAN_FULL': 'none'})               # a gateway with no past here (no flapping window)
+for _ in range(3):
+    run_pass([('gateway', alerts.collect_gateways)])
+GATEWAYS.update({'WAN_FULL': 'down'})
+alerts.State.save = disk
+try:
+    gw_full = [run_pass([('gateway', alerts.collect_gateways)]) for _ in range(4)]
+finally:
+    alerts.State.save = REAL_SAVE
+first_read = CLOCK + 60
+gw_room = [run_pass([('gateway', alerts.collect_gateways)]) for _ in range(2)]
+check('a full disk: a gateway down is not said while it is full; with room again, on the second read, since the first',
+      (gw_full, [[x['facts']['state'] for x in p] for p in gw_room], gw_room[1][0]['text'] if gw_room[1] else None),
+      ([[]] * 4, [[], ['down']], 'Gateway WAN_FULL has been down since %s.' % alerts.local_time(first_read)))
+GATEWAYS.clear()
 
 # past the pass deadline: what is kept until sent waits for the next minute; any other alert is still sent
 TICK3 = [0.0]

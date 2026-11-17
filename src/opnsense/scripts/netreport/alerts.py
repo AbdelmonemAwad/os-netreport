@@ -157,8 +157,8 @@ class State:
         self.running, self.handed, self.held, self.held_subjects = None, 0, 0, []
         # this run only: the channels that timed out, not tried again in it
         self.slow = set()
-        # this run only: whether the last save of the state failed (a full /var: the state on disk is
-        # behind), and whether a save was tried at all (can_keep())
+        # this run only: whether a save of the state failed (a full /var: the state on disk is behind),
+        # and whether a save was tried at all (can_keep())
         self.unsaved, self.save_tried = False, False
 
     def first(self, name):
@@ -432,6 +432,13 @@ def room(state):
     return state is None or not state.running or state.handed < COLLECTOR_CAP
 
 
+def may_hand_on(state):
+    """whether an alert kept until sent can still be handed on: room under the collector's cap, and
+    the pass not past its deadline (notify() holds it otherwise)"""
+    past = getattr(state, 'past_deadline', None)
+    return room(state) and not (callable(past) and past())
+
+
 HELD_SHOWN = 5                  # subjects of held alerts named in their history line
 
 
@@ -516,8 +523,8 @@ def deliver(settings, alert, record=None, slow=None, kept=False):
 
 def save_or_log(state, what):
     """state.save(), a failure (a full /var) logged, not raised: what was delivered stays delivered.
-    Returns whether it saved; until one succeeds again, state.unsaved says the state on disk is
-    behind (can_keep())."""
+    Returns whether it saved. A failure stays in state.unsaved for the rest of the run: the
+    anomalies, which the state keeps until they are sent, wait for the next (can_keep())."""
     state.save_tried = True
     try:
         state.save()
@@ -525,19 +532,22 @@ def save_or_log(state, what):
         state.unsaved = True
         nr.log(f'{what}: the alert state could not be saved: {exc}')
         return False
-    state.unsaved = False
     return True
 
 
-def can_keep(state, what):
-    """Whether an anomaly may go out: only while the alert state can be saved. One sent while it
-    cannot would be sent again each minute, the next run reading the state as it was. The first in
-    a run, if nothing has saved the state yet, saves it as it is, to know; a save that failed, then
-    or after any alert, says no until one succeeds. The anomalies wait for a run that can save; at
-    most the one sent as the disk filled goes out twice."""
+def can_keep(state, what, first=False):
+    """Whether an anomaly may go out, or one kept for a retry be dropped: only while the alert state
+    can be saved. One sent while it cannot would be sent again each minute, the next run reading the
+    state as it was; once a save failed in a run, none goes for the rest of it.
+
+    first, for a new anomaly: the state is saved before it goes, as it will be if the send goes and
+    the save after it fails - the anomaly already pending, the last id past it - so that it goes at
+    most twice: retried once, when there is room. The state with it pending is larger than after
+    the send, so a disk with room for the first save has room for the second. A retry or a drop
+    only makes the state smaller: one save a run is enough, the first if nothing has saved it yet."""
     if state.unsaved:
         return False
-    if not state.save_tried:
+    if first or not state.save_tried:
         return save_or_log(state, what)
     return True
 
@@ -1248,7 +1258,13 @@ def collect_watchdog(settings, state, now):
         return
     st['boot'] = boot
     bits = [b for b in record.get('bits') or [] if isinstance(b, dict)]
-    by_watchdog = record.get('watchdog') is True or any(str(b.get('bit')) == str(WATCHDOG_BIT) for b in bits)
+    if 'watchdog' in record:
+        # os-watchdog says it: true only - false is another cause, null that it cannot tell (a bit an
+        # earlier boot left set, a register that answers nothing)
+        by_watchdog = record.get('watchdog') is True
+    else:
+        # a record kept before os-watchdog wrote the field: bit 25 among its bits
+        by_watchdog = any(str(b.get('bit')) == str(WATCHDOG_BIT) for b in bits)
     if first or not by_watchdog or not wanted(settings, 'watchdog_alert'):
         return
     t = nr.texts(settings.get('language'))
@@ -1401,6 +1417,11 @@ def collect_c2(settings, state, now):
             continue
         if source in own or not nr.started_inside(source, nets):
             continue
+        try:
+            if str(ipaddress.ip_address(rec.get('dst', ''))) in own:
+                continue                # the firewall itself, its address on a list: no server reached
+        except ValueError:
+            pass
         stamp = nr.line_time(line) or now
         if now - stamp > STALE_AFTER:
             continue                    # an old line (a backlog): neither alerted nor counted
@@ -1621,10 +1642,10 @@ def collect_xgs_anomaly(settings, state, now, send, first):
     again each minute (a failed one silently, as the outbox's files are; retry_anomalies()), and
     dropped after 24 hours. Returns the anomalies pending before this run, for retry_anomalies().
 
-    The last id moves, and the anomaly goes into the pending list, one anomaly at a time and before
-    it is sent; it leaves the list once sent. Every alert sent saves the state, so a record that
-    cannot be sent, or a run killed half way, loses none of the anomalies after it; and while the
-    state cannot be saved (a full /var), none is sent (can_keep())."""
+    The last id moves, and the anomaly goes into the pending list, one anomaly at a time; the state
+    is saved so before it is sent, and again once it is, out of the list. So a record that cannot
+    be sent loses none after it, and one a run was killed sending is tried again, after the new
+    ones; while the state cannot be saved (a full /var), none is sent (can_keep())."""
     st = state.get('xgs')
     pending = [p for p in st.get('pending') or [] if isinstance(p, dict) and isinstance(p.get('rec'), dict)]
     for p in pending:
@@ -1658,13 +1679,16 @@ def collect_xgs_anomaly(settings, state, now, send, first):
             for rec in sorted(records, key=lambda r: r['id']):
                 if rec['id'] <= st['last_id']:
                     continue
-                if send and not can_keep(state, XGS_ANOMALY):
+                if send and state.unsaved:
                     break                   # the state cannot be saved: the rest waits for a run that can
                 st['last_id'] = rec['id']
                 if not send:
                     continue
                 entry = {'rec': rec, 'since': now, 'failed': False}
                 pending.append(entry)
+                if may_hand_on(state) and channels_set(settings) and \
+                        not can_keep(state, f'{XGS_ANOMALY} id {rec["id"]}', first=True):
+                    break                   # pending, unsent: it goes when the state can be saved
                 result = try_anomaly(settings, state, entry, now, False)
                 if result == SENT:
                     without(pending, entry)
@@ -1675,20 +1699,26 @@ def collect_xgs_anomaly(settings, state, now, send, first):
 
 
 def retry_anomalies(settings, state, now, send, old):
-    """the anomalies pending before this run, tried again while the cap leaves room"""
+    """The anomalies pending before this run, tried again while the cap leaves room; then those 24
+    hours old dropped, and the oldest past PENDING_MAX - only where the state can be saved: a drop it
+    cannot keep would be made, and said in the history and the system log, again each minute."""
     pending = state.get('xgs').setdefault('pending', [])
     for p in old:
-        if send and channels_set(settings) and room(state) and can_keep(state, XGS_ANOMALY):
+        if send and channels_set(settings) and may_hand_on(state) and can_keep(state, XGS_ANOMALY):
             result = try_anomaly(settings, state, p, now, p.get('failed', True))
             if result == SENT:
                 without(pending, p)
                 save_or_log(state, f'{XGS_ANOMALY} id {p["rec"].get("id")}')
                 continue
             p['failed'] = p.get('failed', True) or result != HELD
-        if now - (p.get('since') or now) >= OUTBOX_MAX_AGE:
-            without(pending, p)
-            dropped(f'{XGS_ANOMALY} id {p["rec"].get("id")}', f'{XGS_ANOMALY} id {p["rec"].get("id")} dropped: '
-                    'not sent within 24 hours')
+    still = {id(p) for p in pending}
+    expired = [p for p in old if id(p) in still and now - (p.get('since') or now) >= OUTBOX_MAX_AGE]
+    if (expired or len(pending) - len(expired) > PENDING_MAX) and not can_keep(state, XGS_ANOMALY):
+        return
+    for p in expired:
+        without(pending, p)
+        dropped(f'{XGS_ANOMALY} id {p["rec"].get("id")}', f'{XGS_ANOMALY} id {p["rec"].get("id")} dropped: '
+                'not sent within 24 hours')
     over = len(pending) - PENDING_MAX
     if over > 0:
         # the oldest go: said once, with how many, in the system log and the history

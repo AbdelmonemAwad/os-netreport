@@ -82,8 +82,8 @@ off). They are written in the *Alert language*, with times in the firewall's loc
 | Repeated failed logins | One address failed to sign in to the web GUI, the API or SSH `login_fail_count` times within 10 minutes; the alert gives the count, the services, and how many different user names were tried with at most three of them cut to their first two characters (people type a password into the user field, so the names are never sent as they are). Every failed SSH try counts, several on one connection too; sshd's "Invalid user" and PAM's error beside a "Failed" line are the same try, and "Failed publickey" is not counted (an agent offering several keys logs it routinely). The address is the one at the end of the line, so a user name holding an address cannot put it in the alert. Then quiet for that address for 30 minutes. A failed API key is not counted: OPNsense logs no address for it. | `login_alert` (on), `login_fail_count` (5) |
 | Intrusion alert | Suricata logged an alert of high severity (or high and medium) in `eve.json`: one alert per signature and source with the action (allowed or blocked), the destinations and the count, then quiet 30 minutes for that pair. | `ips_alert` (on), `ips_severity` (high only) |
 | VPN tunnel down / back | An IPsec connection has no IKE session ESTABLISHED with a child SA INSTALLED (one still connecting, a peer that does not answer, is not up), a WireGuard peer's last handshake is 180 seconds old or older, an OpenVPN instance configured and enabled is not running (it exited, and took its management socket with it), its socket refuses, or a client instance is not connected; a server that is not running or refuses takes its clients down with it, and a client that left its server is down - with the same two reads as the gateways. A connection that has not been up since the plugin started following it is not reported down; a command that fails is unknown, never down. | `vpn_alert` (on) |
-| Hardware watchdog reset | os-watchdog recorded that the hardware watchdog caused the last restart (`/var/db/os-watchdog/reset-reason.json`); one alert per boot, with the reasons. | `watchdog_alert` (on) |
-| Command-and-control list | A device of the firewall's own networks (IPv4 or IPv6) tried to reach an address on a command-and-control list that os-blocklists blocks with its log on, on its rule `Block Lists: blocklists_<id> out` or `... from inside`; one alert the first time an address is seen, with its name and MAC where they are known, the list, the destination and the time. The device is also listed in the report's security section. | `c2_alert` (on) |
+| Hardware watchdog reset | os-watchdog recorded that the hardware watchdog caused the last restart (`/var/db/os-watchdog/reset-reason.json`): its field `watchdog` true, where the record has the field (false is another cause, null that it cannot tell: no alert), or else bit 25 among the record's bits; one alert per boot, with the reasons. | `watchdog_alert` (on) |
+| Command-and-control list | A device of the firewall's own networks (IPv4 or IPv6) tried to reach an address on a command-and-control list that os-blocklists blocks with its log on, on its rule `Block Lists: blocklists_<id> out` or `... from inside` (a connection to one of the firewall's own addresses, which a list may hold, is not counted); one alert the first time an address is seen, with its name and MAC where they are known, the list, the destination and the time. The device is also listed in the report's security section. | `c2_alert` (on) |
 | From other XGS plugins | What os-xgs-npu leaves for this plugin (below). | `xgs_alert` (on) |
 | New device | A device joined the local network for the first time (within five minutes). | `new_device_alert` (on) |
 
@@ -163,6 +163,12 @@ The same alert (its kind and key) is not sent twice within its quiet time, 30 mi
 otherwise above. What the layer remembers - quiet times, log offsets, states - is in
 `/var/db/netreport/alerts-state.json`.
 
+While `/var` is full that file cannot be saved, and each minute's run reads as if the one before
+had not been: a failed-login or intrusion alert goes again each minute while its log lines are
+less than 10 minutes old, then nothing; a gateway that goes down is not said until there is room
+again, then on the second read after it, with the first as its time; os-xgs-npu's alert files go
+once each (a file is removed once sent), and its anomalies wait (below).
+
 ### Files shared with other plugins
 
 - **Taken from os-xgs-npu** (neither existing is normal):
@@ -186,11 +192,12 @@ otherwise above. What the layer remembers - quiet times, log offsets, states - i
     lines), and dropped after 24 hours. At most 1000 are kept waiting; past that the oldest are
     dropped, and one line in the history and the system log says how many. The last id moves one
     anomaly at a time, as each is taken, so one that cannot be sent (it stays pending) or a run
-    stopped half way loses none after it. While the alert state cannot be saved (a full `/var`), no
-    anomaly is sent: the next run would read the state as it was and send it again, each minute.
-    They wait, and go once it can be saved; at most the one sent as the disk filled goes
-    twice. `at` is ISO 8601 or Unix seconds (milliseconds are recognised); an anomaly with a
-    time that is not one, or none a date can hold (a number of hundreds of digits), is sent with
+    stopped half way loses none after it (the one it was sending is tried again, after the new
+    ones). While the alert state cannot be saved (a full `/var`), no anomaly is sent: the next run
+    would read the state as it was and send it again, each minute. Each new one is saved as
+    waiting before it goes, so at most the one sent as the disk filled goes twice; they go once
+    there is room, and only then are those 24 hours old dropped. `at` is ISO 8601 or Unix seconds
+    (milliseconds are recognised); an anomaly with a time that is not one, or none a date can hold (a number of hundreds of digits), is sent with
     the time it was read.
   - In both, a lone surrogate (a `\ud800` escape, which no mail, system log or web page can
     carry) is replaced by `?` where the file or the line is read, in every key and value, so such
