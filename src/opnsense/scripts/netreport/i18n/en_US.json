@@ -188,5 +188,20 @@
  "mail_rejected": "Refused",
  "top_rejected": "Most refused senders",
  "web_slow": "Unbound's query database did not answer within 120 s.",
- "apps_partial": "Suricata's log was read for {n} s only: the counts above are from its first part."
+ "apps_partial": "Suricata's log was read for {n} s only: the counts above are from its first part.",
+ "audit": "📋 Audit log",
+ "audit_signins": "Sign-ins",
+ "audit_failed": "Failed sign-ins",
+ "audit_changes": "Configuration changes",
+ "audit_other": "Other audit log entries",
+ "audit_none": "This firewall has no audit log.",
+ "audit_newest": "The newest {n} of {total}.",
+ "audit_note": "From the firewall's audit log (System: Log Files: Audit): a record of the period, not a certificate of compliance. Of a user name typed at a failed sign-in, only the first two characters are shown.",
+ "audit_names": "User names tried",
+ "audit_time": "Time",
+ "audit_change": "Change",
+ "audit_entry": "Entry",
+ "only_device": "Device: {device}",
+ "only_iface": "Network: {name}",
+ "only_iface_off": "Network {name}: gone, or without an IPv4 address of its own - the devices shown are the Local network's"
 }

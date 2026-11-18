@@ -4,7 +4,6 @@
  "Alert language": "Varslingsspråk",
  "Alert sent": "Varsel sendt",
  "Alerts and thresholds": "Varsler og terskler",
- "Also attach the report as an HTML file, handy for keeping or forwarding.": "Legg også ved rapporten som HTML-fil, praktisk for lagring eller videresending.",
  "Arabic": "Arabisk",
  "Attach as file": "Legg ved som fil",
  "Backup age warning (days)": "Advarsel om alder på sikkerhetskopi (dager)",
@@ -20,7 +19,6 @@
  "Devices on this network are listed in the report and watched for new arrivals.": "Enheter i dette nettverket vises i rapporten, og nye enheter overvåkes.",
  "Disk usage warning (%)": "Advarsel om diskbruk (%)",
  "Download and upload together. Warns at 80% and 100%. 0 means unlimited.": "Nedlasting og opplasting samlet. Varsler ved 80 % og 100 %. 0 betyr ubegrenset.",
- "Each schedule sends one report. Use the eye button to preview it and the plane button to send it now.": "Hver plan sender én rapport. Bruk øyeknappen for forhåndsvisning og flyknappen for å sende den nå.",
  "Edit report schedule": "Rediger rapportplan",
  "Encryption": "Kryptering",
  "Enter a valid email address.": "Skriv inn en gyldig e-postadresse.",
@@ -163,5 +161,15 @@
  "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "For delen Applikasjoner: adressen til nettgrensesnittet til ntopng (os-ntopng). Tomt: http://127.0.0.1:3000, ntopng på denne brannmuren.",
  "ntopng API token": "ntopng API-token",
  "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "Valgfritt: et token laget i ntopng for REST-API-et. Med det viser delen Applikasjoner applikasjonene til ntopng etter trafikk; uten det, det Suricata registrerte. Lagres bare på denne brannmuren. La stå tomt for å beholde gjeldende token.",
- "Enter the token as ntopng shows it.": "Skriv inn tokenet slik ntopng viser det."
+ "Enter the token as ntopng shows it.": "Skriv inn tokenet slik ntopng viser det.",
+ "No attachment": "Ingen vedlegg",
+ "Audit log": "Revisjonslogg",
+ "One device only": "Bare én enhet",
+ "Optional: another network whose devices this report covers (devices and their usage). Empty: the Local network set on the Settings tab.": "Valgfritt: et annet nettverk hvis enheter denne rapporten dekker (enheter og bruken deres). Tomt: Lokalt nettverk angitt i fanen Innstillinger.",
+ "Optional: one address. The lists per device - DNS, web activity, devices and their usage, alerts on connections it opened, VPN sessions, the audit log - then show this device alone; the totals stay the network's.": "Valgfritt: én adresse. Listene per enhet – DNS, nettaktivitet, enheter og bruken deres, varsler om tilkoblinger den åpnet, VPN-økter, revisjonsloggen – viser da bare denne enheten; totalene forblir nettverkets.",
+ "Also attach the report as a file, handy for keeping or forwarding: HTML as the mail shows it, PDF for printing, or CSV with each table's rows for a spreadsheet. PDF is written with a font that has no Chinese, Japanese or Korean letters: a report in those languages is attached as HTML instead.": "Legg også ved rapporten som fil, praktisk for lagring eller videresending: HTML slik e-posten viser den, PDF for utskrift, eller CSV med radene i hver tabell for et regneark. PDF skrives med en skrift uten kinesiske, japanske eller koreanske tegn: en rapport på disse språkene legges ved som HTML i stedet.",
+ "Enter one address, for example 192.168.1.20.": "Skriv inn én adresse, for eksempel 192.168.1.20.",
+ "The report as a file, with its data as of now:": "Rapporten som fil, med dataene slik de er nå:",
+ "The file could not be made.": "Filen kunne ikke lages.",
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Hver plan sender én rapport. Bruk øyeknappen for forhåndsvisning, pilknappen for å laste den ned som HTML, PDF eller CSV, og flyknappen for å sende den nå."
 }

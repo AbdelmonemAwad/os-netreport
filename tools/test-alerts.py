@@ -143,7 +143,7 @@ def fake_mail_settings(settings):
             'sender': 'fw@example.com'}
 
 
-def fake_send_mail(ms, rcpt, subject, page, text, attach_name=None, before_send=None, after_send=None):
+def fake_send_mail(ms, rcpt, subject, page, text, attachment=None, before_send=None, after_send=None):
     if before_send:
         before_send()
     MAILS.append({'to': rcpt, 'subject': subject, 'html': page, 'text': text})

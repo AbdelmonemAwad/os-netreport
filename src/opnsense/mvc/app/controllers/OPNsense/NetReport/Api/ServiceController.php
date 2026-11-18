@@ -56,6 +56,31 @@ class ServiceController extends ApiControllerBase
     }
 
     /**
+     * the report for the schedule as a file to download, HTML, PDF or CSV: its name, type and bytes
+     * (base64), which the page saves
+     */
+    public function exportAction($uuid = null, $format = null)
+    {
+        if (!$this->validUuid($uuid)) {
+            return ['status' => 'failed', 'detail' => gettext('Save the schedule first.')];
+        }
+        $types = ['html' => 'text/html', 'pdf' => 'application/pdf', 'csv' => 'text/csv'];
+        if (!is_string($format) || !isset($types[$format])) {
+            return ['status' => 'failed'];
+        }
+        $response = json_decode($this->run('export', [$uuid, $format]), true);
+        /* a report in Chinese, Japanese or Korean comes back as HTML when PDF was asked for */
+        if (
+            !is_array($response) || ($response['status'] ?? '') !== 'ok' || !is_string($response['data'] ?? null) ||
+            !is_string($response['name'] ?? null) || !preg_match('/^network-report-[0-9-]+\.(html|pdf|csv)$/', $response['name'], $m) ||
+            ($response['type'] ?? '') !== $types[$m[1]]
+        ) {
+            return ['status' => 'failed', 'detail' => gettext('The file could not be made.')];
+        }
+        return ['status' => 'ok', 'name' => $response['name'], 'type' => $response['type'], 'data' => $response['data']];
+    }
+
+    /**
      * send the report for the schedule right now
      */
     public function sendAction($uuid = null)

@@ -188,5 +188,20 @@
  "mail_rejected": "Odrzucone",
  "top_rejected": "Najczęściej odrzucani nadawcy",
  "web_slow": "Baza zapytań Unbound nie odpowiedziała w ciągu 120 s.",
- "apps_partial": "Dziennik Suricaty czytano tylko przez {n} s: powyższe liczby pochodzą z jego pierwszej części."
+ "apps_partial": "Dziennik Suricaty czytano tylko przez {n} s: powyższe liczby pochodzą z jego pierwszej części.",
+ "audit": "📋 Dziennik audytu",
+ "audit_signins": "Logowania",
+ "audit_failed": "Nieudane logowania",
+ "audit_changes": "Zmiany konfiguracji",
+ "audit_other": "Inne wpisy dziennika audytu",
+ "audit_none": "Ta zapora nie ma dziennika audytu.",
+ "audit_newest": "Najnowsze {n} z {total}.",
+ "audit_note": "Z dziennika audytu zapory (System: Log Files: Audit): zapis z okresu, a nie certyfikat zgodności. Z nazwy użytkownika wpisanej przy nieudanym logowaniu pokazywane są tylko dwa pierwsze znaki.",
+ "audit_names": "Próbowane nazwy użytkowników",
+ "audit_time": "Czas",
+ "audit_change": "Zmiana",
+ "audit_entry": "Wpis",
+ "only_device": "Urządzenie: {device}",
+ "only_iface": "Sieć: {name}",
+ "only_iface_off": "Sieć {name}: nie istnieje lub nie ma własnego adresu IPv4 – pokazane urządzenia są z sieci lokalnej"
 }

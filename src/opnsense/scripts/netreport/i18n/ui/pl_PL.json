@@ -4,7 +4,6 @@
  "Alert language": "Język alertów",
  "Alert sent": "Alert wysłany",
  "Alerts and thresholds": "Alerty i progi",
- "Also attach the report as an HTML file, handy for keeping or forwarding.": "Dołącz też raport jako plik HTML, wygodny do przechowywania lub przekazywania.",
  "Arabic": "Arabski",
  "Attach as file": "Dołącz jako plik",
  "Backup age warning (days)": "Ostrzeżenie o wieku kopii zapasowej (dni)",
@@ -20,7 +19,6 @@
  "Devices on this network are listed in the report and watched for new arrivals.": "Urządzenia w tej sieci są wymieniane w raporcie, a pojawienie się nowych jest monitorowane.",
  "Disk usage warning (%)": "Ostrzeżenie o zajętości dysku (%)",
  "Download and upload together. Warns at 80% and 100%. 0 means unlimited.": "Pobieranie i wysyłanie łącznie. Ostrzega przy 80% i 100%. 0 oznacza brak limitu.",
- "Each schedule sends one report. Use the eye button to preview it and the plane button to send it now.": "Każdy harmonogram wysyła jeden raport. Przycisk z okiem pokazuje podgląd, a przycisk z samolotem wysyła raport od razu.",
  "Edit report schedule": "Edytuj harmonogram raportu",
  "Encryption": "Szyfrowanie",
  "Enter a valid email address.": "Podaj prawidłowy adres e-mail.",
@@ -163,5 +161,15 @@
  "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "Dla sekcji Aplikacje: adres interfejsu WWW ntopng (os-ntopng). Puste: http://127.0.0.1:3000, ntopng na tej zaporze.",
  "ntopng API token": "Token API ntopng",
  "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "Opcjonalnie: token utworzony w ntopng dla jego REST API. Z nim sekcja Aplikacje pokazuje aplikacje ntopng według ruchu; bez niego to, co zapisała Suricata. Przechowywany tylko na tej zaporze. Pozostaw puste, aby zachować obecny token.",
- "Enter the token as ntopng shows it.": "Wpisz token tak, jak pokazuje go ntopng."
+ "Enter the token as ntopng shows it.": "Wpisz token tak, jak pokazuje go ntopng.",
+ "No attachment": "Bez załącznika",
+ "Audit log": "Dziennik audytu",
+ "One device only": "Tylko jedno urządzenie",
+ "Optional: another network whose devices this report covers (devices and their usage). Empty: the Local network set on the Settings tab.": "Opcjonalnie: inna sieć, której urządzenia obejmuje ten raport (urządzenia i ich użycie). Puste: Sieć lokalna ustawiona na karcie Ustawienia.",
+ "Optional: one address. The lists per device - DNS, web activity, devices and their usage, alerts on connections it opened, VPN sessions, the audit log - then show this device alone; the totals stay the network's.": "Opcjonalnie: jeden adres. Listy dla urządzeń – DNS, aktywność w sieci WWW, urządzenia i ich użycie, alerty o połączeniach, które otworzyło, sesje VPN, dziennik audytu – pokazują wtedy tylko to urządzenie; sumy pozostają sumami całej sieci.",
+ "Also attach the report as a file, handy for keeping or forwarding: HTML as the mail shows it, PDF for printing, or CSV with each table's rows for a spreadsheet. PDF is written with a font that has no Chinese, Japanese or Korean letters: a report in those languages is attached as HTML instead.": "Dołącz też raport jako plik, wygodny do przechowywania lub przekazywania: HTML tak, jak pokazuje go poczta, PDF do druku lub CSV z wierszami każdej tabeli dla arkusza kalkulacyjnego. PDF jest pisany czcionką bez znaków chińskich, japońskich i koreańskich: raport w tych językach jest zamiast tego dołączany jako HTML.",
+ "Enter one address, for example 192.168.1.20.": "Wpisz jeden adres, na przykład 192.168.1.20.",
+ "The report as a file, with its data as of now:": "Raport jako plik, z danymi z tej chwili:",
+ "The file could not be made.": "Nie udało się utworzyć pliku.",
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Każdy harmonogram wysyła jeden raport. Przycisk z okiem pokazuje podgląd, przycisk ze strzałką pobiera raport jako HTML, PDF lub CSV, a przycisk z samolotem wysyła go od razu."
 }

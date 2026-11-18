@@ -188,5 +188,20 @@
  "mail_rejected": "Rechazados",
  "top_rejected": "Remitentes más rechazados",
  "web_slow": "La base de consultas de Unbound no respondió en 120 s.",
- "apps_partial": "El registro de Suricata se leyó solo durante {n} s: los recuentos de arriba son de su primera parte."
+ "apps_partial": "El registro de Suricata se leyó solo durante {n} s: los recuentos de arriba son de su primera parte.",
+ "audit": "📋 Registro de auditoría",
+ "audit_signins": "Inicios de sesión",
+ "audit_failed": "Inicios de sesión fallidos",
+ "audit_changes": "Cambios de configuración",
+ "audit_other": "Otras entradas del registro de auditoría",
+ "audit_none": "Este cortafuegos no tiene registro de auditoría.",
+ "audit_newest": "Las {n} más recientes de {total}.",
+ "audit_note": "Del registro de auditoría del cortafuegos (System: Log Files: Audit): un registro del periodo, no un certificado de cumplimiento. De un nombre de usuario escrito en un inicio de sesión fallido solo se muestran los dos primeros caracteres.",
+ "audit_names": "Nombres de usuario probados",
+ "audit_time": "Hora",
+ "audit_change": "Cambio",
+ "audit_entry": "Entrada",
+ "only_device": "Dispositivo: {device}",
+ "only_iface": "Red: {name}",
+ "only_iface_off": "Red {name}: ya no existe o no tiene dirección IPv4 propia; los dispositivos mostrados son los de la red local"
 }

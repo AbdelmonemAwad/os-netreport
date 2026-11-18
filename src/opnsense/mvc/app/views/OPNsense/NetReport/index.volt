@@ -132,6 +132,53 @@
                     title: "{{ lang._('Preview') }}",
                     sequence: 10
                 },
+                download: {
+                    method: function () {
+                        const uuid = $(this).data('row-id');
+                        const icon = $(this).find('span');
+                        const save = function (format, dialog) {
+                            dialog.close();
+                            icon.addClass('fa-spinner fa-pulse');
+                            ajaxGet('/api/netreport/service/export/' + uuid + '/' + format, {}, function (data) {
+                                icon.removeClass('fa-spinner fa-pulse');
+                                if (!data || data.status !== 'ok' || !data.data) {
+                                    BootstrapDialog.show({
+                                        type: BootstrapDialog.TYPE_WARNING,
+                                        title: "{{ lang._('Download') }}",
+                                        message: $('<div/>').text((data && data.detail) || "{{ lang._('The file could not be made.') }}").html(),
+                                        buttons: [{label: "{{ lang._('Close') }}", action: function (d) { d.close(); }}]
+                                    });
+                                    return;
+                                }
+                                const raw = atob(data.data);
+                                const bytes = new Uint8Array(raw.length);
+                                for (let i = 0; i < raw.length; i++) {
+                                    bytes[i] = raw.charCodeAt(i);
+                                }
+                                const link = document.createElement('a');
+                                link.href = window.URL.createObjectURL(new Blob([bytes], {type: data.type}));
+                                link.download = data.name;
+                                document.body.appendChild(link);
+                                link.click();
+                                link.remove();
+                                setTimeout(function () { window.URL.revokeObjectURL(link.href); }, 60000);
+                            });
+                        };
+                        BootstrapDialog.show({
+                            title: "{{ lang._('Download') }}",
+                            message: "{{ lang._('The report as a file, with its data as of now:') }}",
+                            buttons: [
+                                {label: 'HTML', action: function (dialog) { save('html', dialog); }},
+                                {label: 'PDF', action: function (dialog) { save('pdf', dialog); }},
+                                {label: 'CSV', action: function (dialog) { save('csv', dialog); }},
+                                {label: "{{ lang._('Close') }}", action: function (dialog) { dialog.close(); }}
+                            ]
+                        });
+                    },
+                    classname: 'fa fa-fw fa-download',
+                    title: "{{ lang._('Download') }}",
+                    sequence: 15
+                },
                 send: {
                     method: function () {
                         const uuid = $(this).data('row-id');
@@ -331,9 +378,9 @@
 <div class="tab-content content-box">
     <div id="schedules" class="tab-pane fade in">
         <div class="text-muted" style="padding: 10px 15px 0;">
-            {{ lang._('Each schedule sends one report. Use the eye button to preview it and the plane button to send it now.') }}
+            {{ lang._('Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.') }}
         </div>
-        {{ partial('layout_partials/base_bootgrid_table', formGridSchedule + {'command_width': '160'}) }}
+        {{ partial('layout_partials/base_bootgrid_table', formGridSchedule + {'command_width': '190'}) }}
     </div>
     <div id="settings" class="tab-pane fade in">
         {{ partial("layout_partials/base_form", ['fields': generalForm, 'id': 'frm_general']) }}

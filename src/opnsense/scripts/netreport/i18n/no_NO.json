@@ -188,5 +188,20 @@
  "mail_rejected": "Avvist",
  "top_rejected": "Mest avviste avsendere",
  "web_slow": "Spørringsdatabasen til Unbound svarte ikke innen 120 s.",
- "apps_partial": "Loggen til Suricata ble bare lest i {n} s: tallene over er fra den første delen."
+ "apps_partial": "Loggen til Suricata ble bare lest i {n} s: tallene over er fra den første delen.",
+ "audit": "📋 Revisjonslogg",
+ "audit_signins": "Pålogginger",
+ "audit_failed": "Mislykkede pålogginger",
+ "audit_changes": "Konfigurasjonsendringer",
+ "audit_other": "Andre oppføringer i revisjonsloggen",
+ "audit_none": "Denne brannmuren har ingen revisjonslogg.",
+ "audit_newest": "De {n} nyeste av {total}.",
+ "audit_note": "Fra brannmurens revisjonslogg (System: Log Files: Audit): en oversikt over perioden, ikke et samsvarssertifikat. Av et brukernavn skrevet ved en mislykket pålogging vises bare de to første tegnene.",
+ "audit_names": "Brukernavn som ble prøvd",
+ "audit_time": "Tid",
+ "audit_change": "Endring",
+ "audit_entry": "Oppføring",
+ "only_device": "Enhet: {device}",
+ "only_iface": "Nettverk: {name}",
+ "only_iface_off": "Nettverk {name}: finnes ikke lenger eller har ingen egen IPv4-adresse – enhetene som vises, er det lokale nettverkets"
 }

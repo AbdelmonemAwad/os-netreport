@@ -33,11 +33,18 @@ for f in $(find "${HERE}/src" -name '*.php'); do
 done
 python3 -m py_compile /usr/local/opnsense/scripts/netreport/netreport.py
 python3 -m py_compile /usr/local/opnsense/scripts/netreport/alerts.py
+python3 -m py_compile /usr/local/opnsense/scripts/netreport/pdf.py
 
 # Where the page goes in the menu: XGS when os-xgs-npu is installed, Reporting when it is not.
 # OPNsense's menu file takes no condition, so place-menu.sh writes it from menu/ and says which.
 chmod 755 /usr/local/opnsense/scripts/netreport/place-menu.sh
 MENUPLACE=$(/usr/local/opnsense/scripts/netreport/place-menu.sh)
+
+# the model's migrations, as the package's post-install runs them: a schedule saved before 1.2.0 had
+# "Attach as file" as a checkbox, now the file's format (Migrations/M1_2_0.php)
+if [ -f /usr/local/opnsense/mvc/script/run_migrations.php ]; then
+	/usr/local/opnsense/mvc/script/run_migrations.php OPNsense/NetReport > /dev/null
+fi
 
 # reload configd actions, menu and ACL caches (in /var/lib/php/tmp on 26.7, /tmp before it)
 service configd restart > /dev/null

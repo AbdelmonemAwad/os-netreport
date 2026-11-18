@@ -4,7 +4,6 @@
  "Alert language": "Sprache der Benachrichtigungen",
  "Alert sent": "Benachrichtigung gesendet",
  "Alerts and thresholds": "Benachrichtigungen und Schwellwerte",
- "Also attach the report as an HTML file, handy for keeping or forwarding.": "Den Bericht zusätzlich als HTML-Datei anhängen, praktisch zum Aufbewahren oder Weiterleiten.",
  "Arabic": "Arabisch",
  "Attach as file": "Als Datei anhängen",
  "Backup age warning (days)": "Warnung bei Sicherungsalter (Tage)",
@@ -20,7 +19,6 @@
  "Devices on this network are listed in the report and watched for new arrivals.": "Geräte in diesem Netzwerk werden im Bericht aufgeführt und auf neu hinzukommende Geräte überwacht.",
  "Disk usage warning (%)": "Warnung bei Festplattenbelegung (%)",
  "Download and upload together. Warns at 80% and 100%. 0 means unlimited.": "Download und Upload zusammen. Warnt bei 80 % und 100 %. 0 bedeutet unbegrenzt.",
- "Each schedule sends one report. Use the eye button to preview it and the plane button to send it now.": "Jeder Zeitplan sendet einen Bericht. Mit der Augen-Schaltfläche zeigen Sie eine Vorschau an, mit der Flugzeug-Schaltfläche senden Sie ihn sofort.",
  "Edit report schedule": "Berichtszeitplan bearbeiten",
  "Encryption": "Verschlüsselung",
  "Enter a valid email address.": "Geben Sie eine gültige E-Mail-Adresse ein.",
@@ -163,5 +161,15 @@
  "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "Für den Abschnitt Anwendungen: die Adresse der Weboberfläche von ntopng (os-ntopng). Leer: http://127.0.0.1:3000, ntopng auf dieser Firewall.",
  "ntopng API token": "ntopng-API-Token",
  "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "Optional: ein in ntopng für seine REST-API erstelltes Token. Damit zeigt der Abschnitt Anwendungen die Anwendungen von ntopng nach Datenverkehr; ohne es das, was Suricata aufgezeichnet hat. Nur auf dieser Firewall gespeichert. Leer lassen, um das aktuelle Token zu behalten.",
- "Enter the token as ntopng shows it.": "Geben Sie das Token so ein, wie ntopng es anzeigt."
+ "Enter the token as ntopng shows it.": "Geben Sie das Token so ein, wie ntopng es anzeigt.",
+ "No attachment": "Kein Anhang",
+ "Audit log": "Audit-Protokoll",
+ "One device only": "Nur ein Gerät",
+ "Optional: another network whose devices this report covers (devices and their usage). Empty: the Local network set on the Settings tab.": "Optional: ein anderes Netzwerk, dessen Geräte dieser Bericht abdeckt (Geräte und ihre Nutzung). Leer: das Lokale Netzwerk aus dem Reiter Einstellungen.",
+ "Optional: one address. The lists per device - DNS, web activity, devices and their usage, alerts on connections it opened, VPN sessions, the audit log - then show this device alone; the totals stay the network's.": "Optional: eine Adresse. Die Listen pro Gerät – DNS, Webaktivität, Geräte und ihre Nutzung, Warnungen zu Verbindungen, die es geöffnet hat, VPN-Sitzungen, das Audit-Protokoll – zeigen dann nur dieses Gerät; die Summen bleiben die des ganzen Netzwerks.",
+ "Also attach the report as a file, handy for keeping or forwarding: HTML as the mail shows it, PDF for printing, or CSV with each table's rows for a spreadsheet. PDF is written with a font that has no Chinese, Japanese or Korean letters: a report in those languages is attached as HTML instead.": "Den Bericht zusätzlich als Datei anhängen, praktisch zum Aufbewahren oder Weiterleiten: HTML so, wie die E-Mail ihn zeigt, PDF zum Drucken oder CSV mit den Zeilen jeder Tabelle für eine Tabellenkalkulation. PDF wird mit einer Schrift ohne chinesische, japanische und koreanische Zeichen geschrieben: Ein Bericht in diesen Sprachen wird stattdessen als HTML angehängt.",
+ "Enter one address, for example 192.168.1.20.": "Geben Sie eine Adresse ein, zum Beispiel 192.168.1.20.",
+ "The report as a file, with its data as of now:": "Der Bericht als Datei, mit den Daten von jetzt:",
+ "The file could not be made.": "Die Datei konnte nicht erstellt werden.",
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Jeder Zeitplan sendet einen Bericht. Mit der Augen-Schaltfläche zeigen Sie eine Vorschau an, mit der Pfeil-Schaltfläche laden Sie ihn als HTML, PDF oder CSV herunter, mit der Flugzeug-Schaltfläche senden Sie ihn sofort."
 }

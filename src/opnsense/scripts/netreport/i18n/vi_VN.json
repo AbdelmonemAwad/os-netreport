@@ -188,5 +188,20 @@
  "mail_rejected": "Bị từ chối",
  "top_rejected": "Người gửi bị từ chối nhiều nhất",
  "web_slow": "Cơ sở dữ liệu truy vấn của Unbound không phản hồi trong 120 giây.",
- "apps_partial": "Nhật ký của Suricata chỉ được đọc trong {n} giây: các số ở trên là từ phần đầu của nó."
+ "apps_partial": "Nhật ký của Suricata chỉ được đọc trong {n} giây: các số ở trên là từ phần đầu của nó.",
+ "audit": "📋 Nhật ký kiểm tra",
+ "audit_signins": "Lần đăng nhập",
+ "audit_failed": "Lần đăng nhập thất bại",
+ "audit_changes": "Thay đổi cấu hình",
+ "audit_other": "Các mục khác trong nhật ký kiểm tra",
+ "audit_none": "Tường lửa này không có nhật ký kiểm tra.",
+ "audit_newest": "{n} mục mới nhất trong {total}.",
+ "audit_note": "Từ nhật ký kiểm tra của tường lửa (System: Log Files: Audit): bản ghi của khoảng thời gian, không phải chứng nhận tuân thủ. Với tên người dùng được gõ khi đăng nhập thất bại, chỉ hiển thị hai ký tự đầu.",
+ "audit_names": "Tên người dùng đã thử",
+ "audit_time": "Thời gian",
+ "audit_change": "Thay đổi",
+ "audit_entry": "Mục",
+ "only_device": "Thiết bị: {device}",
+ "only_iface": "Mạng: {name}",
+ "only_iface_off": "Mạng {name}: không còn hoặc không có địa chỉ IPv4 riêng – thiết bị hiển thị là của mạng cục bộ"
 }

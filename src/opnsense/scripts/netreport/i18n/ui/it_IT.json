@@ -4,7 +4,6 @@
  "Alert language": "Lingua degli avvisi",
  "Alert sent": "Avviso inviato",
  "Alerts and thresholds": "Avvisi e soglie",
- "Also attach the report as an HTML file, handy for keeping or forwarding.": "Allega anche il report come file HTML, comodo da conservare o inoltrare.",
  "Arabic": "Arabo",
  "Attach as file": "Allega come file",
  "Backup age warning (days)": "Avviso età backup (giorni)",
@@ -20,7 +19,6 @@
  "Devices on this network are listed in the report and watched for new arrivals.": "I dispositivi di questa rete sono elencati nel report e monitorati per rilevare nuovi arrivi.",
  "Disk usage warning (%)": "Avviso utilizzo disco (%)",
  "Download and upload together. Warns at 80% and 100%. 0 means unlimited.": "Download e upload insieme. Avvisa all'80% e al 100%. 0 significa illimitato.",
- "Each schedule sends one report. Use the eye button to preview it and the plane button to send it now.": "Ogni pianificazione invia un report. Usa il pulsante con l'occhio per l'anteprima e quello con l'aereo per inviarlo subito.",
  "Edit report schedule": "Modifica pianificazione report",
  "Encryption": "Crittografia",
  "Enter a valid email address.": "Inserisci un indirizzo email valido.",
@@ -163,5 +161,15 @@
  "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "Per la sezione Applicazioni: l’indirizzo dell’interfaccia web di ntopng (os-ntopng). Vuoto: http://127.0.0.1:3000, ntopng su questo firewall.",
  "ntopng API token": "Token API di ntopng",
  "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "Facoltativo: un token creato in ntopng per la sua API REST. Con esso, la sezione Applicazioni mostra le applicazioni di ntopng per traffico; senza, ciò che Suricata ha registrato. Conservato solo su questo firewall. Lascia vuoto per mantenere il token attuale.",
- "Enter the token as ntopng shows it.": "Inserisci il token come lo mostra ntopng."
+ "Enter the token as ntopng shows it.": "Inserisci il token come lo mostra ntopng.",
+ "No attachment": "Nessun allegato",
+ "Audit log": "Registro di audit",
+ "One device only": "Un solo dispositivo",
+ "Optional: another network whose devices this report covers (devices and their usage). Empty: the Local network set on the Settings tab.": "Facoltativo: un'altra rete di cui questo report copre i dispositivi (dispositivi e loro utilizzo). Vuoto: la Rete locale impostata nella scheda Impostazioni.",
+ "Optional: one address. The lists per device - DNS, web activity, devices and their usage, alerts on connections it opened, VPN sessions, the audit log - then show this device alone; the totals stay the network's.": "Facoltativo: un indirizzo. Gli elenchi per dispositivo – DNS, attività web, dispositivi e loro utilizzo, avvisi sulle connessioni che ha aperto, sessioni VPN, registro di audit – mostrano allora solo questo dispositivo; i totali restano quelli della rete.",
+ "Also attach the report as a file, handy for keeping or forwarding: HTML as the mail shows it, PDF for printing, or CSV with each table's rows for a spreadsheet. PDF is written with a font that has no Chinese, Japanese or Korean letters: a report in those languages is attached as HTML instead.": "Allega anche il report come file, comodo da conservare o inoltrare: HTML come lo mostra l'e-mail, PDF per la stampa o CSV con le righe di ogni tabella per un foglio di calcolo. Il PDF è scritto con un carattere senza lettere cinesi, giapponesi o coreane: un report in queste lingue viene allegato invece come HTML.",
+ "Enter one address, for example 192.168.1.20.": "Inserisci un indirizzo, ad esempio 192.168.1.20.",
+ "The report as a file, with its data as of now:": "Il report come file, con i dati di adesso:",
+ "The file could not be made.": "Non è stato possibile creare il file.",
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Ogni pianificazione invia un report. Usa il pulsante con l'occhio per l'anteprima, quello con la freccia per scaricarlo come HTML, PDF o CSV e quello con l'aereo per inviarlo subito."
 }

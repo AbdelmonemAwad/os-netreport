@@ -4,7 +4,6 @@
  "Alert language": "Ngôn ngữ cảnh báo",
  "Alert sent": "Cảnh báo đã gửi",
  "Alerts and thresholds": "Cảnh báo và ngưỡng",
- "Also attach the report as an HTML file, handy for keeping or forwarding.": "Đính kèm thêm báo cáo dưới dạng tệp HTML, tiện để lưu trữ hoặc chuyển tiếp.",
  "Arabic": "Tiếng Ả Rập",
  "Attach as file": "Đính kèm dạng tệp",
  "Backup age warning (days)": "Cảnh báo tuổi bản sao lưu (ngày)",
@@ -20,7 +19,6 @@
  "Devices on this network are listed in the report and watched for new arrivals.": "Các thiết bị trong mạng này được liệt kê trong báo cáo và được theo dõi để phát hiện thiết bị mới.",
  "Disk usage warning (%)": "Cảnh báo dung lượng ổ đĩa (%)",
  "Download and upload together. Warns at 80% and 100%. 0 means unlimited.": "Tổng tải xuống và tải lên. Cảnh báo ở mức 80% và 100%. 0 là không giới hạn.",
- "Each schedule sends one report. Use the eye button to preview it and the plane button to send it now.": "Mỗi lịch gửi một báo cáo. Dùng nút hình con mắt để xem trước và nút hình máy bay để gửi ngay.",
  "Edit report schedule": "Sửa lịch báo cáo",
  "Encryption": "Mã hóa",
  "Enter a valid email address.": "Nhập một địa chỉ email hợp lệ.",
@@ -163,5 +161,15 @@
  "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "Cho phần Ứng dụng: địa chỉ giao diện web của ntopng (os-ntopng). Để trống: http://127.0.0.1:3000, ntopng trên tường lửa này.",
  "ntopng API token": "Mã thông báo API ntopng",
  "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "Tùy chọn: một mã thông báo được tạo trong ntopng cho REST API của nó. Có mã này, phần Ứng dụng hiển thị các ứng dụng của ntopng theo lưu lượng; không có, hiển thị những gì Suricata đã ghi. Chỉ lưu trên tường lửa này. Để trống để giữ mã thông báo hiện tại.",
- "Enter the token as ntopng shows it.": "Nhập mã thông báo đúng như ntopng hiển thị."
+ "Enter the token as ntopng shows it.": "Nhập mã thông báo đúng như ntopng hiển thị.",
+ "No attachment": "Không đính kèm",
+ "Audit log": "Nhật ký kiểm tra",
+ "One device only": "Chỉ một thiết bị",
+ "Optional: another network whose devices this report covers (devices and their usage). Empty: the Local network set on the Settings tab.": "Tùy chọn: một mạng khác mà báo cáo này bao quát các thiết bị của nó (thiết bị và mức sử dụng). Để trống: Mạng cục bộ đặt ở thẻ Cài đặt.",
+ "Optional: one address. The lists per device - DNS, web activity, devices and their usage, alerts on connections it opened, VPN sessions, the audit log - then show this device alone; the totals stay the network's.": "Tùy chọn: một địa chỉ. Các danh sách theo thiết bị – DNS, hoạt động web, thiết bị và mức sử dụng, cảnh báo về các kết nối mà nó mở, phiên VPN, nhật ký kiểm tra – khi đó chỉ hiển thị thiết bị này; các tổng vẫn là của cả mạng.",
+ "Also attach the report as a file, handy for keeping or forwarding: HTML as the mail shows it, PDF for printing, or CSV with each table's rows for a spreadsheet. PDF is written with a font that has no Chinese, Japanese or Korean letters: a report in those languages is attached as HTML instead.": "Đính kèm thêm báo cáo dưới dạng tệp, tiện để lưu trữ hoặc chuyển tiếp: HTML như thư hiển thị, PDF để in, hoặc CSV với các dòng của từng bảng cho bảng tính. PDF được viết bằng phông chữ không có ký tự tiếng Trung, Nhật hay Hàn: báo cáo bằng các ngôn ngữ đó sẽ được đính kèm dạng HTML thay thế.",
+ "Enter one address, for example 192.168.1.20.": "Nhập một địa chỉ, ví dụ 192.168.1.20.",
+ "The report as a file, with its data as of now:": "Báo cáo dưới dạng tệp, với dữ liệu tại thời điểm này:",
+ "The file could not be made.": "Không thể tạo tệp.",
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Mỗi lịch gửi một báo cáo. Dùng nút hình con mắt để xem trước, nút mũi tên để tải xuống dạng HTML, PDF hoặc CSV, và nút hình máy bay để gửi ngay."
 }

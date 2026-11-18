@@ -188,5 +188,20 @@
  "mail_rejected": "Abgewiesen",
  "top_rejected": "Am häufigsten abgewiesene Absender",
  "web_slow": "Die Abfragedatenbank von Unbound hat nicht innerhalb von 120 s geantwortet.",
- "apps_partial": "Das Protokoll von Suricata wurde nur {n} s lang gelesen: Die Zahlen oben stammen aus seinem ersten Teil."
+ "apps_partial": "Das Protokoll von Suricata wurde nur {n} s lang gelesen: Die Zahlen oben stammen aus seinem ersten Teil.",
+ "audit": "📋 Audit-Protokoll",
+ "audit_signins": "Anmeldungen",
+ "audit_failed": "Fehlgeschlagene Anmeldungen",
+ "audit_changes": "Konfigurationsänderungen",
+ "audit_other": "Weitere Einträge im Audit-Protokoll",
+ "audit_none": "Diese Firewall hat kein Audit-Protokoll.",
+ "audit_newest": "Die neuesten {n} von {total}.",
+ "audit_note": "Aus dem Audit-Protokoll der Firewall (System: Protokolldateien: Audit): eine Aufzeichnung des Zeitraums, kein Konformitätsnachweis. Von einem bei einer fehlgeschlagenen Anmeldung eingegebenen Benutzernamen werden nur die ersten zwei Zeichen gezeigt.",
+ "audit_names": "Versuchte Benutzernamen",
+ "audit_time": "Zeit",
+ "audit_change": "Änderung",
+ "audit_entry": "Eintrag",
+ "only_device": "Gerät: {device}",
+ "only_iface": "Netzwerk: {name}",
+ "only_iface_off": "Netzwerk {name}: nicht mehr vorhanden oder ohne eigene IPv4-Adresse – die gezeigten Geräte sind die des lokalen Netzwerks"
 }

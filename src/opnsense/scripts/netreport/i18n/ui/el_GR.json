@@ -4,7 +4,6 @@
  "Alert language": "Γλώσσα ειδοποιήσεων",
  "Alert sent": "Η ειδοποίηση στάλθηκε",
  "Alerts and thresholds": "Ειδοποιήσεις και όρια",
- "Also attach the report as an HTML file, handy for keeping or forwarding.": "Επισύναψη της αναφοράς και ως αρχείο HTML, χρήσιμο για φύλαξη ή προώθηση.",
  "Arabic": "Αραβικά",
  "Attach as file": "Επισύναψη ως αρχείο",
  "Backup age warning (days)": "Προειδοποίηση παλαιότητας αντιγράφου ασφαλείας (ημέρες)",
@@ -20,7 +19,6 @@
  "Devices on this network are listed in the report and watched for new arrivals.": "Οι συσκευές αυτού του δικτύου εμφανίζονται στην αναφορά και παρακολουθούνται για νέες συνδέσεις.",
  "Disk usage warning (%)": "Προειδοποίηση χρήσης δίσκου (%)",
  "Download and upload together. Warns at 80% and 100%. 0 means unlimited.": "Λήψη και αποστολή μαζί. Προειδοποίηση στο 80% και στο 100%. Το 0 σημαίνει απεριόριστο.",
- "Each schedule sends one report. Use the eye button to preview it and the plane button to send it now.": "Κάθε πρόγραμμα στέλνει μία αναφορά. Χρησιμοποιήστε το κουμπί με το μάτι για προεπισκόπηση και το κουμπί με το αεροπλάνο για άμεση αποστολή.",
  "Edit report schedule": "Επεξεργασία προγράμματος αναφοράς",
  "Encryption": "Κρυπτογράφηση",
  "Enter a valid email address.": "Εισαγάγετε μια έγκυρη διεύθυνση email.",
@@ -163,5 +161,15 @@
  "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "Για την ενότητα Εφαρμογές: η διεύθυνση της διεπαφής ιστού του ntopng (os-ntopng). Κενό: http://127.0.0.1:3000, το ntopng σε αυτό το τείχος προστασίας.",
  "ntopng API token": "Διακριτικό API του ntopng",
  "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "Προαιρετικό: ένα διακριτικό που δημιουργήθηκε στο ntopng για το REST API του. Με αυτό, η ενότητα Εφαρμογές δείχνει τις εφαρμογές του ntopng κατά κίνηση· χωρίς αυτό, ό,τι κατέγραψε το Suricata. Αποθηκεύεται μόνο σε αυτό το τείχος προστασίας. Αφήστε το κενό για να κρατήσετε το τρέχον διακριτικό.",
- "Enter the token as ntopng shows it.": "Εισαγάγετε το διακριτικό όπως το δείχνει το ntopng."
+ "Enter the token as ntopng shows it.": "Εισαγάγετε το διακριτικό όπως το δείχνει το ntopng.",
+ "No attachment": "Χωρίς συνημμένο",
+ "Audit log": "Αρχείο ελέγχου",
+ "One device only": "Μία συσκευή μόνο",
+ "Optional: another network whose devices this report covers (devices and their usage). Empty: the Local network set on the Settings tab.": "Προαιρετικό: άλλο δίκτυο, του οποίου τις συσκευές καλύπτει αυτή η αναφορά (συσκευές και χρήση τους). Κενό: το Τοπικό δίκτυο που ορίζεται στην καρτέλα Ρυθμίσεις.",
+ "Optional: one address. The lists per device - DNS, web activity, devices and their usage, alerts on connections it opened, VPN sessions, the audit log - then show this device alone; the totals stay the network's.": "Προαιρετικό: μία διεύθυνση. Οι λίστες ανά συσκευή – DNS, δραστηριότητα ιστού, συσκευές και χρήση τους, ειδοποιήσεις για συνδέσεις που άνοιξε, συνεδρίες VPN, το αρχείο ελέγχου – δείχνουν τότε μόνο αυτή τη συσκευή· τα σύνολα μένουν του δικτύου.",
+ "Also attach the report as a file, handy for keeping or forwarding: HTML as the mail shows it, PDF for printing, or CSV with each table's rows for a spreadsheet. PDF is written with a font that has no Chinese, Japanese or Korean letters: a report in those languages is attached as HTML instead.": "Επισύναψη της αναφοράς και ως αρχείο, χρήσιμο για φύλαξη ή προώθηση: HTML όπως τη δείχνει το μήνυμα, PDF για εκτύπωση ή CSV με τις γραμμές κάθε πίνακα για υπολογιστικό φύλλο. Το PDF γράφεται με γραμματοσειρά χωρίς κινεζικούς, ιαπωνικούς ή κορεατικούς χαρακτήρες: μια αναφορά σε αυτές τις γλώσσες επισυνάπτεται ως HTML.",
+ "Enter one address, for example 192.168.1.20.": "Εισαγάγετε μία διεύθυνση, για παράδειγμα 192.168.1.20.",
+ "The report as a file, with its data as of now:": "Η αναφορά ως αρχείο, με τα δεδομένα αυτής της στιγμής:",
+ "The file could not be made.": "Δεν ήταν δυνατή η δημιουργία του αρχείου.",
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Κάθε πρόγραμμα στέλνει μία αναφορά. Χρησιμοποιήστε το κουμπί με το μάτι για προεπισκόπηση, το κουμπί με το βέλος για λήψη ως HTML, PDF ή CSV και το κουμπί με το αεροπλάνο για άμεση αποστολή."
 }

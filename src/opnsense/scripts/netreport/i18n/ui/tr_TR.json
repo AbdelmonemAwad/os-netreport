@@ -4,7 +4,6 @@
  "Alert language": "Uyarı dili",
  "Alert sent": "Uyarı gönderildi",
  "Alerts and thresholds": "Uyarılar ve eşikler",
- "Also attach the report as an HTML file, handy for keeping or forwarding.": "Raporu ayrıca HTML dosyası olarak ekle; saklamak veya iletmek için kullanışlıdır.",
  "Arabic": "Arapça",
  "Attach as file": "Dosya olarak ekle",
  "Backup age warning (days)": "Yedek yaşı uyarısı (gün)",
@@ -20,7 +19,6 @@
  "Devices on this network are listed in the report and watched for new arrivals.": "Bu ağdaki cihazlar raporda listelenir ve yeni katılanlar izlenir.",
  "Disk usage warning (%)": "Disk kullanımı uyarısı (%)",
  "Download and upload together. Warns at 80% and 100%. 0 means unlimited.": "İndirme ve yükleme toplamı. %80 ve %100'de uyarır. 0 sınırsız demektir.",
- "Each schedule sends one report. Use the eye button to preview it and the plane button to send it now.": "Her zamanlama bir rapor gönderir. Önizlemek için göz düğmesini, hemen göndermek için uçak düğmesini kullanın.",
  "Edit report schedule": "Rapor zamanlamasını düzenle",
  "Encryption": "Şifreleme",
  "Enter a valid email address.": "Geçerli bir e-posta adresi girin.",
@@ -163,5 +161,15 @@
  "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "Uygulamalar bölümü için: ntopng web arayüzünün (os-ntopng) adresi. Boş: http://127.0.0.1:3000, bu güvenlik duvarındaki ntopng.",
  "ntopng API token": "ntopng API belirteci",
  "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "İsteğe bağlı: ntopng’de REST API’si için oluşturulmuş bir belirteç. Onunla Uygulamalar bölümü ntopng’nin trafiğe göre uygulamalarını gösterir; onsuz, Suricata’nın kaydettiklerini. Yalnızca bu güvenlik duvarında saklanır. Geçerli belirteci korumak için boş bırakın.",
- "Enter the token as ntopng shows it.": "Belirteci ntopng’nin gösterdiği gibi girin."
+ "Enter the token as ntopng shows it.": "Belirteci ntopng’nin gösterdiği gibi girin.",
+ "No attachment": "Ek yok",
+ "Audit log": "Denetim günlüğü",
+ "One device only": "Yalnızca bir cihaz",
+ "Optional: another network whose devices this report covers (devices and their usage). Empty: the Local network set on the Settings tab.": "İsteğe bağlı: bu raporun cihazlarını kapsadığı başka bir ağ (cihazlar ve kullanımları). Boş: Ayarlar sekmesinde belirlenen Yerel ağ.",
+ "Optional: one address. The lists per device - DNS, web activity, devices and their usage, alerts on connections it opened, VPN sessions, the audit log - then show this device alone; the totals stay the network's.": "İsteğe bağlı: tek bir adres. Cihaz başına listeler – DNS, web etkinliği, cihazlar ve kullanımları, açtığı bağlantılardaki uyarılar, VPN oturumları, denetim günlüğü – bu durumda yalnızca bu cihazı gösterir; toplamlar ağın toplamı olarak kalır.",
+ "Also attach the report as a file, handy for keeping or forwarding: HTML as the mail shows it, PDF for printing, or CSV with each table's rows for a spreadsheet. PDF is written with a font that has no Chinese, Japanese or Korean letters: a report in those languages is attached as HTML instead.": "Raporu ayrıca dosya olarak ekle; saklamak veya iletmek için kullanışlıdır: HTML e-postanın gösterdiği gibi, PDF yazdırmak için veya CSV her tablonun satırlarıyla bir elektronik tablo için. PDF, Çince, Japonca ve Korece harfleri olmayan bir yazı tipiyle yazılır: bu dillerdeki bir rapor bunun yerine HTML olarak eklenir.",
+ "Enter one address, for example 192.168.1.20.": "Bir adres girin, örneğin 192.168.1.20.",
+ "The report as a file, with its data as of now:": "Şu anki verileriyle rapor dosyası:",
+ "The file could not be made.": "Dosya oluşturulamadı.",
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Her zamanlama bir rapor gönderir. Önizlemek için göz düğmesini, HTML, PDF veya CSV olarak indirmek için ok düğmesini, hemen göndermek için uçak düğmesini kullanın."
 }

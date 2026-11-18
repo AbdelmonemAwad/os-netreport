@@ -188,5 +188,20 @@
  "mail_rejected": "Rifiutati",
  "top_rejected": "Mittenti più rifiutati",
  "web_slow": "Il database delle query di Unbound non ha risposto entro 120 s.",
- "apps_partial": "Il log di Suricata è stato letto solo per {n} s: i conteggi qui sopra vengono dalla sua prima parte."
+ "apps_partial": "Il log di Suricata è stato letto solo per {n} s: i conteggi qui sopra vengono dalla sua prima parte.",
+ "audit": "📋 Registro di audit",
+ "audit_signins": "Accessi",
+ "audit_failed": "Accessi non riusciti",
+ "audit_changes": "Modifiche alla configurazione",
+ "audit_other": "Altre voci del registro di audit",
+ "audit_none": "Questo firewall non ha un registro di audit.",
+ "audit_newest": "Le {n} più recenti su {total}.",
+ "audit_note": "Dal registro di audit del firewall (System: Log Files: Audit): una registrazione del periodo, non un certificato di conformità. Di un nome utente digitato in un accesso non riuscito si mostrano solo i primi due caratteri.",
+ "audit_names": "Nomi utente provati",
+ "audit_time": "Ora",
+ "audit_change": "Modifica",
+ "audit_entry": "Voce",
+ "only_device": "Dispositivo: {device}",
+ "only_iface": "Rete: {name}",
+ "only_iface_off": "Rete {name}: non più presente o senza un proprio indirizzo IPv4 – i dispositivi mostrati sono quelli della rete locale"
 }
