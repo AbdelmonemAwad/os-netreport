@@ -27,7 +27,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 Network report for OPNsense, mailed as HTML in any of the GUI languages (texts in i18n/<locale>.json).
 
-  netreport.py scheduler        run from cron every minute: send due reports, watch for new devices
+  netreport.py scheduler        run from cron every minute: send due reports, run the alert collectors
+                                (alerts.py), watch for new devices
   netreport.py send <uuid>      send one schedule now (prints JSON)
   netreport.py preview <uuid>   print the rendered report
   netreport.py testmail         send a short test message (prints JSON)
@@ -54,6 +55,7 @@ import ssl
 import subprocess
 import sys
 import syslog
+import tempfile
 import time
 import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
@@ -68,6 +70,7 @@ STATE_DIR = '/var/db/netreport'
 STATE_FILE = os.path.join(STATE_DIR, 'state.json')
 DEVICES_FILE = os.path.join(STATE_DIR, 'devices.json')
 HISTORY_FILE = os.path.join(STATE_DIR, 'history.json')
+INFECTED_FILE = os.path.join(STATE_DIR, 'infected.json')     # written by alerts.py, its format there
 ARCHIVE_DIR = os.path.join(STATE_DIR, 'archive')
 LOCK_FILE = '/var/run/netreport.lock'
 CATCH_UP = 12 * 3600            # send a missed report up to 12 hours late (firewall was off or rebooting)
@@ -140,11 +143,37 @@ def load_json(path, default):
 
 
 def save_json(path, data):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    tmp = path + '.tmp'
-    with open(tmp, 'w', encoding='utf-8') as fh:
-        json.dump(data, fh, indent=1, ensure_ascii=False)
-    os.replace(tmp, path)
+    """Write JSON whole: a temporary file of its own in the same folder, renamed over the file. Its
+    own, so that the scheduler and a page action writing at the same time cannot fail each other."""
+    folder = os.path.dirname(path)
+    os.makedirs(folder, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=folder, prefix='.' + os.path.basename(path) + '.')
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as fh:
+            # ASCII: a lone surrogate (a \ud800 escape in a record read) stays an escape; in UTF-8
+            # it could not be written, and the file would never be saved again
+            json.dump(data, fh, indent=1, ensure_ascii=True)
+        os.chmod(tmp, 0o644)
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+def no_surrogates(value):
+    """value with every string in it - the keys of a dict too, through dicts and lists - made one that
+    UTF-8 can carry: a lone surrogate (a \\ud800 escape in JSON that was read) becomes "?". A mail's
+    headers and body, the system log and the history page cannot take one."""
+    if isinstance(value, str):
+        return value.encode('utf-8', 'replace').decode('utf-8')
+    if isinstance(value, dict):
+        return {no_surrogates(k): no_surrogates(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [no_surrogates(v) for v in value]
+    return value
 
 
 def log(msg):
@@ -175,6 +204,10 @@ class Settings:
         'smtp_port': '465', 'smtp_security': 'ssl', 'smtp_auth': '1', 'wan_interface': 'wan', 'lan_interface': 'lan',
         'vpn_interfaces': '', 'new_device_alert': '1', 'temp_warn': '75', 'disk_warn': '85', 'loss_warn': '5',
         'backup_warn': '2', 'monthly_cap': '0', 'keep_days': '90',
+        # alerts (alerts.py): all on by default; a channel is used once it is set
+        'alerts': '1', 'alert_mail': '1', 'gateway_alert': '1', 'login_alert': '1', 'login_fail_count': '5',
+        'ips_alert': '1', 'ips_severity': '1', 'vpn_alert': '1', 'watchdog_alert': '1', 'c2_alert': '1',
+        'xgs_alert': '1',
     }
 
     def __init__(self):
@@ -428,13 +461,25 @@ def local_networks():
     nets = []
     for line in run('/sbin/ifconfig -a').splitlines():
         found = re.search(r'inet (\d+\.\d+\.\d+\.\d+) netmask (0x[0-9a-fA-F]+)', line)
+        if found:
+            try:
+                bits = bin(int(found.group(2), 16)).count('1')
+                nets.append(ipaddress.ip_network('%s/%d' % (found.group(1), bits), strict=False))
+            except Exception:
+                pass
+            continue
+        # IPv6 too, so that a device using it counts as one of ours; never the link-local
+        # networks (every interface has fe80::/10) or the loopback
+        found = re.search(r'inet6 ([0-9A-Fa-f:.]+)(?:%\S+)? prefixlen (\d+)', line)
         if not found:
             continue
         try:
-            bits = bin(int(found.group(2), 16)).count('1')
-            nets.append(ipaddress.ip_network('%s/%d' % (found.group(1), bits), strict=False))
+            net = ipaddress.ip_network('%s/%s' % (found.group(1), found.group(2)), strict=False)
         except Exception:
             continue
+        if net.network_address.is_link_local or net.network_address.is_loopback:
+            continue
+        nets.append(net)
     return nets
 
 
@@ -737,6 +782,28 @@ def kpis(items):
         f'<div class="kpi"><b>{v}</b><span>{esc(k)}</span>{x}</div>' for k, v, x in items) + '</div>'
 
 
+def infected_table(t, names):
+    """the devices that tried to reach a command-and-control list (infected.json), or nothing"""
+    infected = load_json(INFECTED_FILE, {})
+    rows = sorted(((a, e) for a, e in (infected.items() if isinstance(infected, dict) else []) if isinstance(e, dict)),
+                  key=lambda x: -(x[1].get('last') or 0))
+    if not rows:
+        return ''
+
+    def when(ts):
+        return f'<span class="ltr">{datetime.datetime.fromtimestamp(ts):%Y-%m-%d %H:%M}</span>' if ts else ''
+
+    def who(address, entry):
+        name = names.get(address) or entry.get('name')
+        return f'{name} ({address})' if name else address
+
+    return (f'<h3 class="bad">{esc(t["infected"])}</h3><p class="muted">{esc(t["infected_intro"])}</p>' +
+            table(t, [t['device'], 'MAC', t['blocklist'], t['times'], t['first_seen'], t['last_seen']], [
+                [esc(who(a, e)),
+                 f'<span class="ltr">{esc(e.get("mac") or "")}</span>', esc(e.get('list') or ''),
+                 f'{int(e.get("count") or 0):,}', when(e.get('first')), when(e.get('last'))] for a, e in rows]))
+
+
 def build_report(settings, sched, start, end):
     """returns subject, html, plain text and the list of issues (level, text)"""
     t = texts(sched.get('language'))
@@ -844,6 +911,7 @@ def build_report(settings, sched, start, end):
             [f'<span class="ltr">{esc(s)}</span>', f'{n:,}'] for s, n in ids['out_sigs']])
         body += table(t, [t['address'], t['times']], [
             [f'<span class="ltr">{esc(ip)}</span>', f'{n:,}'] for ip, n in ids['out_hosts']])
+    body += infected_table(t, names)
     ids_general = settings.root.find('./OPNsense/IDS/general')
     if ids_general is not None and ids_general.findtext('enabled') == '1' and ids_general.findtext('ips') != '1':
         body += f'<p class="muted">{esc(t["ids_note"])}</p>'
@@ -960,7 +1028,14 @@ def recipients_for(settings, sched, ms):
     return rcpt
 
 
-def send_mail(ms, rcpt, subject, page, text, attach_name=None):
+QUIT_TIMEOUT = 5                # seconds in all for QUIT, once the mail server took the message
+
+
+def send_mail(ms, rcpt, subject, page, text, attach_name=None, before_send=None, after_send=None):
+    """before_send() runs as the message is about to go, after_send() once the server took it (the alert
+    layer moves and stops its time limit there). The QUIT then has QUIT_TIMEOUT in all - not smtplib's
+    quit(), which reads a reply's continuation lines for as long as a server sends them - and whatever
+    it gets, the mail was sent."""
     msg = MIMEMultipart('mixed')
     msg['Subject'] = Header(subject, 'utf-8')
     msg['From'] = formataddr((str(Header('OPNsense', 'utf-8')), ms['sender']))
@@ -982,10 +1057,31 @@ def send_mail(ms, rcpt, subject, page, text, attach_name=None):
         server = smtplib.SMTP(ms['host'], ms['port'], timeout=60)
         if ms['security'] == 'starttls':
             server.starttls(context=context)
-    with server:
+    try:
         if ms['user'] and ms['password']:
             server.login(ms['user'], ms['password'])
+        if before_send:
+            before_send()
         server.sendmail(ms['sender'], rcpt, msg.as_string())
+        if after_send:
+            after_send()
+    except BaseException:
+        server.close()
+        raise
+    # the server has the message: a QUIT that fails or is slow does not make it a failure (it would be
+    # mailed again with its retry). It has QUIT_TIMEOUT in all, for its send and the first piece of
+    # the answer, which is all that is read
+    try:
+        if server.sock is not None:
+            end = time.monotonic() + QUIT_TIMEOUT
+            server.sock.settimeout(QUIT_TIMEOUT)
+            server.sock.sendall(b'QUIT\r\n')
+            server.sock.settimeout(max(end - time.monotonic(), 0.001))
+            server.sock.recv(512)
+    except Exception:
+        pass
+    finally:
+        server.close()
 
 
 # ---------------------------------------------------------------- history and archive
@@ -1043,6 +1139,8 @@ def deliver(settings, sched, forced=False):
 
 
 def new_device_alert(settings, db, macs):
+    """the devices that joined the network for the first time, through the alert layer (alerts.py)"""
+    import alerts
     t = texts(settings.get('language'))
     names = hostnames(settings)
     rows = [[esc(label(db[m].get('ip', ''), names)), f'<span class="ltr">{esc(m)}</span>', esc(db[m].get('vendor', ''))]
@@ -1054,16 +1152,11 @@ def new_device_alert(settings, db, macs):
             f'<p>{esc(t["alert_intro"])}</p>{table(t, [t["device"], "MAC", t["vendor"]], rows)}'
             f'<p class="muted">{esc(t["alert_hint"])}</p></div></div></body></html>')
     text = '\n'.join([subject, ''] + [f'- {db[m].get("ip", "")} {m} {db[m].get("vendor", "")}' for m in macs])
-    entry = {'schedule': subject, 'subject': subject, 'recipients': '', 'archive': ''}
-    try:
-        ms = mail_settings(settings)
-        rcpt = recipients_for(settings, None, ms)
-        entry['recipients'] = ', '.join(rcpt)
-        send_mail(ms, rcpt, subject, page, text)
-        entry.update(status='alert', detail=', '.join(macs))
-    except Exception as exc:
-        entry.update(status='failed', detail=str(exc))
-    add_history(entry)
+    facts = {'devices': [{'mac': m, 'ip': db[m].get('ip', ''), 'name': names.get(db[m].get('ip', ''), ''),
+                          'vendor': db[m].get('vendor', '')} for m in macs]}
+    # each set of new devices is its own alert: no quiet time holds it back
+    alerts.notify(settings, None, 'new_device', ','.join(macs), subject, text, facts=facts, page=page, quiet=0,
+                  tags=['new'])
 
 
 def scheduler():
@@ -1075,9 +1168,20 @@ def scheduler():
     settings = Settings()
     if settings.get('enabled') != '1':
         return
+    # the minute this run is for, taken before the collectors: a long run must not move the device
+    # scan's :x0/:x5 past it
+    now = datetime.datetime.now()
+
+    # The alert collectors first, so that a report being built does not hold an alert back; each in
+    # its own try, so that one failing stops neither the others nor the reports (alerts.run_collectors).
+    try:
+        import alerts
+        alerts.run_collectors(settings, alerts.State(), time.time())
+    except Exception as exc:
+        log(f'alerts failed: {exc}')
+
     state = load_json(STATE_FILE, {})
     last_sent = state.setdefault('last_sent', {})
-    now = datetime.datetime.now()
     for uuid, sched in settings.schedules.items():
         if sched.get('enabled') != '1':
             continue
@@ -1097,7 +1201,7 @@ def scheduler():
 
     if now.minute % DEVICE_SCAN_MINUTES == 0:
         db, new, _ = update_devices(settings)
-        if new and settings.get('new_device_alert') == '1':
+        if new and settings.get('alerts') == '1' and settings.get('new_device_alert') == '1':
             new_device_alert(settings, db, new)
 
 
@@ -1105,6 +1209,8 @@ def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else ''
     arg = sys.argv[2] if len(sys.argv) > 2 else ''
     os.makedirs(STATE_DIR, exist_ok=True)
+    # alerts.py imports this module by its name: the one running is the one it gets
+    sys.modules.setdefault('netreport', sys.modules[__name__])
     if cmd == 'scheduler':
         scheduler()
     elif cmd in ('send', 'preview'):
@@ -1133,7 +1239,9 @@ def main():
         except Exception as exc:
             print(json.dumps({'status': 'failed', 'detail': str(exc)}, ensure_ascii=False))
     elif cmd == 'history':
-        print(json.dumps(load_json(HISTORY_FILE, []), ensure_ascii=False))
+        # an older line may hold a lone surrogate: printed as UTF-8 it raises, and as an escape PHP's
+        # json_decode() refuses the whole list - the page would show no history at all
+        print(json.dumps(no_surrogates(load_json(HISTORY_FILE, [])), ensure_ascii=True))
     elif cmd == 'view':
         if re.match(r'^[0-9A-Za-z_-]+\.html$', arg) and os.path.exists(os.path.join(ARCHIVE_DIR, arg)):
             print(open(os.path.join(ARCHIVE_DIR, arg), encoding='utf-8').read())

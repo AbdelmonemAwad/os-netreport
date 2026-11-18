@@ -4,7 +4,7 @@
 -->
 <model>
     <mount>//OPNsense/NetReport</mount>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <description>Network report</description>
     <items>
         <general>
@@ -94,6 +94,73 @@
                 <Required>Y</Required>
                 <Default>1</Default>
             </new_device_alert>
+            <alerts type="BooleanField">
+                <Required>Y</Required>
+                <Default>1</Default>
+            </alerts>
+            <alert_mail type="BooleanField">
+                <Required>Y</Required>
+                <Default>1</Default>
+            </alert_mail>
+            <alert_webhook_url type="TextField">
+                <Mask>/^https?:\/\/[^\s]+$/i</Mask>
+                <ValidationMessage>Enter an address that starts with https:// or http://.</ValidationMessage>
+            </alert_webhook_url>
+            <alert_webhook_header type="UpdateOnlyTextField">
+                <Mask>/^[A-Za-z0-9_-]+:[^\r\n]*$/</Mask>
+                <ValidationMessage>Enter one header line as Name: value.</ValidationMessage>
+            </alert_webhook_header>
+            <alert_ntfy_server type="TextField">
+                <Mask>/^https?:\/\/[^\s]+$/i</Mask>
+                <ValidationMessage>Enter an address that starts with https:// or http://.</ValidationMessage>
+            </alert_ntfy_server>
+            <alert_ntfy_topic type="TextField">
+                <Mask>/^[A-Za-z0-9_-]{1,64}$/</Mask>
+                <ValidationMessage>Use letters, digits, - and _ only, at most 64.</ValidationMessage>
+            </alert_ntfy_topic>
+            <alert_ntfy_token type="UpdateOnlyTextField"/>
+            <gateway_alert type="BooleanField">
+                <Required>Y</Required>
+                <Default>1</Default>
+            </gateway_alert>
+            <login_alert type="BooleanField">
+                <Required>Y</Required>
+                <Default>1</Default>
+            </login_alert>
+            <login_fail_count type="IntegerField">
+                <Required>Y</Required>
+                <Default>5</Default>
+                <MinimumValue>2</MinimumValue>
+                <MaximumValue>1000</MaximumValue>
+            </login_fail_count>
+            <ips_alert type="BooleanField">
+                <Required>Y</Required>
+                <Default>1</Default>
+            </ips_alert>
+            <ips_severity type="OptionField">
+                <Required>Y</Required>
+                <Default>1</Default>
+                <OptionValues>
+                    <v1 value="1">High only</v1>
+                    <v2 value="2">High and medium</v2>
+                </OptionValues>
+            </ips_severity>
+            <vpn_alert type="BooleanField">
+                <Required>Y</Required>
+                <Default>1</Default>
+            </vpn_alert>
+            <watchdog_alert type="BooleanField">
+                <Required>Y</Required>
+                <Default>1</Default>
+            </watchdog_alert>
+            <c2_alert type="BooleanField">
+                <Required>Y</Required>
+                <Default>1</Default>
+            </c2_alert>
+            <xgs_alert type="BooleanField">
+                <Required>Y</Required>
+                <Default>1</Default>
+            </xgs_alert>
             <temp_warn type="IntegerField">
                 <Required>Y</Required>
                 <Default>75</Default>

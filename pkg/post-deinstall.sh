@@ -35,6 +35,14 @@ rm -f /var/lib/php/tmp/opnsense_menu_cache.xml /tmp/opnsense_menu_cache.xml
 # until opnsense-lang replaces the catalogues.
 rm -f /var/db/netreport/i18n-owned.json
 
+# The alerts' places in the logs they follow (alerts.py): a later install starts from where the
+# logs are then, and does not send what was written while the plugin was away.
+rm -f /var/db/netreport/alerts-state.json
+
+# The devices it found reaching a command-and-control list: with nothing to keep it current, the
+# list would stay for os-portguard to read as if it were current.
+rm -f /var/db/netreport/infected.json
+
 # system_cache_flush(): without it the menu keeps a dead entry and the user manager keeps
 # an ACL tag pointing at a page that is not there, for up to an hour each.
 if [ -f /usr/local/etc/rc.configure_plugins ]; then

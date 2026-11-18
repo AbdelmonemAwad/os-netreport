@@ -28,7 +28,7 @@ Tested on OPNsense 26.7.
 
 *A daily report (sample data).*
 
-<p align="center"><b>Contents:</b> <a href="#what-is-in-a-report">What is in a report</a> &middot; <a href="#features">Features</a> &middot; <a href="#screenshots">Screenshots</a> &middot; <a href="#where-the-data-comes-from">Where the data comes from</a> &middot; <a href="#installation">Installation</a> &middot; <a href="#how-it-works">How it works</a> &middot; <a href="#translations">Translations</a> &middot; <a href="#known-limitations">Known limitations</a> &middot; <a href="#in-the-xgs-image">In the XGS image</a> &middot; <a href="#updates">Updates</a> &middot; <a href="#license">License</a></p>
+<p align="center"><b>Contents:</b> <a href="#what-is-in-a-report">What is in a report</a> &middot; <a href="#features">Features</a> &middot; <a href="#alerts">Alerts</a> &middot; <a href="#screenshots">Screenshots</a> &middot; <a href="#where-the-data-comes-from">Where the data comes from</a> &middot; <a href="#installation">Installation</a> &middot; <a href="#how-it-works">How it works</a> &middot; <a href="#translations">Translations</a> &middot; <a href="#known-limitations">Known limitations</a> &middot; <a href="#in-the-xgs-image">In the XGS image</a> &middot; <a href="#updates">Updates</a> &middot; <a href="#license">License</a></p>
 
 ## What is in a report
 
@@ -58,12 +58,174 @@ Each schedule picks which of these sections it includes.
 - Reports in all 21 languages of the OPNsense GUI, or in whatever language the GUI is set to.
   Arabic and Persian reports are laid out right to left.
 - Optional "only when something needs attention" mode, which skips quiet days.
-- A short alert within five minutes when a device joins the LAN for the first time.
+- Alerts as things happen, by mail, a webhook or ntfy: a gateway or a VPN tunnel down and back,
+  repeated failed logins, intrusion alerts, a device reaching a command-and-control list, a
+  restart the hardware watchdog caused, a device joining the LAN for the first time (see
+  [Alerts](#alerts)).
 - If the firewall is off at the scheduled time, the report goes out when it comes back (up to
   12 hours late).
 - Preview and "send now" buttons, a history of everything sent, and copies of sent reports kept
   on the firewall for a configurable number of days.
 - Mail goes through the SMTP server already configured for Monit, or a separate one.
+
+## Alerts
+
+Besides the scheduled reports, the plugin sends an alert as soon as something happens. Every alert
+goes through one layer (`alerts.py`), which hands it to each channel that is set; a channel that
+fails does not stop the others, and each try is a line on the History tab with the result per
+channel. All alerts are on by default (Settings tab, section *Alerts*; *Send alerts* turns them all
+off). They are written in the *Alert language*, with times in the firewall's local time.
+
+| Alert | When | Setting (default) |
+| --- | --- | --- |
+| Gateway down / back | A monitored gateway's state (dpinger, as **System → Gateways** shows it) has changed and held on two reads a minute apart: "down since" the first read that saw it, "back after" how long it was down. More than 3 changes in 15 minutes is one "flapping" alert instead, and nothing more until one state has held for 15 minutes. The changes counted are the raw reads, before the two-reads rule, on purpose: two one-minute blips within 15 minutes (four changes) are flapping. Gateways with monitoring off are skipped. | `gateway_alert` (on) |
+| Repeated failed logins | One address failed to sign in to the web GUI, the API or SSH `login_fail_count` times within 10 minutes; the alert gives the count, the services, and how many different user names were tried with at most three of them cut to their first two characters (people type a password into the user field, so the names are never sent as they are). Every failed SSH try counts, several on one connection too; sshd's "Invalid user" and PAM's error beside a "Failed" line are the same try, and "Failed publickey" is not counted (an agent offering several keys logs it routinely). The address is the one at the end of the line, so a user name holding an address cannot put it in the alert. Then quiet for that address for 30 minutes. A failed API key is not counted: OPNsense logs no address for it. | `login_alert` (on), `login_fail_count` (5) |
+| Intrusion alert | Suricata logged an alert of high severity (or high and medium) in `eve.json`: one alert per signature and source with the action (allowed or blocked), the destinations and the count, then quiet 30 minutes for that pair. | `ips_alert` (on), `ips_severity` (high only) |
+| VPN tunnel down / back | An IPsec connection has no IKE session ESTABLISHED with a child SA INSTALLED (one still connecting, a peer that does not answer, is not up), a WireGuard peer's last handshake is 180 seconds old or older, an OpenVPN instance configured and enabled is not running (it exited, and took its management socket with it), its socket refuses, or a client instance is not connected; a server that is not running or refuses takes its clients down with it, and a client that left its server is down - with the same two reads as the gateways. A connection that has not been up since the plugin started following it is not reported down; a command that fails is unknown, never down. | `vpn_alert` (on) |
+| Hardware watchdog reset | os-watchdog recorded that the hardware watchdog caused the last restart (`/var/db/os-watchdog/reset-reason.json`): its field `watchdog` true, where the record has the field (false is another cause, null that it cannot tell: no alert), or else bit 25 among the record's bits; one alert per boot, with the reasons. It is kept until a channel takes it - tried again each minute, and dropped after 24 hours - so that one tried before the WAN is up after the restart is not lost. | `watchdog_alert` (on) |
+| Command-and-control list | A device of the firewall's own networks (IPv4 or IPv6) tried to reach an address on a command-and-control list that os-blocklists blocks with its log on, on its rule `Block Lists: blocklists_<id> out` or `... from inside` (a connection to one of the firewall's own addresses, which a list may hold, is not counted); one alert the first time an address is seen, with its name and MAC where they are known, the list, the destination and the time. The device is also listed in the report's security section. | `c2_alert` (on) |
+| From other XGS plugins | What os-xgs-npu leaves for this plugin (below). | `xgs_alert` (on) |
+| New device | A device joined the local network for the first time (within five minutes). | `new_device_alert` (on) |
+
+Each collector's first run only records where things are (log offsets, states, the last id), so
+installing the plugin does not alert on old history (os-xgs-npu's alert files are the exception:
+they are left there to be taken, and those already waiting are sent on the first run); with an alert off its collector still keeps
+its place, so turning it on does not send the backlog.
+
+Limits on each minute's pass, so that a storm or a pause does not flood the channels:
+
+- One collector sends at most 10 alerts a minute. Past that, the rest are not sent: one line in
+  the history says how many, for that collector and minute, however many they are ("Skipped", "N
+  alerts of this kind held this minute (more than 10)", with the first five subjects), so a storm
+  cannot push the rest of the history (its last 500 lines) out; and one more alert says how many:
+  "N more alerts of the same kind", see the history. The alerts kept until they are sent -
+  os-xgs-npu's alert files and anomalies (below), a watchdog reset - are not dropped at the cap:
+  those past it wait for the next minute, with no history line. New alert files and new anomalies go first, and the retries of files and
+  anomalies that failed after both, so the retries cannot crowd out what is new.
+- The collectors have 45 seconds a pass. Those not yet run by then wait for the next minute, their
+  places in the logs unmoved; and past it the alerts kept until they are sent wait for the next
+  minute too. An alert of any other kind a collector has already
+  read is still sent - so a pass can run past 45 seconds, by the time its channels take.
+- A channel that did not answer in time (see Channels) is not tried again for the
+  rest of that minute's pass for the alerts kept until they are sent: their result is "skipped: it did not answer earlier this minute", so ten of them cannot
+  take ten times its time. That is a failure like any other: they stay kept for the next minute,
+  when the channel is tried again. Every other alert (a gateway or VPN down, failed logins, the
+  intrusion and command-and-control alerts) is not kept for a retry, so it is tried on
+  every channel all the same - on a channel that ran out of time earlier in that pass, with 3
+  seconds (the mail 3 for its connect and 3 for its message), so that a server that does not
+  answer costs each of them seconds.
+- When the last pass is more than 10 minutes old (the plugin was off, the firewall was down), the
+  log readers - failed logins, intrusion alerts, command-and-control - start again from the end of
+  their logs, as on a first run. And whatever they read, a log line whose own time is more than 10
+  minutes old is not alerted.
+
+### Channels
+
+- **Mail** (`alert_mail`, on): the report's own mail server (Monit's or the custom one) and default
+  recipients, as an HTML mail.
+- **Webhook** (`alert_webhook_url`, empty = off): each alert is POSTed as JSON
+  `{"source": "os-netreport", "host", "kind", "at", "subject", "text", "facts"}`, with one optional
+  header line (`alert_webhook_header`, for example an `Authorization` header; kept on the
+  firewall like a password, not shown again, and left as it is when the field is saved empty), a
+  10 second timeout on each step and 15 seconds for the whole try (see below), and the server's
+  certificate checked.
+- **ntfy** (`alert_ntfy_server` and `alert_ntfy_topic`, both empty = off): the plain text POSTed to
+  `<server>/<topic>` with ntfy's `Title`, `Priority` and `Tags` headers, and `alert_ntfy_token` as
+  a bearer token when set. There is no default server, on purpose: a public server by default
+  would send the firewall's events out by itself. On a public server anyone who knows the topic
+  can read it.
+
+Each channel's try has a time in all, whatever it is doing - the connect, the TLS handshake,
+sending, or waiting for the reply or the mail server's greeting: 15 seconds for the webhook's and
+ntfy's POST, and for the mail up to its message; from the moment the message goes, the mail server
+has 60 seconds to say it took it (a server may take long to, while it has it). A real-time timer
+in the cron process ends the try then, so a server that answers a byte at a time, or never, cannot
+hold the minute's pass; the result is "no answer within 15 s" (or 60). A channel that ran out of
+time earlier in the same pass has 3 seconds for the alerts not kept until sent ("no answer within
+3 s"), the mail 3 for its connect and 3 for its message. A try that ran out goes no further, but a
+server may have taken the alert before its answer was due: an alert counted as failed can still
+arrive, and arrive twice with its retry. Once the mail server has taken the message the timer
+stops, and the QUIT has 5 seconds in all: one it is slow to answer, or does not answer, is not a
+failure, and only the first piece of its answer is read. The system's name lookup is the one step
+the timer cannot cut: it ends at the resolver's own timeouts.
+
+A webhook or ntfy server that answers with a redirect is not followed (the header or the token
+would go along to whatever host it names): any 3xx is a failure, "the server answered with a
+redirect to ...", which names only the scheme and host it points to (`https://host`): its path
+and any user name or password are left out of the history and the system log, since a webhook's
+address may carry its secret in the path. Only the reply's status is read, not its body.
+
+*Send a test alert* on the Settings tab sends one to every channel that is set and shows what each
+one answered (`configctl netreport testalert` does the same from a shell).
+
+The same alert (its kind and key) is not sent twice within its quiet time, 30 minutes unless said
+otherwise above. What the layer remembers - quiet times, log offsets, states - is in
+`/var/db/netreport/alerts-state.json`.
+
+While `/var` is full that file cannot be saved, and each minute's run reads as if the one before
+had not been: a failed-login, intrusion or command-and-control alert goes again each minute while
+its log lines are less than 10 minutes old, then nothing (`infected.json` cannot be written
+either); and once the last run that could save is more than 10 minutes old, those log readers
+start again from the end of their logs, so what is logged after that is not alerted, then or
+later. A gateway's or a VPN tunnel's change is saved before it is said, so none is said while the
+disk is full: with room again it is said once its new state has held on two reads, with the
+first as its time. A reset the hardware watchdog caused waits for room, then goes as above.
+os-xgs-npu's alert files go once each (a file is removed once sent), and its anomalies wait
+(below).
+
+### Files shared with other plugins
+
+- **Taken from os-xgs-npu** (neither existing is normal):
+  - `/var/db/os-xgs-npu/alerts/*.json`, one alert a file
+    (`{"source", "kind", "at", "subject", "text", "facts"}`): sent, then removed; kept while every
+    channel fails and tried again each minute, and removed after 24 hours; a file is removed
+    only once it was sent or is 24 hours old. Files already waiting
+    when the plugin first runs are taken too, on purpose: they are left there to be taken. A
+    retry is silent: the history has one line at the first failure, one when a send succeeds,
+    and one when the file is dropped. Only regular files are taken: a symbolic link is not
+    followed (nor sent, nor removed), and a file is removed only if it is still the one that was
+    read (the same inode and size), so an alert written over it in the meantime goes the next
+    minute. Each file is taken on its own: one that cannot be sent (its record is not what it
+    should be) is kept, as a failure, and logged, and stops none of the files after it. `at` is
+    read as the anomalies' below; a file with a time that is not one is sent with the file's
+    time.
+  - `/var/db/os-xgs-npu/anomaly/alerts.jsonl`, one `{"id", "at", "host", "kind", "message",
+    "source"}` a line, `id` counting up from 1: what is above the last id sent is sent; ids all
+    below it mean the file was started again, and it is read from the start. An anomaly no
+    channel took is kept and tried again each minute like the files above (the same history
+    lines), and dropped after 24 hours. At most 1000 are kept waiting; past that the oldest are
+    dropped, and one line in the history and the system log says how many. The last id moves one
+    anomaly at a time, as each is taken, so one that cannot be sent (it stays pending) or a run
+    stopped half way loses none after it (the one it was sending is tried again, after the new
+    ones). While the alert state cannot be saved (a full `/var`), no anomaly is sent: the next run
+    would read the state as it was and send it again, each minute. Each new one is saved as
+    waiting before it goes, so one in flight when the disk fills goes again once there is room.
+    Once there is room they go, ten a minute at most (the collector's cap),
+    and those kept 24 hours are dropped then, one line in the history saying how many. `at` is
+    ISO 8601 or Unix seconds
+    (milliseconds are recognised); an anomaly with a time that is not one, or none a date can hold (a number of hundreds of digits), is sent with
+    the time it was read.
+  - In both, a lone surrogate (a `\ud800` escape, which no mail, system log or web page can
+    carry) is replaced by `?` where the file or the line is read, in every key and value, so such
+    an alert is sent like any other.
+- **Written for os-portguard**: `/var/db/netreport/infected.json`,
+  `{"<address>": {"first", "last", "count", "list", "mac", "name"}}` - the addresses of the
+  firewall's own networks that os-blocklists blocked on their way to a command-and-control list
+  (never one of the firewall's own addresses), the times in Unix seconds, the os-blocklists feed id,
+  and the device's MAC and name where they are known. An entry whose last blocked connection is
+  more than 7 days old is dropped; the file is written whole. A command-and-control list is a feed
+  of os-blocklists marked `"c2": true` in its `feeds.json`, and until os-blocklists marks them,
+  `feodo` (abuse.ch Feodo Tracker). The file is removed with the plugin.
+
+### Where the alerts are read from
+
+| Alert | Source |
+| --- | --- |
+| Gateways | `pluginctl -r return_gateways_status` (dpinger) |
+| Failed logins | `/var/log/audit/audit_YYYYMMDD.log`. For every failed login of the web GUI, of the API's user and password or of another service, OPNsense 26.7 writes one warning under the program `audit`: `user <name> could not authenticate for <service>. [using <service class> + <authenticator class>] at <address>`; that line is counted, once, and its service goes into the alert. Not counted: the debug line OPNsense may write before it (`... failed authentication for ...`), the login page's `Web GUI authentication error for '<name>' from <address>` (the same try), and `... could not authenticate for <service>, failed constraints on ...` (the right password for an account that is disabled or expired). A failed API key is logged as `uri ... authentication failed for api key ...`, with no address, so it cannot be counted per address and is not counted at all. sshd's failures are there too (facility auth), under the program `sshd` or `sshd-session` (OPNsense 26.7). A line is read only by the patterns of its program: the `audit` line by the web GUI's, sshd's by the SSH ones. When password logins are allowed, OPNsense's "System" authentication also answers for the PAM services (`sshd`, `login`, `su`, `sudo`), and `audit` may then write its line for `sshd` beside sshd's own `Failed password` line of the same try: the `audit` line is not counted for those services, so SSH is counted from sshd's lines alone. The audit log's destination folds a line repeated within seconds into "Last message '...' repeated N times"; such a line counts as N more of the line it folds, but only when it directly follows that line in the same file (syslog-ng writes it there): after the reader started again (a pause, a rotated file, a log grown too fast to read whole) or with another line between them, a fold counts nothing, so it cannot multiply a line read long before. A new day's file is not such a restart for the day before's: a fold at the end of that file, read just after midnight, still counts. |
+| Intrusion alerts | `/var/log/suricata/eve.json` |
+| VPN tunnels | `configctl ipsec list status`, `configctl wireguard show`, `configctl openvpn connections client,server`. Which OpenVPN instances there are comes from `/conf/config.xml`: the instances of the OpenVPN model (`OPNsense/OpenVPN/Instances/Instance`, `enabled` 1, by uuid) and the legacy servers and clients (`openvpn/openvpn-server`, `openvpn/openvpn-client`, without `disable`, by vpnid). One that is neither there nor listed by configctl has been removed and is forgotten. |
+| Command-and-control | `/var/log/filter/filter_YYYYMMDD.log` (folded lines given back as for the audit log), the rule's description from `/tmp/rules.debug` (the way the firewall's live log names its rules) |
 
 ## Screenshots
 
@@ -165,7 +327,8 @@ pkg delete os-netreport
 ```
 
 Settings stay in `config.xml` and the history in `/var/db/netreport`, so a reinstall
-picks up where it left off.
+picks up where it left off. The alerts' places in the logs (`alerts-state.json`) and
+`infected.json` go with the plugin: a later install starts from where the logs are then.
 
 ### What a package outside the OPNsense repository does not get
 
@@ -177,8 +340,10 @@ not be updated either. Build a new package from a newer tag and `pkg add -f` it.
 ## How it works
 
 - `src/opnsense/scripts/netreport/netreport.py` builds and sends the reports. Cron runs it every
-  minute (`/usr/local/etc/cron.d/netreport`); it sends whatever is due and scans the LAN for new
-  devices every five minutes.
+  minute (`/usr/local/etc/cron.d/netreport`); it runs the alert collectors, sends whatever is due
+  and scans the LAN for new devices every five minutes.
+- `src/opnsense/scripts/netreport/alerts.py` is the alert layer and its collectors (see
+  [Alerts](#alerts)); `alerts.py test` sends a test alert.
 - The GUI (model, controllers, view) follows the usual OPNsense MVC layout. Settings are stored
   under `OPNsense/NetReport` in `config.xml`.
 - Report texts live in `i18n/<locale>.json`, Arabic among them. The GUI's Arabic is in
@@ -207,6 +372,15 @@ the English one.
   devices on the same switch is not seen.
 - The "new device" list relies on the ARP table, so devices that are only on IPv6 are not
   detected.
+- A WireGuard peer counts as up while its last handshake is less than 180 seconds old. A peer
+  that carries no traffic and has no persistent keepalive set handshakes less often, and reads as
+  down; set a keepalive on such a peer, or turn the VPN alert off.
+- The command-and-control alert needs os-blocklists' rule `Block Lists: blocklists_<id> from
+  inside` (its next release adds one for every command-and-control feed) for devices behind the
+  firewall's outbound NAT. pf matches os-blocklists' outbound rule (`... out`) after NAT and logs
+  the firewall's own address as the source there (seen on an appliance: three tries out of three),
+  which names no device and is left out; the `from inside` rule matches where the packet enters
+  the firewall, before NAT, with the device's own address.
 - Some languages change word forms with the number (Polish, Russian, Ukrainian and others).
   The wording was chosen to read well for most numbers, but not every count is grammatically
   perfect.

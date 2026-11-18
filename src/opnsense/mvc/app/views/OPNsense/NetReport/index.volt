@@ -214,6 +214,43 @@
             }, true);
         });
 
+        /* one test alert to every channel that is set, and what each answered */
+        $('#testAlertAct').click(function () {
+            const btn = $(this);
+            saveFormToEndpoint('/api/netreport/settings/set', 'frm_general', function () {
+                btn.find('i').addClass('fa fa-spinner fa-pulse');
+                ajaxCall('/api/netreport/service/test_alert', {}, function (data) {
+                    btn.find('i').removeClass('fa fa-spinner fa-pulse');
+                    const names = {'mail': "{{ lang._('Mail') }}", 'webhook': "{{ lang._('Webhook') }}", 'ntfy': 'ntfy'};
+                    let message = '';
+                    let sent = 0;
+                    if (data && data.status === 'ok') {
+                        message = "{{ lang._('What each alert channel answered:') }}" + '<br/><br/>';
+                        ['mail', 'webhook', 'ntfy'].forEach(function (channel) {
+                            const result = data[channel] || '';
+                            let shown = result;
+                            if (result === 'sent') {
+                                shown = "{{ lang._('Sent') }}";
+                                sent += 1;
+                            } else if (result === 'not set') {
+                                shown = "{{ lang._('not set') }}";
+                            }
+                            message += '<b>' + names[channel] + '</b>: ' + $('<div/>').text(shown).html() + '<br/>';
+                        });
+                    } else {
+                        message = $('<div/>').text((data && data.detail) || "{{ lang._('No response from the report script.') }}").html();
+                    }
+                    BootstrapDialog.show({
+                        type: sent ? BootstrapDialog.TYPE_SUCCESS : BootstrapDialog.TYPE_WARNING,
+                        title: "{{ lang._('Test alert') }}",
+                        message: message,
+                        buttons: [{label: "{{ lang._('Close') }}", action: function (dialog) { dialog.close(); }}]
+                    });
+                    $('#grid-history').bootgrid('reload');
+                });
+            }, true);
+        });
+
         /* history */
         status_text = {
             'sent': "{{ lang._('Sent') }}",
@@ -304,6 +341,9 @@
             <button class="btn btn-primary" id="saveAct" type="button"><b>{{ lang._('Save') }}</b></button>
             <button class="btn btn-default" id="testMailAct" type="button">
                 {{ lang._('Save and send test message') }} <i></i>
+            </button>
+            <button class="btn btn-default" id="testAlertAct" type="button">
+                {{ lang._('Send a test alert') }} <i></i>
             </button>
             <span id="saveAct_done" class="text-success" style="display: none; margin: 0 10px;">
                 <i class="fa fa-check"></i> {{ lang._('Saved') }}

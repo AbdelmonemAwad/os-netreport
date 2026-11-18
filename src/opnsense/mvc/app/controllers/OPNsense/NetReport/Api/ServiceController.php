@@ -79,6 +79,25 @@ class ServiceController extends ApiControllerBase
         return is_array($response) ? $response : ['status' => 'failed', 'detail' => gettext('No response from the report script.')];
     }
 
+    /**
+     * send one test alert to every alert channel that is set; the result per channel
+     */
+    public function testAlertAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $response = json_decode($this->run('testalert'), true);
+        if (!is_array($response)) {
+            return ['status' => 'failed', 'detail' => gettext('No response from the report script.')];
+        }
+        $result = ['status' => 'ok'];
+        foreach (['mail', 'webhook', 'ntfy'] as $channel) {
+            $result[$channel] = is_string($response[$channel] ?? null) ? $response[$channel] : '';
+        }
+        return $result;
+    }
+
     public function historyAction()
     {
         $records = json_decode($this->run('history'), true);

@@ -112,13 +112,111 @@
     </field>
     <field>
         <type>header</type>
-        <label>Alerts and thresholds</label>
+        <label>Alerts</label>
+    </field>
+    <field>
+        <id>netreport.general.alerts</id>
+        <label>Send alerts</label>
+        <type>checkbox</type>
+        <help>Send the alerts below as they happen, to every channel set here. Turned off, no alert is sent; the scheduled reports go on.</help>
+    </field>
+    <field>
+        <id>netreport.general.alert_mail</id>
+        <label>Alerts by mail</label>
+        <type>checkbox</type>
+        <help>Mail the alerts to the default recipients, through the mail server above.</help>
+    </field>
+    <field>
+        <id>netreport.general.alert_webhook_url</id>
+        <label>Webhook URL</label>
+        <type>text</type>
+        <help>Each alert is posted here as JSON: source, host, kind, at, subject, text and facts. The certificate is checked. Empty: no webhook.</help>
+    </field>
+    <field>
+        <id>netreport.general.alert_webhook_header</id>
+        <label>Webhook header</label>
+        <type>password</type>
+        <help>Optional: one header line sent with each post, for example Authorization: Bearer followed by your token. Stored on this firewall only. Leave empty to keep the current header.</help>
+    </field>
+    <field>
+        <id>netreport.general.alert_ntfy_server</id>
+        <label>ntfy server</label>
+        <type>text</type>
+        <help>The address of an ntfy server, for example https://ntfy.example.com. There is no default: ntfy stays off until a server and a topic are set.</help>
+    </field>
+    <field>
+        <id>netreport.general.alert_ntfy_topic</id>
+        <label>ntfy topic</label>
+        <type>text</type>
+        <help>The topic the alerts are published to. Anyone who knows the topic of a public server can read it: choose one that is hard to guess, or use an access token.</help>
+    </field>
+    <field>
+        <id>netreport.general.alert_ntfy_token</id>
+        <label>ntfy access token</label>
+        <type>password</type>
+        <help>Optional, sent as a bearer token. Stored on this firewall only. Leave empty to keep the current token.</help>
+    </field>
+    <field>
+        <id>netreport.general.gateway_alert</id>
+        <label>Gateway down and back</label>
+        <type>checkbox</type>
+        <help>Alert when a monitored gateway goes down and when it comes back, once the new state has held on two reads a minute apart. A gateway that changes state more than 3 times in 15 minutes gets one alert, and no more until it holds one state for 15 minutes.</help>
+    </field>
+    <field>
+        <id>netreport.general.login_alert</id>
+        <label>Repeated failed logins</label>
+        <type>checkbox</type>
+        <help>Alert when one address fails to sign in to the web GUI, the API or SSH this many times within 10 minutes, then nothing more for that address for 30 minutes. A failed API key is not counted: OPNsense logs no address for it.</help>
+    </field>
+    <field>
+        <id>netreport.general.login_fail_count</id>
+        <label>Failed logins before an alert</label>
+        <type>text</type>
+    </field>
+    <field>
+        <id>netreport.general.ips_alert</id>
+        <label>Intrusion prevention alerts</label>
+        <type>checkbox</type>
+        <help>Alert on Suricata alerts as they are logged: one alert per signature and source, then nothing more for that pair for 30 minutes.</help>
+    </field>
+    <field>
+        <id>netreport.general.ips_severity</id>
+        <label>Intrusion alert severity</label>
+        <type>dropdown</type>
+    </field>
+    <field>
+        <id>netreport.general.vpn_alert</id>
+        <label>VPN tunnels down and back</label>
+        <type>checkbox</type>
+        <help>Alert when an IPsec, WireGuard or OpenVPN connection that has been up goes down, and when it comes back, with the same two reads as the gateways. A WireGuard peer counts as up while its last handshake is less than 3 minutes old.</help>
+    </field>
+    <field>
+        <id>netreport.general.watchdog_alert</id>
+        <label>Hardware watchdog reset</label>
+        <type>checkbox</type>
+        <help>Alert once after a restart that the hardware watchdog caused, as os-watchdog records it.</help>
+    </field>
+    <field>
+        <id>netreport.general.c2_alert</id>
+        <label>Device reaching a command-and-control list</label>
+        <type>checkbox</type>
+        <help>Alert the first time a device of the local networks tries to reach an address on a command-and-control list that os-blocklists blocks with its log on, and list the device in the report.</help>
+    </field>
+    <field>
+        <id>netreport.general.xgs_alert</id>
+        <label>Alerts from other XGS plugins</label>
+        <type>checkbox</type>
+        <help>Pass on the alerts that os-xgs-npu leaves for this plugin.</help>
     </field>
     <field>
         <id>netreport.general.new_device_alert</id>
         <label>New device alert</label>
         <type>checkbox</type>
         <help>Send a short message within five minutes when a device joins the local network for the first time.</help>
+    </field>
+    <field>
+        <type>header</type>
+        <label>Thresholds</label>
     </field>
     <field>
         <id>netreport.general.temp_warn</id>
