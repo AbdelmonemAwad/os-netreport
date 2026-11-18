@@ -177,7 +177,7 @@
  "records": "Registos",
  "top_sites": "Sites por nome (TLS e HTTP)",
  "site": "Site",
- "apps_no_ids": "O Suricata não escreveu registos de aplicações neste período: a Deteção de Intrusões está desligada, ou o seu registo de TLS e HTTP está.",
+ "apps_no_ids": "O Suricata não escreveu registos de aplicações neste período: a Deteção de Intrusões está desligada, ou o seu registo de HTTP e o registo alargado de TLS estão.",
  "ntopng_apps": "Aplicações por tráfego desde o último arranque do ntopng (ntopng)",
  "ntopng_failed": "O ntopng não respondeu: {why}",
  "mail": "✉️ Correio",

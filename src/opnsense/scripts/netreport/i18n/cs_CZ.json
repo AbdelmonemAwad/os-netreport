@@ -177,7 +177,7 @@
  "records": "Záznamy",
  "top_sites": "Weby podle názvu (TLS a HTTP)",
  "site": "Web",
- "apps_no_ids": "Suricata v tomto období nezapsala žádné záznamy aplikací: detekce průniků je vypnutá, nebo je vypnuté její zaznamenávání TLS a HTTP.",
+ "apps_no_ids": "Suricata v tomto období nezapsala žádné záznamy aplikací: detekce průniků je vypnutá, nebo je vypnuté její zaznamenávání HTTP a rozšířené zaznamenávání TLS.",
  "ntopng_apps": "Aplikace podle provozu od posledního spuštění ntopng (ntopng)",
  "ntopng_failed": "ntopng neodpověděl: {why}",
  "mail": "✉️ Pošta",

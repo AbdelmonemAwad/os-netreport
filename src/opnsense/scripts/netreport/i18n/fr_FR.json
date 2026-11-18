@@ -177,7 +177,7 @@
  "records": "Enregistrements",
  "top_sites": "Sites par nom (TLS et HTTP)",
  "site": "Site",
- "apps_no_ids": "Suricata n’a écrit aucun enregistrement d’application sur cette période : la détection d’intrusion est désactivée, ou sa journalisation TLS et HTTP l’est.",
+ "apps_no_ids": "Suricata n’a écrit aucun enregistrement d’application sur cette période : la détection d’intrusion est désactivée, ou sa journalisation HTTP et sa journalisation TLS étendue le sont.",
  "ntopng_apps": "Applications par trafic depuis le dernier démarrage de ntopng (ntopng)",
  "ntopng_failed": "ntopng n’a pas répondu : {why}",
  "mail": "✉️ Messagerie",

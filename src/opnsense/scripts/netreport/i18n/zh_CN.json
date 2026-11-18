@@ -164,7 +164,7 @@
  "records": "记录",
  "top_sites": "按名称统计的网站（TLS 和 HTTP）",
  "site": "网站",
- "apps_no_ids": "此期间 Suricata 未写入应用记录：入侵检测已关闭，或其 TLS 和 HTTP 日志已关闭。",
+ "apps_no_ids": "此期间 Suricata 未写入应用记录：入侵检测已关闭，或其 HTTP 日志和扩展 TLS 日志已关闭。",
  "ntopng_apps": "自 ntopng 上次启动以来按流量统计的应用（ntopng）",
  "ntopng_failed": "ntopng 未响应：{why}",
  "mail": "✉️ 邮件",

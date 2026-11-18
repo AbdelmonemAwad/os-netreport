@@ -177,7 +177,7 @@
  "records": "Bản ghi",
  "top_sites": "Trang web theo tên (TLS và HTTP)",
  "site": "Trang web",
- "apps_no_ids": "Suricata không ghi bản ghi ứng dụng nào trong khoảng thời gian này: Phát hiện xâm nhập đang tắt, hoặc việc ghi nhật ký TLS và HTTP của nó đang tắt.",
+ "apps_no_ids": "Suricata không ghi bản ghi ứng dụng nào trong khoảng thời gian này: Phát hiện xâm nhập đang tắt, hoặc việc ghi nhật ký HTTP và ghi nhật ký TLS mở rộng của nó đang tắt.",
  "ntopng_apps": "Ứng dụng theo lưu lượng kể từ lần khởi động gần nhất của ntopng (ntopng)",
  "ntopng_failed": "ntopng không phản hồi: {why}",
  "mail": "✉️ Thư",

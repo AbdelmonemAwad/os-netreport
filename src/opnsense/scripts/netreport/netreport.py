@@ -849,9 +849,9 @@ def mail_stats(start, end, top_n):
 
 def suricata_apps(start, end, top_n):
     """from Suricata's eve.json in the period: the application protocols it recognised (records with an
-    app_proto other than "failed") and the sites named in its TLS (SNI) and HTTP (Host) records; ok False
-    where it wrote no TLS or HTTP record and no protocol at all - Intrusion Detection off, or its TLS and
-    HTTP logging off. Read for EVE_SCAN_SECONDS at most (the scheduler holds its lock while a report is
+    app_proto other than "failed") and the sites named in its TLS (SNI) and HTTP (Host) records - a TLS
+    record names its site only when Intrusion Detection's TLS logging is extended (Suricata 8.0.8, seen on an
+    appliance on 2026-11-18: "tls":{} otherwise); ok False where it wrote no protocol and no site at all. Read for EVE_SCAN_SECONDS at most (the scheduler holds its lock while a report is
     built): partial True when the log was left unread past it."""
     s, e = start.timestamp(), end.timestamp()
     protos, sites = Counter(), Counter()

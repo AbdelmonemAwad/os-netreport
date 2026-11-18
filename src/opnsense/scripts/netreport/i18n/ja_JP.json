@@ -164,7 +164,7 @@
  "records": "記録",
  "top_sites": "名前別のサイト（TLS と HTTP）",
  "site": "サイト",
- "apps_no_ids": "この期間、Suricata はアプリケーションの記録を書き込みませんでした：侵入検知がオフか、その TLS と HTTP のログ記録がオフです。",
+ "apps_no_ids": "この期間、Suricata はアプリケーションの記録を書き込みませんでした：侵入検知がオフか、その HTTP のログ記録と拡張 TLS のログ記録がオフです。",
  "ntopng_apps": "ntopng の前回起動以降のトラフィック別アプリケーション（ntopng）",
  "ntopng_failed": "ntopng が応答しませんでした：{why}",
  "mail": "✉️ メール",

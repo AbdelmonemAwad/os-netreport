@@ -177,7 +177,7 @@
  "records": "Wpisy",
  "top_sites": "Witryny według nazwy (TLS i HTTP)",
  "site": "Witryna",
- "apps_no_ids": "Suricata nie zapisała w tym okresie żadnych wpisów aplikacji: wykrywanie włamań jest wyłączone albo jego rejestrowanie TLS i HTTP.",
+ "apps_no_ids": "Suricata nie zapisała w tym okresie żadnych wpisów aplikacji: wykrywanie włamań jest wyłączone albo jego rejestrowanie HTTP i rozszerzone rejestrowanie TLS.",
  "ntopng_apps": "Aplikacje według ruchu od ostatniego uruchomienia ntopng (ntopng)",
  "ntopng_failed": "ntopng nie odpowiedział: {why}",
  "mail": "✉️ Poczta",

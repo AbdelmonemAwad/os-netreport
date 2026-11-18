@@ -262,7 +262,7 @@ whose source is missing simply show "no data".
 | DNS filtering | Unbound query database | Unbound with reporting enabled |
 | Web activity by device | Unbound query database, by client | Unbound DNS statistics on (Reporting: Unbound DNS, its settings) |
 | Security | Suricata `eve.json`, `cscli` | Intrusion Detection, `os-crowdsec` (optional) |
-| Applications | Suricata `eve.json` (`app_proto`, TLS SNI, HTTP Host); ntopng's REST API | Intrusion Detection with its TLS and HTTP logging; `os-ntopng` and an API token (optional) |
+| Applications | Suricata `eve.json` (`app_proto`, TLS SNI, HTTP Host); ntopng's REST API | Intrusion Detection with its HTTP logging and its TLS logging extended (a TLS record names its site only then); `os-ntopng` and an API token (optional) |
 | Devices | ARP table, host discovery, NetFlow | Insight (NetFlow) for per-device usage |
 | Mail | the mail server's log, `/var/log/postfix/` | `os-postfix` |
 | Firewall health | sysctl, `smartctl`, system log | `os-smart` for SMART (optional) |

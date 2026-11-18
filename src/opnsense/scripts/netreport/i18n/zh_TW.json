@@ -164,7 +164,7 @@
  "records": "記錄",
  "top_sites": "依名稱統計的網站（TLS 與 HTTP）",
  "site": "網站",
- "apps_no_ids": "此期間 Suricata 未寫入應用程式記錄：入侵偵測已關閉，或其 TLS 與 HTTP 記錄已關閉。",
+ "apps_no_ids": "此期間 Suricata 未寫入應用程式記錄：入侵偵測已關閉，或其 HTTP 記錄與擴充 TLS 記錄已關閉。",
  "ntopng_apps": "自 ntopng 上次啟動以來依流量統計的應用程式（ntopng）",
  "ntopng_failed": "ntopng 未回應：{why}",
  "mail": "✉️ 郵件",

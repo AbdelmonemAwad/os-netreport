@@ -177,7 +177,7 @@
  "records": "Oppføringer",
  "top_sites": "Nettsteder etter navn (TLS og HTTP)",
  "site": "Nettsted",
- "apps_no_ids": "Suricata skrev ingen applikasjonsoppføringer i denne perioden: inntrengingsdeteksjon er av, eller dens TLS- og HTTP-logging er det.",
+ "apps_no_ids": "Suricata skrev ingen applikasjonsoppføringer i denne perioden: inntrengingsdeteksjon er av, eller dens HTTP-logging og utvidede TLS-logging er det.",
  "ntopng_apps": "Applikasjoner etter trafikk siden ntopng sist startet (ntopng)",
  "ntopng_failed": "ntopng svarte ikke: {why}",
  "mail": "✉️ E-post",

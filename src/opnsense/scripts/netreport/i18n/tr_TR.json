@@ -177,7 +177,7 @@
  "records": "Kayıtlar",
  "top_sites": "Ada göre siteler (TLS ve HTTP)",
  "site": "Site",
- "apps_no_ids": "Suricata bu dönemde hiçbir uygulama kaydı yazmadı: Saldırı Tespiti kapalı ya da onun TLS ve HTTP günlüğü kapalı.",
+ "apps_no_ids": "Suricata bu dönemde hiçbir uygulama kaydı yazmadı: Saldırı Tespiti kapalı ya da onun HTTP günlüğü ve genişletilmiş TLS günlüğü kapalı.",
  "ntopng_apps": "ntopng’nin son başlatılmasından bu yana trafiğe göre uygulamalar (ntopng)",
  "ntopng_failed": "ntopng yanıt vermedi: {why}",
  "mail": "✉️ E-posta",

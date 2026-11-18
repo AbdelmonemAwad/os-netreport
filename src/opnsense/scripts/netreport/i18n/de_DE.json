@@ -177,7 +177,7 @@
  "records": "Einträge",
  "top_sites": "Websites nach Name (TLS und HTTP)",
  "site": "Website",
- "apps_no_ids": "Suricata hat in diesem Zeitraum keine Anwendungseinträge geschrieben: Die Angriffserkennung ist aus, oder ihre TLS- und HTTP-Protokollierung.",
+ "apps_no_ids": "Suricata hat in diesem Zeitraum keine Anwendungseinträge geschrieben: Die Angriffserkennung ist aus, oder ihre HTTP-Protokollierung und ihre erweiterte TLS-Protokollierung.",
  "ntopng_apps": "Anwendungen nach Datenverkehr seit dem letzten Start von ntopng (ntopng)",
  "ntopng_failed": "ntopng hat nicht geantwortet: {why}",
  "mail": "✉️ E-Mail",

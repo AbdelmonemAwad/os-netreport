@@ -177,7 +177,7 @@
  "records": "Records",
  "top_sites": "Sites by name (TLS and HTTP)",
  "site": "Site",
- "apps_no_ids": "Suricata wrote no application records in this period: Intrusion Detection is off, or its TLS and HTTP logging is.",
+ "apps_no_ids": "Suricata wrote no application records in this period: Intrusion Detection is off, or its HTTP logging and its extended TLS logging are.",
  "ntopng_apps": "Applications by traffic since ntopng last started (ntopng)",
  "ntopng_failed": "ntopng did not answer: {why}",
  "mail": "✉️ Mail",

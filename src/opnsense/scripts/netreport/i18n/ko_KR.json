@@ -164,7 +164,7 @@
  "records": "기록",
  "top_sites": "이름별 사이트 (TLS 및 HTTP)",
  "site": "사이트",
- "apps_no_ids": "이 기간에 Suricata가 애플리케이션 기록을 쓰지 않았습니다: 침입 탐지가 꺼져 있거나 TLS 및 HTTP 로깅이 꺼져 있습니다.",
+ "apps_no_ids": "이 기간에 Suricata가 애플리케이션 기록을 쓰지 않았습니다: 침입 탐지가 꺼져 있거나 HTTP 로깅과 확장 TLS 로깅이 꺼져 있습니다.",
  "ntopng_apps": "ntopng 마지막 시작 이후 트래픽별 애플리케이션 (ntopng)",
  "ntopng_failed": "ntopng가 응답하지 않았습니다: {why}",
  "mail": "✉️ 메일",
