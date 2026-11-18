@@ -13,10 +13,20 @@ Plugin Changelog
 
 1.0.7
 
-* Report texts: the four the security section asks for, in all 21
+* a report whose security section holds a high-severity Suricata alert
+  no longer stops: the four texts that section asks for are in all 21
   catalogues
-* Alerts: one layer to mail, a webhook and ntfy, and the alerts sent
-  through it
+* alerts: one layer to mail, a webhook and ntfy, with a test button and
+  every alert and its result per channel in the History tab; a failing
+  channel does not stop the others, and one alert is not sent again
+  within its quiet time (30 minutes)
+* on by default under one switch, each with its own: a gateway down and
+  back, repeated failed logins to the web GUI or SSH from one address,
+  high-severity Suricata alerts, an IPsec, WireGuard or OpenVPN tunnel
+  down and back, a reset the hardware watchdog caused (as os-watchdog
+  1.0.4 records it), and a device inside reaching a command-and-control
+  list (as os-blocklists 1.0.3 logs it), listed in the report's security
+  section
 
 1.0.6
 
