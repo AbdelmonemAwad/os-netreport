@@ -396,6 +396,20 @@ the English one.
   the firewall's own address as the source there (seen on an appliance: three tries out of three),
   which names no device and is left out; the `from inside` rule matches where the packet enters
   the firewall, before NAT, with the device's own address.
+- The VPN section lists as tunnels the connections that should stay up: an IPsec connection with a
+  remote address of its own, an OpenVPN client or server instance, a WireGuard peer this firewall sends
+  a keepalive to. A road warrior - an OpenVPN server's clients, IPsec open to any address, a WireGuard
+  peer with no keepalive - is a session, listed with who is connected now, and its comings and goings
+  are no outages. Outages are counted from the log the tunnel watch keeps since this version (62 days,
+  200 entries a tunnel); a period that began earlier says from when it counts.
+- "Connected now" counts a WireGuard peer while its last handshake is under 300 seconds old, as
+  VPN: WireGuard: Status does; the tunnel watch's 180 seconds above decide a tunnel's outages.
+- The Applications section reads Suricata's log for 60 seconds at most (the scheduler waits while a
+  report is built), and says so when it stopped early. ntopng's figures are its totals since it last
+  started, for the first interface it monitors.
+- A secret field (the ntopng token, like the webhook header and the ntfy token) is kept when left
+  empty, so it cannot be cleared from the page; with os-ntopng removed and no ntopng address set, a
+  token left behind is not used.
 - Some languages change word forms with the number (Polish, Russian, Ukrainian and others).
   The wording was chosen to read well for most numbers, but not every count is grammatically
   perfect.

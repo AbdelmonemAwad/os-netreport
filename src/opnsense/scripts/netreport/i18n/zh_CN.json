@@ -165,7 +165,7 @@
  "top_sites": "按名称统计的网站（TLS 和 HTTP）",
  "site": "网站",
  "apps_no_ids": "此期间 Suricata 未写入应用记录：入侵检测已关闭，或其 TLS 和 HTTP 日志已关闭。",
- "ntopng_apps": "按流量统计的应用（ntopng）",
+ "ntopng_apps": "自 ntopng 上次启动以来按流量统计的应用（ntopng）",
  "ntopng_failed": "ntopng 未响应：{why}",
  "mail": "✉️ 邮件",
  "mail_none": "此防火墙上没有邮件服务器日志（os-postfix）。",
@@ -173,5 +173,7 @@
  "mail_deferred": "已延迟",
  "mail_bounced": "已退回",
  "mail_rejected": "已拒绝",
- "top_rejected": "被拒绝最多的发件方"
+ "top_rejected": "被拒绝最多的发件方",
+ "web_slow": "Unbound 的查询数据库未在 120 秒内响应。",
+ "apps_partial": "Suricata 的日志只读取了 {n} 秒：以上数字来自其前一部分。"
 }

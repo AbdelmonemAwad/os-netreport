@@ -165,7 +165,7 @@
  "top_sites": "이름별 사이트 (TLS 및 HTTP)",
  "site": "사이트",
  "apps_no_ids": "이 기간에 Suricata가 애플리케이션 기록을 쓰지 않았습니다: 침입 탐지가 꺼져 있거나 TLS 및 HTTP 로깅이 꺼져 있습니다.",
- "ntopng_apps": "트래픽별 애플리케이션 (ntopng)",
+ "ntopng_apps": "ntopng 마지막 시작 이후 트래픽별 애플리케이션 (ntopng)",
  "ntopng_failed": "ntopng가 응답하지 않았습니다: {why}",
  "mail": "✉️ 메일",
  "mail_none": "이 방화벽에 메일 서버 로그가 없습니다 (os-postfix).",
@@ -173,5 +173,7 @@
  "mail_deferred": "지연됨",
  "mail_bounced": "반송됨",
  "mail_rejected": "거부됨",
- "top_rejected": "가장 많이 거부된 발신자"
+ "top_rejected": "가장 많이 거부된 발신자",
+ "web_slow": "Unbound의 쿼리 데이터베이스가 120초 안에 응답하지 않았습니다.",
+ "apps_partial": "Suricata 로그는 {n}초 동안만 읽었습니다: 위의 수는 그 앞부분에서 나온 것입니다."
 }

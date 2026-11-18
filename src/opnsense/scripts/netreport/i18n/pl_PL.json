@@ -178,7 +178,7 @@
  "top_sites": "Witryny według nazwy (TLS i HTTP)",
  "site": "Witryna",
  "apps_no_ids": "Suricata nie zapisała w tym okresie żadnych wpisów aplikacji: wykrywanie włamań jest wyłączone albo jego rejestrowanie TLS i HTTP.",
- "ntopng_apps": "Aplikacje według ruchu (ntopng)",
+ "ntopng_apps": "Aplikacje według ruchu od ostatniego uruchomienia ntopng (ntopng)",
  "ntopng_failed": "ntopng nie odpowiedział: {why}",
  "mail": "✉️ Poczta",
  "mail_none": "Brak dziennika serwera pocztowego na tej zaporze (os-postfix).",
@@ -186,5 +186,7 @@
  "mail_deferred": "Odroczone",
  "mail_bounced": "Zwrócone",
  "mail_rejected": "Odrzucone",
- "top_rejected": "Najczęściej odrzucani nadawcy"
+ "top_rejected": "Najczęściej odrzucani nadawcy",
+ "web_slow": "Baza zapytań Unbound nie odpowiedziała w ciągu 120 s.",
+ "apps_partial": "Dziennik Suricaty czytano tylko przez {n} s: powyższe liczby pochodzą z jego pierwszej części."
 }

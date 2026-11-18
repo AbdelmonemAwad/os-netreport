@@ -178,7 +178,7 @@
  "top_sites": "Websites nach Name (TLS und HTTP)",
  "site": "Website",
  "apps_no_ids": "Suricata hat in diesem Zeitraum keine Anwendungseinträge geschrieben: Die Angriffserkennung ist aus, oder ihre TLS- und HTTP-Protokollierung.",
- "ntopng_apps": "Anwendungen nach Datenverkehr (ntopng)",
+ "ntopng_apps": "Anwendungen nach Datenverkehr seit dem letzten Start von ntopng (ntopng)",
  "ntopng_failed": "ntopng hat nicht geantwortet: {why}",
  "mail": "✉️ E-Mail",
  "mail_none": "Kein Protokoll eines Mailservers auf dieser Firewall (os-postfix).",
@@ -186,5 +186,7 @@
  "mail_deferred": "Zurückgestellt",
  "mail_bounced": "Unzustellbar",
  "mail_rejected": "Abgewiesen",
- "top_rejected": "Am häufigsten abgewiesene Absender"
+ "top_rejected": "Am häufigsten abgewiesene Absender",
+ "web_slow": "Die Abfragedatenbank von Unbound hat nicht innerhalb von 120 s geantwortet.",
+ "apps_partial": "Das Protokoll von Suricata wurde nur {n} s lang gelesen: Die Zahlen oben stammen aus seinem ersten Teil."
 }

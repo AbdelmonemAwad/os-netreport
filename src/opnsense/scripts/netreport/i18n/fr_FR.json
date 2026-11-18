@@ -178,7 +178,7 @@
  "top_sites": "Sites par nom (TLS et HTTP)",
  "site": "Site",
  "apps_no_ids": "Suricata n’a écrit aucun enregistrement d’application sur cette période : la détection d’intrusion est désactivée, ou sa journalisation TLS et HTTP l’est.",
- "ntopng_apps": "Applications par trafic (ntopng)",
+ "ntopng_apps": "Applications par trafic depuis le dernier démarrage de ntopng (ntopng)",
  "ntopng_failed": "ntopng n’a pas répondu : {why}",
  "mail": "✉️ Messagerie",
  "mail_none": "Aucun journal de serveur de messagerie sur ce pare-feu (os-postfix).",
@@ -186,5 +186,7 @@
  "mail_deferred": "Différés",
  "mail_bounced": "Rejetés en retour",
  "mail_rejected": "Refusés",
- "top_rejected": "Expéditeurs les plus refusés"
+ "top_rejected": "Expéditeurs les plus refusés",
+ "web_slow": "La base de requêtes d’Unbound n’a pas répondu en 120 s.",
+ "apps_partial": "Le journal de Suricata n’a été lu que pendant {n} s : les nombres ci-dessus viennent de sa première partie."
 }

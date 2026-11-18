@@ -1146,18 +1146,51 @@ def ipsec_up(conn):
     return False
 
 
-def vpn_reads(settings, entries, now):
+def vpn_answers():
+    """the three status actions vpn_reads() reads, asked once: {'ipsec', 'wg', 'ovpn': answer or None}"""
+    return {'ipsec': configctl('ipsec', 'list', 'status'), 'wg': configctl('wireguard', 'show'),
+            'ovpn': configctl('openvpn', 'connections', 'client,server')}
+
+
+def road_warrior(settings, key):
+    """Whether a followed VPN key is a connection users come and go on rather than a tunnel that should
+    stay up: an OpenVPN server's client; an IPsec connection with no remote address, or any (a swanctl
+    connection's remote_addrs empty, %any, 0.0.0.0/0 or ::/0; a legacy phase 1 marked mobile); a
+    WireGuard peer this firewall sends no keepalive to. Such a key's down is someone gone home, not an
+    outage: the report lists its users and keeps no outage log of it."""
+    parts = key.split('|')
+    if parts[0] == 'ovpn':
+        return len(parts) == 4 and parts[1] == 's' and parts[3] != ''
+    if parts[0] == 'ipsec' and len(parts) == 2:
+        for conn in settings.root.findall('./OPNsense/Swanctl/Connections/Connection'):
+            if conn.get('uuid') == parts[1]:
+                remote = [a.strip() for a in (conn.findtext('remote_addrs') or '').split(',') if a.strip()]
+                return not remote or any(a in ('%any', '0.0.0.0/0', '::/0') for a in remote)
+        for phase1 in settings.root.findall('./ipsec/phase1'):
+            if parts[1] == 'con%s' % (phase1.findtext('ikeid') or '').strip():
+                return phase1.find('mobile') is not None
+        return False
+    if parts[0] == 'wg' and len(parts) == 3:
+        for item in settings.root.iter('client'):
+            if (item.findtext('pubkey') or '').strip() == parts[2]:
+                return not (item.findtext('keepalive') or '').strip()
+    return False
+
+
+def vpn_reads(settings, entries, now, answers=None):
     """({key: (name, 'up' or 'down')} of every connection this read could see, and the key prefixes of
-    the sources that answered)"""
+    the sources that answered); answers: vpn_answers() already asked (the report's VPN section)"""
     reads, answered = {}, []
-    ipsec = configctl('ipsec', 'list', 'status')
+    if answers is None:
+        answers = vpn_answers()
+    ipsec = answers.get('ipsec')
     if isinstance(ipsec, dict):
         answered.append('ipsec|')
         for cid, conn in ipsec.items():
             if isinstance(conn, dict):
                 name = description(settings, cid) or str(conn.get('remote-addrs') or cid)
                 reads[f'ipsec|{cid}'] = ('IPsec ' + name, 'up' if ipsec_up(conn) else 'down')
-    wg = configctl('wireguard', 'show')
+    wg = answers.get('wg')
     if isinstance(wg, dict) and wg.get('status') == 'ok':
         answered.append('wg|')
         peers = {}
@@ -1172,7 +1205,7 @@ def vpn_reads(settings, entries, now):
             up = isinstance(handshake, int) and handshake > 0 and now - handshake < WG_HANDSHAKE
             reads[f'wg|{rec.get("if")}|{key}'] = ('WireGuard ' + (peers.get(key) or f'{rec.get("if")} {key[:8]}…'),
                                                  'up' if up else 'down')
-    ovpn = configctl('openvpn', 'connections', 'client,server')
+    ovpn = answers.get('ovpn')
     if isinstance(ovpn, dict):
         answered.append('ovpn|')
         reads.update(openvpn_reads(settings, entries, ovpn))
@@ -1245,23 +1278,36 @@ def openvpn_reads(settings, entries, ovpn):
 
 
 VPN_LOG_KEEP = 62 * 86400      # the report's VPN section reads a period of up to two months
+VPN_LOG_PER_KEY = 200          # one tunnel that flaps cannot push the others' history out
 VPN_LOG_MAX = 1000
 
 
-def vpn_logged(state, key, name, said):
-    """the tunnel watch's log, for the report's VPN section (netreport.py vpn_report): each down and back
-    the watch says, whether or not its alert is wanted; VPN_LOG_KEEP seconds, VPN_LOG_MAX entries at most"""
-    log = state.data.get('vpn_log') if isinstance(state.data.get('vpn_log'), list) else []
+def vpn_logged(state, settings, key, name, said):
+    """The tunnel watch's log, for the report's VPN section (netreport.py vpn_report): each down and back
+    the watch says of a tunnel, whether or not its alert is wanted - not of a road warrior (road_warrior()),
+    whose ups and downs are users coming and going. Kept VPN_LOG_KEEP seconds, VPN_LOG_PER_KEY entries a
+    tunnel and VPN_LOG_MAX in all; when the cap drops an entry younger than VPN_LOG_KEEP, vpn_log_since moves
+    up to the oldest kept, so a report reading further back says from when it counts."""
+    if road_warrior(settings, key):
+        return
+    log = [x for x in state.data.get('vpn_log') or [] if isinstance(x, dict) and isinstance(x.get('at'), (int, float))]
     # once only: a change put back by kept_before() (the state could not be saved) is said again
-    if any(isinstance(x, dict) and x.get('key') == key and x.get('event') == said[0] and x.get('at') == said[1]
-           for x in log):
+    if any(x.get('key') == key and x.get('event') == said[0] and x.get('at') == said[1] for x in log):
         return
     entry = {'key': key, 'name': name, 'event': said[0], 'at': said[1]}
     if said[0] == 'back':
         entry['down'] = int(said[2])
     log.append(entry)
-    cutoff = said[1] - VPN_LOG_KEEP
-    state.data['vpn_log'] = [x for x in log if isinstance(x, dict) and (x.get('at') or 0) >= cutoff][-VPN_LOG_MAX:]
+    log = [x for x in log if x['at'] >= said[1] - VPN_LOG_KEEP]
+    mine = [x for x in log if x.get('key') == key]
+    capped = mine[:-VPN_LOG_PER_KEY] if len(mine) > VPN_LOG_PER_KEY else []
+    log = [x for x in log if not any(x is c for c in capped)]
+    capped += log[:-VPN_LOG_MAX] if len(log) > VPN_LOG_MAX else []
+    log = log[-VPN_LOG_MAX:]
+    if capped:
+        since = state.data.get('vpn_log_since') if isinstance(state.data.get('vpn_log_since'), (int, float)) else 0
+        state.data['vpn_log_since'] = max(since, max(c['at'] for c in capped))
+    state.data['vpn_log'] = log
 
 
 def collect_vpn(settings, state, now):
@@ -1283,7 +1329,7 @@ def collect_vpn(settings, state, now):
         said = track(entries, key, read, now)
         entries[key]['name'] = name
         if said and said[0] in ('down', 'back'):
-            vpn_logged(state, key, name, said)
+            vpn_logged(state, settings, key, name, said)
         if not said or not send or not kept_before(state, entries, key, before, 'vpn'):
             continue
         facts = {'connection': name, 'state': said[0]}

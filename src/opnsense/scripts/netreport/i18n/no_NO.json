@@ -178,7 +178,7 @@
  "top_sites": "Nettsteder etter navn (TLS og HTTP)",
  "site": "Nettsted",
  "apps_no_ids": "Suricata skrev ingen applikasjonsoppføringer i denne perioden: inntrengingsdeteksjon er av, eller dens TLS- og HTTP-logging er det.",
- "ntopng_apps": "Applikasjoner etter trafikk (ntopng)",
+ "ntopng_apps": "Applikasjoner etter trafikk siden ntopng sist startet (ntopng)",
  "ntopng_failed": "ntopng svarte ikke: {why}",
  "mail": "✉️ E-post",
  "mail_none": "Ingen e-postserverlogg på denne brannmuren (os-postfix).",
@@ -186,5 +186,7 @@
  "mail_deferred": "Utsatt",
  "mail_bounced": "Returnert",
  "mail_rejected": "Avvist",
- "top_rejected": "Mest avviste avsendere"
+ "top_rejected": "Mest avviste avsendere",
+ "web_slow": "Spørringsdatabasen til Unbound svarte ikke innen 120 s.",
+ "apps_partial": "Loggen til Suricata ble bare lest i {n} s: tallene over er fra den første delen."
 }

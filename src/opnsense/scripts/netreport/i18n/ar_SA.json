@@ -178,7 +178,7 @@
  "top_sites": "المواقع بأسمائها (TLS وHTTP)",
  "site": "الموقع",
  "apps_no_ids": "لم تكتب Suricata سجلات تطبيقات في هذه الفترة: كشف التسلل مطفأ، أو تسجيله لـ TLS وHTTP مطفأ.",
- "ntopng_apps": "التطبيقات بحسب الحركة (ntopng)",
+ "ntopng_apps": "التطبيقات بحسب الحركة منذ آخر تشغيل لـ ntopng (ntopng)",
  "ntopng_failed": "لم يُجب ntopng: {why}",
  "mail": "✉️ البريد",
  "mail_none": "لا سجل لخادم بريد على هذا الجدار الناري (os-postfix).",
@@ -186,5 +186,7 @@
  "mail_deferred": "أُجّلت",
  "mail_bounced": "ارتدّت",
  "mail_rejected": "رُفضت",
- "top_rejected": "أكثر المرسلين المرفوضين"
+ "top_rejected": "أكثر المرسلين المرفوضين",
+ "web_slow": "لم تُجب قاعدة استعلامات Unbound خلال 120 ثانية.",
+ "apps_partial": "قُرئ سجل Suricata {n} ثانية فقط: الأعداد أعلاه من أوله."
 }

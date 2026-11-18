@@ -178,7 +178,7 @@
  "top_sites": "Sites by name (TLS and HTTP)",
  "site": "Site",
  "apps_no_ids": "Suricata wrote no application records in this period: Intrusion Detection is off, or its TLS and HTTP logging is.",
- "ntopng_apps": "Applications by traffic (ntopng)",
+ "ntopng_apps": "Applications by traffic since ntopng last started (ntopng)",
  "ntopng_failed": "ntopng did not answer: {why}",
  "mail": "✉️ Mail",
  "mail_none": "No mail server log on this firewall (os-postfix).",
@@ -186,5 +186,7 @@
  "mail_deferred": "Deferred",
  "mail_bounced": "Bounced",
  "mail_rejected": "Refused",
- "top_rejected": "Most refused senders"
+ "top_rejected": "Most refused senders",
+ "web_slow": "Unbound's query database did not answer within 120 s.",
+ "apps_partial": "Suricata's log was read for {n} s only: the counts above are from its first part."
 }

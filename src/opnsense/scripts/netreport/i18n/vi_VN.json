@@ -178,7 +178,7 @@
  "top_sites": "Trang web theo tên (TLS và HTTP)",
  "site": "Trang web",
  "apps_no_ids": "Suricata không ghi bản ghi ứng dụng nào trong khoảng thời gian này: Phát hiện xâm nhập đang tắt, hoặc việc ghi nhật ký TLS và HTTP của nó đang tắt.",
- "ntopng_apps": "Ứng dụng theo lưu lượng (ntopng)",
+ "ntopng_apps": "Ứng dụng theo lưu lượng kể từ lần khởi động gần nhất của ntopng (ntopng)",
  "ntopng_failed": "ntopng không phản hồi: {why}",
  "mail": "✉️ Thư",
  "mail_none": "Không có nhật ký máy chủ thư trên tường lửa này (os-postfix).",
@@ -186,5 +186,7 @@
  "mail_deferred": "Hoãn lại",
  "mail_bounced": "Bị trả về",
  "mail_rejected": "Bị từ chối",
- "top_rejected": "Người gửi bị từ chối nhiều nhất"
+ "top_rejected": "Người gửi bị từ chối nhiều nhất",
+ "web_slow": "Cơ sở dữ liệu truy vấn của Unbound không phản hồi trong 120 giây.",
+ "apps_partial": "Nhật ký của Suricata chỉ được đọc trong {n} giây: các số ở trên là từ phần đầu của nó."
 }

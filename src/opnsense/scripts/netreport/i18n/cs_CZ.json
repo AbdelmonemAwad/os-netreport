@@ -178,7 +178,7 @@
  "top_sites": "Weby podle názvu (TLS a HTTP)",
  "site": "Web",
  "apps_no_ids": "Suricata v tomto období nezapsala žádné záznamy aplikací: detekce průniků je vypnutá, nebo je vypnuté její zaznamenávání TLS a HTTP.",
- "ntopng_apps": "Aplikace podle provozu (ntopng)",
+ "ntopng_apps": "Aplikace podle provozu od posledního spuštění ntopng (ntopng)",
  "ntopng_failed": "ntopng neodpověděl: {why}",
  "mail": "✉️ Pošta",
  "mail_none": "Na tomto firewallu není žádný log poštovního serveru (os-postfix).",
@@ -186,5 +186,7 @@
  "mail_deferred": "Odloženo",
  "mail_bounced": "Vráceno",
  "mail_rejected": "Odmítnuto",
- "top_rejected": "Nejčastěji odmítnutí odesílatelé"
+ "top_rejected": "Nejčastěji odmítnutí odesílatelé",
+ "web_slow": "Databáze dotazů Unbound neodpověděla do 120 s.",
+ "apps_partial": "Log Suricaty byl čten jen {n} s: počty výše jsou z jeho první části."
 }

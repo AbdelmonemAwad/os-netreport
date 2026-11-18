@@ -165,7 +165,7 @@
  "top_sites": "名前別のサイト（TLS と HTTP）",
  "site": "サイト",
  "apps_no_ids": "この期間、Suricata はアプリケーションの記録を書き込みませんでした：侵入検知がオフか、その TLS と HTTP のログ記録がオフです。",
- "ntopng_apps": "トラフィック別のアプリケーション（ntopng）",
+ "ntopng_apps": "ntopng の前回起動以降のトラフィック別アプリケーション（ntopng）",
  "ntopng_failed": "ntopng が応答しませんでした：{why}",
  "mail": "✉️ メール",
  "mail_none": "このファイアウォールにはメールサーバーのログがありません（os-postfix）。",
@@ -173,5 +173,7 @@
  "mail_deferred": "保留",
  "mail_bounced": "返送",
  "mail_rejected": "拒否",
- "top_rejected": "最も拒否された送信元"
+ "top_rejected": "最も拒否された送信元",
+ "web_slow": "Unbound のクエリデータベースが 120 秒以内に応答しませんでした。",
+ "apps_partial": "Suricata のログは {n} 秒分しか読めませんでした：上の数はその最初の部分のものです。"
 }

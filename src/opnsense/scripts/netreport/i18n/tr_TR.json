@@ -178,7 +178,7 @@
  "top_sites": "Ada göre siteler (TLS ve HTTP)",
  "site": "Site",
  "apps_no_ids": "Suricata bu dönemde hiçbir uygulama kaydı yazmadı: Saldırı Tespiti kapalı ya da onun TLS ve HTTP günlüğü kapalı.",
- "ntopng_apps": "Trafiğe göre uygulamalar (ntopng)",
+ "ntopng_apps": "ntopng’nin son başlatılmasından bu yana trafiğe göre uygulamalar (ntopng)",
  "ntopng_failed": "ntopng yanıt vermedi: {why}",
  "mail": "✉️ E-posta",
  "mail_none": "Bu güvenlik duvarında e-posta sunucusu günlüğü yok (os-postfix).",
@@ -186,5 +186,7 @@
  "mail_deferred": "Ertelendi",
  "mail_bounced": "Geri döndü",
  "mail_rejected": "Reddedildi",
- "top_rejected": "En çok reddedilen gönderenler"
+ "top_rejected": "En çok reddedilen gönderenler",
+ "web_slow": "Unbound sorgu veritabanı 120 sn içinde yanıt vermedi.",
+ "apps_partial": "Suricata günlüğü yalnızca {n} sn okundu: yukarıdaki sayılar onun ilk bölümündendir."
 }

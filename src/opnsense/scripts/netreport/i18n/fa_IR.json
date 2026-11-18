@@ -178,7 +178,7 @@
  "top_sites": "سایت‌ها به نام (TLS و HTTP)",
  "site": "سایت",
  "apps_no_ids": "Suricata در این دوره هیچ رکورد برنامه‌ای ننوشت: تشخیص نفوذ خاموش است، یا ثبت TLS و HTTP آن.",
- "ntopng_apps": "برنامه‌ها بر اساس ترافیک (ntopng)",
+ "ntopng_apps": "برنامه‌ها بر اساس ترافیک از آخرین راه‌اندازی ntopng (ntopng)",
  "ntopng_failed": "ntopng پاسخ نداد: {why}",
  "mail": "✉️ ایمیل",
  "mail_none": "هیچ گزارش سرور ایمیل روی این فایروال نیست (os-postfix).",
@@ -186,5 +186,7 @@
  "mail_deferred": "به‌تعویق‌افتاده",
  "mail_bounced": "برگشتی",
  "mail_rejected": "ردشده",
- "top_rejected": "بیشترین فرستندگان ردشده"
+ "top_rejected": "بیشترین فرستندگان ردشده",
+ "web_slow": "پایگاه داده پرس‌وجوهای Unbound در ۱۲۰ ثانیه پاسخ نداد.",
+ "apps_partial": "گزارش Suricata فقط {n} ثانیه خوانده شد: شمارش‌های بالا از بخش نخست آن است."
 }

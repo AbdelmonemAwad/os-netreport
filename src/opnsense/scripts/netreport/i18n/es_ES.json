@@ -178,7 +178,7 @@
  "top_sites": "Sitios por nombre (TLS y HTTP)",
  "site": "Sitio",
  "apps_no_ids": "Suricata no escribió registros de aplicaciones en este periodo: la detección de intrusiones está desactivada, o lo está su registro de TLS y HTTP.",
- "ntopng_apps": "Aplicaciones por tráfico (ntopng)",
+ "ntopng_apps": "Aplicaciones por tráfico desde el último arranque de ntopng (ntopng)",
  "ntopng_failed": "ntopng no respondió: {why}",
  "mail": "✉️ Correo",
  "mail_none": "No hay registro de servidor de correo en este cortafuegos (os-postfix).",
@@ -186,5 +186,7 @@
  "mail_deferred": "Aplazados",
  "mail_bounced": "Devueltos",
  "mail_rejected": "Rechazados",
- "top_rejected": "Remitentes más rechazados"
+ "top_rejected": "Remitentes más rechazados",
+ "web_slow": "La base de consultas de Unbound no respondió en 120 s.",
+ "apps_partial": "El registro de Suricata se leyó solo durante {n} s: los recuentos de arriba son de su primera parte."
 }
