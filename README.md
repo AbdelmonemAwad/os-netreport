@@ -249,6 +249,17 @@ The GUI below is shown in Arabic, with the right-to-left layout from
 
 The same report in Arabic: [docs/images/report-ar_SA.png](docs/images/report-ar_SA.png).
 
+The newer sections, from previews on lab appliances (2026-11-18; addresses hidden): the VPN section with
+its highlight, from an XGS 3300 whose IPsec tunnel to an appliance taken out of the lab was down, and the
+web activity, applications and mail sections from an XGS 136 with no mail server.
+
+| VPN | Web activity, applications, mail |
+| --- | --- |
+| ![The VPN section](docs/images/report-sections/vpn-en_US.png) | ![Web activity, applications and mail](docs/images/report-sections/web-apps-mail-en_US.png) |
+
+In Arabic: [VPN](docs/images/report-sections/vpn-ar_SA.png),
+[web activity, applications and mail](docs/images/report-sections/web-apps-mail-ar_SA.png).
+
 ## Where the data comes from
 
 The plugin does not collect anything itself; it reads what OPNsense already records. Sections
