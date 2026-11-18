@@ -77,7 +77,18 @@ CATCH_UP = 12 * 3600            # send a missed report up to 12 hours late (fire
 DEVICE_SCAN_MINUTES = 5
 HISTORY_MAX = 500
 
-ALL_SECTIONS = ['summary', 'internet', 'connection', 'dns', 'security', 'devices', 'system']
+ALL_SECTIONS = ['summary', 'internet', 'connection', 'vpn', 'dns', 'web', 'security', 'apps', 'devices', 'mail', 'system']
+
+CONFIGCTL = '/usr/local/sbin/configctl'
+UNBOUND_DB = '/var/unbound/data/unbound.duckdb'
+# os-postfix logs through syslog-ng's local filter "postfix", which OPNsense writes like every local filter
+# (the plan's phase 0, 2026-11-16)
+POSTFIX_LOGS = '/var/log/postfix/postfix_*.log'
+# a WireGuard peer is online for 300 s after its last handshake: OPNsense's own rule (VPN: WireGuard: Status)
+WG_ONLINE = 300
+# where os-ntopng's web interface answers on the firewall itself when the setting is empty
+NTOPNG_URL = 'http://127.0.0.1:3000'
+EVE_LOGS = '/var/log/suricata/eve.json*'
 
 # ---------------------------------------------------------------- texts
 
@@ -652,6 +663,309 @@ def top_talkers(settings, start, end, top_n):
     return [(ip, down[ip], up[ip]) for ip in ranked]
 
 
+# ---------------------------------------------------------------- VPN, mail, applications, web activity
+
+def num(value):
+    """a count from a service's JSON (some give numbers as strings), 0 for anything else"""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+def configctl_json(*args, timeout=30):
+    """configd's answer as JSON, or None: a command that fails, or answers with something else (IPsec's
+    "ipsec not active" while strongSwan is stopped), gives no data and never an error in the report"""
+    try:
+        out = subprocess.run([CONFIGCTL] + list(args), capture_output=True, text=True, timeout=timeout)
+        return json.loads(out.stdout) if out.returncode == 0 else None
+    except Exception:
+        return None
+
+
+def vpn_sessions(settings, now):
+    """Who is connected now, from the actions OPNsense's own status pages call: a list of
+    (service, connection, user, address, since or None, traffic in bytes), the traffic as each service
+    counts it - IPsec its associations, OpenVPN its encrypted link, WireGuard its transfer.
+
+    IPsec: one row per established IKE session (a road warrior is one each), its user the EAP or XAuth
+    identity or else the remote identity, its address the virtual one it was given or else its own.
+    OpenVPN: each client of a server instance. WireGuard: each peer whose last handshake is at most
+    WG_ONLINE seconds old, by the name its configuration gives its key; WireGuard keeps no start time."""
+    import alerts
+    rows = []
+    ipsec = configctl_json('ipsec', 'list', 'status')
+    for cid, conn in (ipsec.items() if isinstance(ipsec, dict) else []):
+        if not isinstance(conn, dict):
+            continue
+        name = alerts.description(settings, cid) or str(conn.get('remote-addrs') or cid)
+        for sa in conn.get('sas') or []:
+            if not isinstance(sa, dict) or str(sa.get('state', '')).upper() != 'ESTABLISHED':
+                continue
+            children = sa.get('child-sas')
+            children = children.values() if isinstance(children, dict) else children if isinstance(children, list) else []
+            traffic = sum(num(c.get('bytes-in')) + num(c.get('bytes-out')) for c in children if isinstance(c, dict))
+            vips = sa.get('remote-vips') if isinstance(sa.get('remote-vips'), list) else []
+            user = sa.get('remote-eap-id') or sa.get('remote-xauth-id') or sa.get('remote-id') or '?'
+            age = sa.get('established')
+            since = now - num(age) if age is not None and str(age).isdigit() else None
+            rows.append(('IPsec', name, str(user), str(vips[0] if vips else sa.get('remote-host') or ''), since, traffic))
+    ovpn = configctl_json('openvpn', 'connections', 'client,server')
+    if isinstance(ovpn, dict):
+        configured = alerts.openvpn_instances(settings)
+        servers = ovpn.get('server') if isinstance(ovpn.get('server'), dict) else {}
+        for iid, inst in sorted(servers.items()):
+            if not isinstance(inst, dict):
+                continue
+            name = configured.get(iid, (None, ''))[1] or alerts.description(settings, iid) or iid
+            for client in inst.get('client_list') or []:
+                if not isinstance(client, dict):
+                    continue
+                user = client.get('username')
+                if user in (None, '', 'UNDEF'):
+                    user = client.get('common_name') or '?'
+                start = num(client.get('connected_since__time_t_'))
+                rows.append(('OpenVPN', name, str(user), str(client.get('virtual_address') or client.get('real_address') or ''),
+                             start or None, num(client.get('bytes_received')) + num(client.get('bytes_sent'))))
+    wg = configctl_json('wireguard', 'show')
+    if isinstance(wg, dict) and wg.get('status') == 'ok':
+        peers = {}
+        for item in settings.root.iter('client'):
+            if item.findtext('pubkey'):
+                peers[item.findtext('pubkey').strip()] = (item.findtext('name') or '').strip()
+        for rec in wg.get('records') or []:
+            if not isinstance(rec, dict) or rec.get('type') != 'peer':
+                continue
+            handshake = num(rec.get('latest-handshake'))
+            if not handshake or now - handshake > WG_ONLINE:
+                continue
+            key = str(rec.get('public-key') or '')
+            rows.append(('WireGuard', str(rec.get('if') or ''), peers.get(key) or key[:8] + '…',
+                         str(rec.get('endpoint') or ''), None, num(rec.get('transfer-rx')) + num(rec.get('transfer-tx'))))
+    return rows
+
+
+def vpn_outages(log, key, s, e, now):
+    """(outages that began in [s, e), seconds down within [s, e)) of one connection, from the tunnel
+    watch's log (alerts.py's collect_vpn: a 'down' once a new state has held on two reads, a 'back' the
+    same way); a down still running counts up to now"""
+    events = sorted((x for x in log if x.get('key') == key and isinstance(x.get('at'), (int, float))),
+                    key=lambda x: x['at'])
+    down_at = None
+    for x in events:
+        if x['at'] < s:
+            down_at = x['at'] if x.get('event') == 'down' else None
+    current = max(down_at, s) if down_at is not None else None
+    count = total = 0
+    for x in events:
+        if not s <= x['at'] < e:
+            continue
+        if x.get('event') == 'down':
+            count += 1
+            if current is None:
+                current = x['at']
+        elif x.get('event') == 'back' and current is not None:
+            total += x['at'] - current
+            current = None
+    if current is not None:
+        total += max(0, min(e, now) - current)
+    return count, total
+
+
+def vpn_report(settings, start, end):
+    """the tunnels as the alert layer's tunnel watch reads them (alerts.vpn_reads), their outages in the
+    period from its log, and the sessions now; None when there is no VPN at all"""
+    import alerts
+    now = time.time()
+    s, e = start.timestamp(), end.timestamp()
+    data = load_json(alerts.STATE_FILE, {})
+    data = data if isinstance(data, dict) else {}
+    entries = data.get('vpn') if isinstance(data.get('vpn'), dict) else {}
+    log = [x for x in data.get('vpn_log') or [] if isinstance(x, dict)]
+    reads, _ = alerts.vpn_reads(settings, dict(entries), now)
+    tunnels = []
+    for key, (name, state) in sorted(reads.items(), key=lambda kv: kv[1][0].lower()):
+        # an OpenVPN server's clients are its sessions, not tunnels of their own
+        if key.startswith('ovpn|s|') and not key.endswith('|'):
+            continue
+        entry = entries.get(key) if isinstance(entries.get(key), dict) else {}
+        count, down = vpn_outages(log, key, s, e, now)
+        if not count and not down and state != 'up' and entry.get('state') == 'down':
+            # down since before the log knows of it (the watch says a down only after an up): its time down
+            down = max(0, min(e, now) - max(entry.get('since') or s, s))
+        tunnels.append({'name': name, 'up': state == 'up', 'since': entry.get('since') if entry.get('state') == state else None,
+                        'outages': count, 'down': down})
+    sessions = vpn_sessions(settings, now)
+    if not tunnels and not sessions:
+        return None
+    since = data.get('vpn_log_since')
+    return {'tunnels': tunnels, 'sessions': sessions,
+            'log_since': since if isinstance(since, (int, float)) and since > s else None}
+
+
+def mail_stats(start, end, top_n):
+    """what the mail server's log (os-postfix) says of the period: messages delivered, deferred and
+    bounced (one per recipient, as postfix logs them), and connections refused, with the addresses
+    refused most; ok False where this firewall keeps no such log"""
+    s, e = start.timestamp(), end.timestamp()
+    out = {'ok': False, 'sent': 0, 'deferred': 0, 'bounced': 0, 'rejected': 0, 'rejects': []}
+    since = datetime.datetime.fromtimestamp(s).date() - datetime.timedelta(days=1)
+    rejects = Counter()
+    for path in sorted(glob.glob(POSTFIX_LOGS)):
+        out['ok'] = True
+        m = re.search(r'_(\d{8})\.log$', path)
+        if m and datetime.datetime.strptime(m.group(1), '%Y%m%d').date() < since:
+            continue
+        try:
+            with open(path, errors='ignore') as fh:
+                for line in fh:
+                    status = re.search(r' status=(sent|deferred|bounced)\b', line)
+                    refused = 'NOQUEUE: reject:' in line
+                    if not status and not refused:
+                        continue
+                    ts = line_time(line)
+                    if ts is None or not s <= ts < e:
+                        continue
+                    if status:
+                        out[status.group(1)] += 1
+                        continue
+                    out['rejected'] += 1
+                    client = re.search(r' from [^\s\[]*\[([0-9A-Fa-f.:]+)\]', line)
+                    rejects[client.group(1) if client else '?'] += 1
+        except OSError:
+            pass
+    out['rejects'] = rejects.most_common(top_n)
+    return out
+
+
+def suricata_apps(start, end, top_n):
+    """from Suricata's eve.json in the period: the application protocols it recognised (records with an
+    app_proto other than "failed") and the sites named in its TLS (SNI) and HTTP (Host) records; ok False
+    where it wrote no TLS or HTTP record and no protocol at all - Intrusion Detection off, or its TLS and
+    HTTP logging off"""
+    s, e = start.timestamp(), end.timestamp()
+    protos, sites = Counter(), Counter()
+    for path in sorted(glob.glob(EVE_LOGS)):
+        if os.path.getmtime(path) < s:
+            continue
+        opener = gzip.open if path.endswith('.gz') else open
+        try:
+            with opener(path, 'rt', errors='ignore') as fh:
+                for line in fh:
+                    if '"app_proto"' not in line and '"event_type":"tls"' not in line and '"event_type":"http"' not in line:
+                        continue
+                    try:
+                        ev = json.loads(line)
+                        stamp = re.sub(r'([+-]\d\d)(\d\d)$', r'\1:\2', ev['timestamp'])
+                        ts = datetime.datetime.fromisoformat(stamp).timestamp()
+                    except Exception:
+                        continue
+                    if not s <= ts < e:
+                        continue
+                    proto = ev.get('app_proto')
+                    if proto and proto != 'failed':
+                        protos[str(proto)] += 1
+                    name = (ev.get('tls') or {}).get('sni') if ev.get('event_type') == 'tls' else \
+                        (ev.get('http') or {}).get('hostname') if ev.get('event_type') == 'http' else None
+                    if name:
+                        sites[str(name).lower().rstrip('.')] += 1
+        except Exception:
+            pass
+    return {'ok': bool(protos or sites), 'protos': protos.most_common(top_n), 'sites': sites.most_common(top_n)}
+
+
+def ntopng_apps(settings, top_n):
+    """applications by traffic from os-ntopng's REST API (v2, get/interface/l7/stats.lua) with the API
+    token set on the General tab: (rows, None), or ([], why) - None as why when no token is set.
+    ntopng's answer is {"rc": 0, "rsp": ...}; its rows are read whether it gives a list of objects
+    (label or name, and bytes or value) or an object of name -> bytes."""
+    token = settings.get('ntopng_token')
+    if not token:
+        return [], None
+    import urllib.parse
+    import urllib.request
+    base = (settings.get('ntopng_url') or NTOPNG_URL).rstrip('/')
+    url = base + '/lua/rest/v2/get/interface/l7/stats.lua?' + urllib.parse.urlencode({'ifid': 0, 'ndpistats_mode': 'sinceStartup'})
+    try:
+        req = urllib.request.Request(url, headers={'Authorization': 'Token ' + token.strip()})
+        context = ssl.create_default_context() if url.startswith('https:') else None
+        with urllib.request.urlopen(req, timeout=15, context=context) as answer:
+            body = json.loads(answer.read(4 * 1024 * 1024).decode('utf-8', 'replace'))
+    except Exception as exc:
+        return [], str(getattr(exc, 'reason', None) or exc)[:120]
+    if not isinstance(body, dict) or body.get('rc') not in (0, None):
+        return [], 'rc %s' % (body.get('rc') if isinstance(body, dict) else '?')
+    rsp = body.get('rsp')
+    rows = []
+    if isinstance(rsp, dict):
+        rsp = rsp.get('ndpi') if isinstance(rsp.get('ndpi'), (dict, list)) else rsp
+    if isinstance(rsp, list):
+        for item in rsp:
+            if isinstance(item, dict):
+                name = item.get('label') or item.get('name') or item.get('application')
+                value = item.get('bytes') if item.get('bytes') is not None else item.get('value')
+                if name and isinstance(value, (int, float)):
+                    rows.append((str(name), int(value)))
+    elif isinstance(rsp, dict):
+        for name, value in rsp.items():
+            if isinstance(value, dict):
+                value = value.get('bytes') if isinstance(value.get('bytes'), (int, float)) else \
+                    num((value.get('bytes') or {}).get('sent')) + num((value.get('bytes') or {}).get('rcvd')) \
+                    if isinstance(value.get('bytes'), dict) else None
+            if isinstance(value, (int, float)):
+                rows.append((str(name), int(value)))
+    rows.sort(key=lambda r: -r[1])
+    return rows[:top_n], (None if rows else 'no applications in its answer')
+
+
+def hour_ranges(hours):
+    """local hours of the day with activity as ranges, e.g. 07–09, 19–23"""
+    hours = sorted(set(hours))
+    out, i = [], 0
+    while i < len(hours):
+        j = i
+        while j + 1 < len(hours) and hours[j + 1] == hours[j] + 1:
+            j += 1
+        out.append(f'{hours[i]:02d}' if i == j else f'{hours[i]:02d}–{hours[j]:02d}')
+        i = j + 1
+    return ', '.join(out)
+
+
+def web_activity(start, end, top_n):
+    """web activity per device from Unbound's query database (Reporting: Unbound DNS, statistics on):
+    for the devices asking most, the domains they asked for most, how many of their queries were
+    blocked and which, and the local hours they were active in; ok False without the database"""
+    res = {'ok': False, 'devices': []}
+    if not os.path.exists(UNBOUND_DB):
+        return res
+    s, e = int(start.timestamp()), int(end.timestamp())
+    code = f'''
+import duckdb, json
+c = duckdb.connect({UNBOUND_DB!r}, read_only=True)
+q = lambda s: c.execute(s).fetchall()
+w = "time >= {s} and time < {e}"
+top = q("select client, count(*) n, sum(case when action = 1 then 1 else 0 end) b from query where " + w + " group by client order by n desc limit {int(top_n)}")
+out = []
+for client, n, b in top:
+    cw = w + " and client = '" + str(client).replace("'", "''") + "'"
+    out.append({{'client': client, 'queries': n, 'blocked': int(b or 0),
+                'domains': q("select domain, count(*) k from query where " + cw + " and action != 1 group by domain order by k desc limit 5"),
+                'blocked_domains': q("select domain, count(*) k from query where " + cw + " and action = 1 group by domain order by k desc limit 3"),
+                'hours': [int(h) for (h,) in q("select distinct time // 3600 from query where " + cw)]}})
+print(json.dumps(out))
+'''
+    try:
+        raw = subprocess.run(['/usr/local/bin/python3', '-c', code], capture_output=True, text=True,
+                             timeout=120, cwd='/usr/local/opnsense/scripts/unbound').stdout
+        devices = json.loads(raw)
+    except Exception:
+        return res
+    for d in devices:
+        d['hours'] = hour_ranges(datetime.datetime.fromtimestamp(h * 3600).hour for h in d.get('hours') or [])
+    res.update(ok=True, devices=devices)
+    return res
+
+
 def last_backup():
     """time of the last remote configuration backup found in the system log"""
     newest = None
@@ -864,6 +1178,39 @@ def build_report(settings, sched, start, end):
         issues.append(('warn', t['i_outages'].format(n=outages)))
     parts['connection'] = table(t, [t['gateway'], t['state_now'], t['delay'], t['loss'], t['outages']], rows)
 
+    def at(ts):
+        return f'<span class="ltr">{datetime.datetime.fromtimestamp(ts):%Y-%m-%d %H:%M}</span>' if ts else '—'
+
+    # vpn
+    if 'vpn' in sections:
+        import alerts
+        vpn = vpn_report(settings, start, end)
+        if vpn is None:
+            parts['vpn'] = f'<p class="muted">{esc(t["vpn_none"])}</p>'
+        else:
+            down_now = [x for x in vpn['tunnels'] if not x['up']]
+            if down_now:
+                issues.append(('warn', t['i_vpn_down'].format(n=len(down_now))))
+            body = kpis([
+                (t['tunnels_up'], f'{len(vpn["tunnels"]) - len(down_now)} / {len(vpn["tunnels"])}', ''),
+                (t['vpn_outages'], f'{sum(x["outages"] for x in vpn["tunnels"]):,}', ''),
+                (t['users_now'], f'{len(vpn["sessions"]):,}', ''),
+            ])
+            body += table(t, [t['vpn_conn'], t['state_now'], t['since'], t['vpn_outages'], t['down_for']], [
+                [esc(x['name']),
+                 f'<span class="ok">{esc(t["online"])}</span>' if x['up'] else f'<span class="bad">{esc(t["vpn_down_state"])}</span>',
+                 at(x['since']), f'{x["outages"]:,}', esc(alerts.duration(x['down'], t)) if x['down'] else '—']
+                for x in vpn['tunnels']])
+            if vpn['sessions']:
+                body += f'<h3>{esc(t["active_now"])}</h3>' + table(
+                    t, [t['service'], t['vpn_conn'], t['user'], t['address'], t['since'], t['traffic']], [
+                        [esc(svc), esc(conn), esc(user), f'<span class="ltr">{esc(addr)}</span>', at(since), human_bytes(traffic)]
+                        for svc, conn, user, addr, since, traffic in sorted(vpn['sessions'], key=lambda r: -r[5])[:50]])
+                body += f'<p class="muted">{esc(t["vpn_traffic_note"])}</p>'
+            if vpn['log_since']:
+                body += f'<p class="muted">{esc(t["vpn_log_from"].format(time=datetime.datetime.fromtimestamp(vpn["log_since"]).strftime("%Y-%m-%d %H:%M")))}</p>'
+            parts['vpn'] = body
+
     # dns
     if 'dns' in sections:
         dns = dns_stats(start, end, top_n)
@@ -879,6 +1226,20 @@ def build_report(settings, sched, start, end):
         body += f'<h3>{esc(t["top_clients"])}</h3>' + table(t, [t['device'], t['times']], [
             [esc(label(c, names)), f'{n:,}'] for c, n in dns['top_clients']])
         parts['dns'] = body
+
+    # web activity per device
+    if 'web' in sections:
+        web = web_activity(start, end, top_n)
+        if not web['ok']:
+            parts['web'] = f'<p class="muted">{esc(t["web_off"])}</p>'
+        else:
+            def domains(pairs, counted=True):
+                return '<br>'.join(f'<span class="ltr">{esc(str(d).rstrip("."))}</span>' + (f' ({n:,})' if counted else '')
+                                   for d, n in pairs) or '—'
+            parts['web'] = table(t, [t['device'], t['queries'], t['top_domains'], t['blocked'], t['active_hours']], [
+                [esc(label(d['client'], names)), f'{d["queries"]:,}', domains(d['domains']),
+                 f'{d["blocked"]:,}' + ('<br>' + domains(d['blocked_domains'], False) if d['blocked_domains'] else ''),
+                 f'<span class="ltr">{esc(d["hours"])}</span>'] for d in web['devices']])
 
     # security
     ids = suricata_alerts(start, end, top_n)
@@ -917,6 +1278,25 @@ def build_report(settings, sched, start, end):
         body += f'<p class="muted">{esc(t["ids_note"])}</p>'
     parts['security'] = body
 
+    # applications: ntopng's by traffic where its token is set, and Suricata's records
+    if 'apps' in sections:
+        body = ''
+        ntop, why = ntopng_apps(settings, top_n)
+        if ntop:
+            body += f'<h3>{esc(t["ntopng_apps"])}</h3>' + table(t, [t['app'], t['traffic']], [
+                [esc(name), human_bytes(n)] for name, n in ntop])
+        elif why:
+            body += f'<p class="muted">{esc(t["ntopng_failed"].format(why=why))}</p>'
+        apps = suricata_apps(start, end, top_n)
+        if apps['ok']:
+            body += f'<h3>{esc(t["app_protos"])}</h3>' + table(t, [t['app'], t['records']], [
+                [f'<span class="ltr">{esc(p)}</span>', f'{n:,}'] for p, n in apps['protos']])
+            body += f'<h3>{esc(t["top_sites"])}</h3>' + table(t, [t['site'], t['times']], [
+                [f'<span class="ltr">{esc(site)}</span>', f'{n:,}'] for site, n in apps['sites']])
+        else:
+            body += f'<p class="muted">{esc(t["apps_no_ids"])}</p>'
+        parts['apps'] = body
+
     # devices
     db, _, active = update_devices(settings)
     s_ts, e_ts = start.timestamp(), end.timestamp()
@@ -935,6 +1315,19 @@ def build_report(settings, sched, start, end):
         body += f'<h3>{esc(t["top_talkers"])}</h3>' + table(t, [t['device'], t['download'], t['upload'], t['total']], [
             [esc(label(ip, names)), human_bytes(d), human_bytes(u), human_bytes(d + u)] for ip, d, u in talkers])
     parts['devices'] = body
+
+    # mail, from the mail server's log (os-postfix)
+    if 'mail' in sections:
+        mail = mail_stats(start, end, top_n)
+        if not mail['ok']:
+            parts['mail'] = f'<p class="muted">{esc(t["mail_none"])}</p>'
+        else:
+            body = kpis([(t['mail_sent'], f'{mail["sent"]:,}', ''), (t['mail_deferred'], f'{mail["deferred"]:,}', ''),
+                         (t['mail_bounced'], f'{mail["bounced"]:,}', ''), (t['mail_rejected'], f'{mail["rejected"]:,}', '')])
+            if mail['rejects']:
+                body += f'<h3>{esc(t["top_rejected"])}</h3>' + table(t, [t['address'], t['times']], [
+                    [f'<span class="ltr">{esc(a)}</span>', f'{n:,}'] for a, n in mail['rejects']])
+            parts['mail'] = body
 
     # system
     info = system_info(settings, t)

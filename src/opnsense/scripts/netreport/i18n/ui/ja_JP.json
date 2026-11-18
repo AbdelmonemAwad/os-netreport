@@ -156,5 +156,12 @@
  "Webhook": "Webhook",
  "What each alert channel answered:": "各アラートチャネルの応答:",
  "Test alert": "テストアラート",
- "Send a test alert": "テストアラートを送信"
+ "Send a test alert": "テストアラートを送信",
+ "Web activity by device": "デバイスごとの Web アクティビティ",
+ "Report sources": "レポートのデータソース",
+ "ntopng address": "ntopng のアドレス",
+ "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "「アプリケーション」セクション用：ntopng の Web インターフェイス（os-ntopng）のアドレス。空欄：http://127.0.0.1:3000（このファイアウォール上の ntopng）。",
+ "ntopng API token": "ntopng API トークン",
+ "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "任意：ntopng で REST API 用に作成したトークン。あれば「アプリケーション」セクションに ntopng のトラフィック別アプリケーションを表示し、なければ Suricata が記録したものを表示します。このファイアウォールにのみ保存されます。現在のトークンを残すには空欄のままにしてください。",
+ "Enter the token as ntopng shows it.": "ntopng に表示されたとおりにトークンを入力してください。"
 }

@@ -156,5 +156,12 @@
  "Webhook": "Webhook",
  "What each alert channel answered:": "Mỗi kênh cảnh báo đã trả lời:",
  "Test alert": "Cảnh báo thử",
- "Send a test alert": "Gửi cảnh báo thử"
+ "Send a test alert": "Gửi cảnh báo thử",
+ "Web activity by device": "Hoạt động web theo thiết bị",
+ "Report sources": "Nguồn của báo cáo",
+ "ntopng address": "Địa chỉ ntopng",
+ "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "Cho phần Ứng dụng: địa chỉ giao diện web của ntopng (os-ntopng). Để trống: http://127.0.0.1:3000, ntopng trên tường lửa này.",
+ "ntopng API token": "Mã thông báo API ntopng",
+ "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "Tùy chọn: một mã thông báo được tạo trong ntopng cho REST API của nó. Có mã này, phần Ứng dụng hiển thị các ứng dụng của ntopng theo lưu lượng; không có, hiển thị những gì Suricata đã ghi. Chỉ lưu trên tường lửa này. Để trống để giữ mã thông báo hiện tại.",
+ "Enter the token as ntopng shows it.": "Nhập mã thông báo đúng như ntopng hiển thị."
 }

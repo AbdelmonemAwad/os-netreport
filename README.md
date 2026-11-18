@@ -39,14 +39,25 @@ Tested on OPNsense 26.7.
   tunnels, compared with the previous period.
 - **Connection quality**: state, latency and loss of each monitored gateway, outage alarms in
   the period.
+- **VPN**: each IPsec, OpenVPN and WireGuard connection with its state now, its outages in the
+  period and the time it was down, and who is connected now - user, address, since when and
+  traffic, as each service counts it.
 - **DNS filtering**: queries, blocked queries, most blocked domains, busiest clients.
+- **Web activity by device**: for the devices asking most, the domains they asked for most, how
+  many of their queries were blocked and which, and the hours they were active.
 - **Security**: Suricata alerts by signature and source, CrowdSec alerts and active bans.
+- **Applications**: the protocols Suricata recognised and the sites named in its TLS and HTTP
+  records; with an ntopng API token set, ntopng's applications by traffic.
 - **Devices**: devices online, devices seen for the first time (with the manufacturer), and the
   heaviest users.
+- **Mail**: messages delivered, deferred, bounced and refused by the mail server, and the
+  senders refused most.
 - **Firewall health**: version, uptime, load, temperature, memory, disk, SMART, last backup,
   VPN tunnel state.
 
-Each schedule picks which of these sections it includes.
+Each schedule picks which of these sections it includes. A new schedule has them all; one made
+before the VPN, Web activity, Applications and Mail sections existed keeps the sections it had
+until they are ticked.
 
 ## Features
 
@@ -247,9 +258,13 @@ whose source is missing simply show "no data".
 | --- | --- | --- |
 | Internet usage | vnstat | `os-vnstat` plugin |
 | Connection quality | dpinger gateway monitoring, system log | gateway monitoring enabled |
+| VPN | `configctl ipsec list status`, `openvpn connections`, `wireguard show` (what each status page reads); outages from the alerts' tunnel watch | a VPN configured |
 | DNS filtering | Unbound query database | Unbound with reporting enabled |
+| Web activity by device | Unbound query database, by client | Unbound DNS statistics on (Reporting: Unbound DNS, its settings) |
 | Security | Suricata `eve.json`, `cscli` | Intrusion Detection, `os-crowdsec` (optional) |
+| Applications | Suricata `eve.json` (`app_proto`, TLS SNI, HTTP Host); ntopng's REST API | Intrusion Detection with its TLS and HTTP logging; `os-ntopng` and an API token (optional) |
 | Devices | ARP table, host discovery, NetFlow | Insight (NetFlow) for per-device usage |
+| Mail | the mail server's log, `/var/log/postfix/` | `os-postfix` |
 | Firewall health | sysctl, `smartctl`, system log | `os-smart` for SMART (optional) |
 
 ## Installation

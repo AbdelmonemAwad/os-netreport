@@ -156,5 +156,12 @@
  "Webhook": "Webhook",
  "What each alert channel answered:": "各警報管道的結果：",
  "Test alert": "測試警報",
- "Send a test alert": "傳送測試警報"
+ "Send a test alert": "傳送測試警報",
+ "Web activity by device": "各裝置的網頁活動",
+ "Report sources": "報告資料來源",
+ "ntopng address": "ntopng 位址",
+ "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "用於「應用程式」部分：ntopng 網頁介面（os-ntopng）的位址。留空：http://127.0.0.1:3000，即本防火牆上的 ntopng。",
+ "ntopng API token": "ntopng API 權杖",
+ "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "選用：在 ntopng 中為其 REST API 建立的權杖。有權杖時，「應用程式」部分顯示 ntopng 依流量統計的應用程式；沒有時，顯示 Suricata 記錄的內容。僅儲存在本防火牆上。留空以保留目前的權杖。",
+ "Enter the token as ntopng shows it.": "請依 ntopng 顯示的樣子輸入權杖。"
 }

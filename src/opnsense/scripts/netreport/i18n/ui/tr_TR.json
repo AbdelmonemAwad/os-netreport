@@ -156,5 +156,12 @@
  "Webhook": "Webhook",
  "What each alert channel answered:": "Her uyarı kanalının yanıtı:",
  "Test alert": "Test uyarısı",
- "Send a test alert": "Test uyarısı gönder"
+ "Send a test alert": "Test uyarısı gönder",
+ "Web activity by device": "Cihaz başına web etkinliği",
+ "Report sources": "Rapor kaynakları",
+ "ntopng address": "ntopng adresi",
+ "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "Uygulamalar bölümü için: ntopng web arayüzünün (os-ntopng) adresi. Boş: http://127.0.0.1:3000, bu güvenlik duvarındaki ntopng.",
+ "ntopng API token": "ntopng API belirteci",
+ "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "İsteğe bağlı: ntopng’de REST API’si için oluşturulmuş bir belirteç. Onunla Uygulamalar bölümü ntopng’nin trafiğe göre uygulamalarını gösterir; onsuz, Suricata’nın kaydettiklerini. Yalnızca bu güvenlik duvarında saklanır. Geçerli belirteci korumak için boş bırakın.",
+ "Enter the token as ntopng shows it.": "Belirteci ntopng’nin gösterdiği gibi girin."
 }

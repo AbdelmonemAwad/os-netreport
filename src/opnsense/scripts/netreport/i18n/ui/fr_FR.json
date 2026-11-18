@@ -156,5 +156,12 @@
  "Webhook": "Webhook",
  "What each alert channel answered:": "Ce que chaque canal d’alerte a répondu :",
  "Test alert": "Alerte de test",
- "Send a test alert": "Envoyer une alerte de test"
+ "Send a test alert": "Envoyer une alerte de test",
+ "Web activity by device": "Activité web par appareil",
+ "Report sources": "Sources du rapport",
+ "ntopng address": "Adresse de ntopng",
+ "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "Pour la section Applications : l’adresse de l’interface web de ntopng (os-ntopng). Vide : http://127.0.0.1:3000, ntopng sur ce pare-feu.",
+ "ntopng API token": "Jeton d’API ntopng",
+ "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "Facultatif : un jeton créé dans ntopng pour son API REST. Avec lui, la section Applications montre les applications de ntopng par trafic ; sans lui, ce que Suricata a enregistré. Conservé sur ce pare-feu uniquement. Laissez vide pour garder le jeton actuel.",
+ "Enter the token as ntopng shows it.": "Saisissez le jeton tel que ntopng l’affiche."
 }

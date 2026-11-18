@@ -156,5 +156,12 @@
  "Webhook": "Вебхук",
  "What each alert channel answered:": "Що відповів кожен канал сповіщень:",
  "Test alert": "Тестове сповіщення",
- "Send a test alert": "Надіслати тестове сповіщення"
+ "Send a test alert": "Надіслати тестове сповіщення",
+ "Web activity by device": "Веб-активність за пристроями",
+ "Report sources": "Джерела звіту",
+ "ntopng address": "Адреса ntopng",
+ "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "Для розділу «Застосунки»: адреса вебінтерфейсу ntopng (os-ntopng). Порожньо: http://127.0.0.1:3000, ntopng на цьому брандмауері.",
+ "ntopng API token": "API-токен ntopng",
+ "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "Необов’язково: токен, створений у ntopng для його REST API. З ним розділ «Застосунки» показує застосунки ntopng за трафіком; без нього — те, що записала Suricata. Зберігається лише на цьому брандмауері. Залиште порожнім, щоб зберегти поточний токен.",
+ "Enter the token as ntopng shows it.": "Введіть токен так, як його показує ntopng."
 }

@@ -112,6 +112,22 @@
     </field>
     <field>
         <type>header</type>
+        <label>Report sources</label>
+    </field>
+    <field>
+        <id>netreport.general.ntopng_url</id>
+        <label>ntopng address</label>
+        <type>text</type>
+        <help>For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.</help>
+    </field>
+    <field>
+        <id>netreport.general.ntopng_token</id>
+        <label>ntopng API token</label>
+        <type>password</type>
+        <help>Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.</help>
+    </field>
+    <field>
+        <type>header</type>
         <label>Alerts</label>
     </field>
     <field>

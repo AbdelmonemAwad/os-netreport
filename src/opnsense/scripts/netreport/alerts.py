@@ -1244,9 +1244,32 @@ def openvpn_reads(settings, entries, ovpn):
     return reads
 
 
+VPN_LOG_KEEP = 62 * 86400      # the report's VPN section reads a period of up to two months
+VPN_LOG_MAX = 1000
+
+
+def vpn_logged(state, key, name, said):
+    """the tunnel watch's log, for the report's VPN section (netreport.py vpn_report): each down and back
+    the watch says, whether or not its alert is wanted; VPN_LOG_KEEP seconds, VPN_LOG_MAX entries at most"""
+    log = state.data.get('vpn_log') if isinstance(state.data.get('vpn_log'), list) else []
+    # once only: a change put back by kept_before() (the state could not be saved) is said again
+    if any(isinstance(x, dict) and x.get('key') == key and x.get('event') == said[0] and x.get('at') == said[1]
+           for x in log):
+        return
+    entry = {'key': key, 'name': name, 'event': said[0], 'at': said[1]}
+    if said[0] == 'back':
+        entry['down'] = int(said[2])
+    log.append(entry)
+    cutoff = said[1] - VPN_LOG_KEEP
+    state.data['vpn_log'] = [x for x in log if isinstance(x, dict) and (x.get('at') or 0) >= cutoff][-VPN_LOG_MAX:]
+
+
 def collect_vpn(settings, state, now):
     first = state.first('vpn')
     entries = state.get('vpn')
+    # since when the log holds every down and back (the report says so for a period that began earlier)
+    if not isinstance(state.data.get('vpn_log_since'), (int, float)):
+        state.data['vpn_log_since'] = now
     reads, answered = vpn_reads(settings, entries, now)
     for key in list(entries):
         if key in reads:
@@ -1259,6 +1282,8 @@ def collect_vpn(settings, state, now):
         before = entry_copy(entries, key)
         said = track(entries, key, read, now)
         entries[key]['name'] = name
+        if said and said[0] in ('down', 'back'):
+            vpn_logged(state, key, name, said)
         if not said or not send or not kept_before(state, entries, key, before, 'vpn'):
             continue
         facts = {'connection': name, 'state': said[0]}
