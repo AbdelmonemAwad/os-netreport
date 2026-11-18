@@ -11,6 +11,13 @@ joins the local network.
 Plugin Changelog
 ================
 
+1.0.7
+
+* Report texts: the four the security section asks for, in all 21
+  catalogues
+* Alerts: one layer to mail, a webhook and ntfy, and the alerts sent
+  through it
+
 1.0.6
 
 * an update installed only as its owner signed it: the release's
