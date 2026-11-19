@@ -203,5 +203,12 @@
  "audit_entry": "Entrada",
  "only_device": "Dispositivo: {device}",
  "only_iface": "Rede: {name}",
- "only_iface_off": "Rede {name}: não existe mais ou não tem endereço IPv4 próprio – os dispositivos mostrados são os da rede local"
+ "only_iface_off": "Rede {name}: não existe mais ou não tem endereço IPv4 próprio – os dispositivos mostrados são os da rede local",
+ "anon_note": "endereços, endereços MAC e nomes de dispositivos mascarados",
+ "backup_mail_row": "Backup semanal por e-mail",
+ "backup_never": "ainda não enviado",
+ "backup_failed": "falhou: {why}",
+ "i_backup_nopass": "O backup semanal por e-mail está ativado, mas não tem senha, então nenhum é enviado.",
+ "backup_subject": "Backup da configuração — {title} — {date}",
+ "backup_text": "A configuração de {host}, criptografada com a senha de backup definida em “Relatório da rede”. Para restaurá-la: System: Configuration: Backups, escolha este arquivo, marque que ele está criptografado e digite essa senha."
 }

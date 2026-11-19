@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "用於計算網際網路流量與每月流量上限。",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "SSL/TLS 通常為 465，STARTTLS 通常為 587。",
  "VPN tunnels": "VPN 通道",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "當最近一次遠端設定備份早於此天數時發出警告。0 表示停用此檢查。",
  "System language": "系統語言",
  "BSD-2-Clause licence": "BSD-2-Clause 授權條款",
  "An independent project, not affiliated with Deciso B.V.": "獨立專案，與 Deciso B.V. 無關聯",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "請輸入一個位址，例如 192.168.1.20。",
  "The report as a file, with its data as of now:": "以目前資料產生的報告檔案：",
  "The file could not be made.": "無法產生檔案。",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "每個排程寄送一份報告。使用眼睛按鈕預覽，使用箭頭按鈕下載為 HTML、PDF 或 CSV，使用紙飛機按鈕立即寄送。"
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "每個排程寄送一份報告。使用眼睛按鈕預覽，使用箭頭按鈕下載為 HTML、PDF 或 CSV，使用紙飛機按鈕立即寄送。",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "當最近一次遠端設定備份或最近一次每週郵件備份早於此天數時發出警告。0 表示停用此檢查。",
+ "Privacy": "隱私",
+ "Mask addresses": "遮蔽位址",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "在報告、警報和下載的檔案中，將每個位址、MAC 位址和裝置名稱改為顯示遮蔽後的值：同一裝置在各次報告中保持相同的值，且沒有僅存放在此防火牆上的金鑰就無法還原。啟用前已保存的報告維持寄出時的原樣。",
+ "Weekly configuration backup": "每週設定備份",
+ "Send a weekly backup": "寄送每週備份",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "每週一次以郵件寄出此防火牆的設定，並以下方的密碼加密，方式與 System: Configuration: Backups 加密下載檔案相同：在那裡使用同一密碼即可還原。未設定密碼則不會寄出任何內容。在備份過期警告中計為一次備份。",
+ "Backup day": "備份日",
+ "Backup time": "備份時間",
+ "24-hour clock, firewall time zone.": "24 小時制，使用防火牆時區。",
+ "Backup recipients": "備份收件人",
+ "Who receives the backup. Empty: the default recipients above.": "接收備份的人。留空：使用上方的預設收件人。",
+ "Backup password": "備份密碼",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "用來加密備份的密碼；請另外妥善保存一份，因為沒有它就無法開啟備份。僅儲存在此防火牆上。留空則保留目前的密碼。"
 }

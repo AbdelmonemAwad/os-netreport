@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "Wird für das Internetvolumen und das monatliche Datenlimit verwendet.",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "Üblicherweise 465 für SSL/TLS oder 587 für STARTTLS.",
  "VPN tunnels": "VPN-Tunnel",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Warnen, wenn die letzte externe Konfigurationssicherung älter ist als dieser Wert. 0 deaktiviert die Prüfung.",
  "System language": "Systemsprache",
  "BSD-2-Clause licence": "Lizenz BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Ein unabhängiges Projekt, nicht mit Deciso B.V. verbunden",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "Geben Sie eine Adresse ein, zum Beispiel 192.168.1.20.",
  "The report as a file, with its data as of now:": "Der Bericht als Datei, mit den Daten von jetzt:",
  "The file could not be made.": "Die Datei konnte nicht erstellt werden.",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Jeder Zeitplan sendet einen Bericht. Mit der Augen-Schaltfläche zeigen Sie eine Vorschau an, mit der Pfeil-Schaltfläche laden Sie ihn als HTML, PDF oder CSV herunter, mit der Flugzeug-Schaltfläche senden Sie ihn sofort."
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Jeder Zeitplan sendet einen Bericht. Mit der Augen-Schaltfläche zeigen Sie eine Vorschau an, mit der Pfeil-Schaltfläche laden Sie ihn als HTML, PDF oder CSV herunter, mit der Flugzeug-Schaltfläche senden Sie ihn sofort.",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "Warnen, wenn die letzte externe Konfigurationssicherung oder die letzte wöchentliche Sicherung per E-Mail älter ist als dieser Wert. 0 deaktiviert die Prüfung.",
+ "Privacy": "Datenschutz",
+ "Mask addresses": "Adressen maskieren",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "Zeigt jede Adresse, MAC-Adresse und jeden Gerätenamen in Berichten, Benachrichtigungen und heruntergeladenen Dateien stattdessen als maskierten Wert: Dasselbe Gerät behält von einem Bericht zum nächsten denselben Wert, und ohne einen Schlüssel, der allein auf dieser Firewall liegt, lässt sich der Wert nicht zurückführen. Berichte, die vor dem Einschalten gespeichert wurden, bleiben so, wie sie gesendet wurden.",
+ "Weekly configuration backup": "Wöchentliche Konfigurationssicherung",
+ "Send a weekly backup": "Wöchentliche Sicherung senden",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "Sendet die Konfiguration dieser Firewall einmal pro Woche per E-Mail, verschlüsselt mit dem Passwort unten, so wie System: Configuration: Backups einen Download verschlüsselt: Wiederherstellen lässt sie sich dort, mit demselben Passwort. Ohne Passwort wird nichts gesendet. Sie zählt als Sicherung für die Warnung bei Sicherungsalter.",
+ "Backup day": "Sicherungstag",
+ "Backup time": "Uhrzeit der Sicherung",
+ "24-hour clock, firewall time zone.": "24-Stunden-Format, Zeitzone der Firewall.",
+ "Backup recipients": "Empfänger der Sicherung",
+ "Who receives the backup. Empty: the default recipients above.": "Wer die Sicherung erhält. Leer: die Standardempfänger oben.",
+ "Backup password": "Sicherungspasswort",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "Das Passwort, mit dem die Sicherung verschlüsselt wird; bewahren Sie es auch an anderer Stelle auf, denn ohne es lässt sich die Sicherung nicht öffnen. Wird nur auf dieser Firewall gespeichert. Leer lassen, um das aktuelle Passwort beizubehalten."
 }

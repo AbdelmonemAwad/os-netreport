@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "Používá se pro objem internetových dat a měsíční datový limit.",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "Obvykle 465 pro SSL/TLS nebo 587 pro STARTTLS.",
  "VPN tunnels": "Tunely VPN",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Varovat, pokud je poslední vzdálená záloha konfigurace starší. 0 kontrolu vypne.",
  "System language": "Jazyk systému",
  "BSD-2-Clause licence": "Licence BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Nezávislý projekt, nijak nespojený se společností Deciso B.V.",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "Zadejte jednu adresu, například 192.168.1.20.",
  "The report as a file, with its data as of now:": "Zpráva jako soubor, s daty z tohoto okamžiku:",
  "The file could not be made.": "Soubor se nepodařilo vytvořit.",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Každý plán odesílá jednu zprávu. Tlačítkem s okem zobrazíte náhled, tlačítkem se šipkou ji stáhnete jako HTML, PDF nebo CSV a tlačítkem s letadlem ji ihned odešlete."
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Každý plán odesílá jednu zprávu. Tlačítkem s okem zobrazíte náhled, tlačítkem se šipkou ji stáhnete jako HTML, PDF nebo CSV a tlačítkem s letadlem ji ihned odešlete.",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "Varovat, pokud je poslední vzdálená záloha konfigurace nebo poslední týdenní záloha e-mailem starší. 0 kontrolu vypne.",
+ "Privacy": "Soukromí",
+ "Mask addresses": "Maskovat adresy",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "Zobrazovat každou adresu, adresu MAC a název zařízení ve zprávách, upozorněních a stažených souborech místo toho jako maskovanou hodnotu: stejné zařízení si ponechá stejnou hodnotu od jedné zprávy k další a hodnotu nelze zpětně převést bez klíče uloženého pouze na tomto firewallu. Zprávy uchované před zapnutím zůstanou tak, jak byly odeslány.",
+ "Weekly configuration backup": "Týdenní záloha konfigurace",
+ "Send a weekly backup": "Posílat týdenní zálohu",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "Jednou týdně pošle e-mailem konfiguraci tohoto firewallu, zašifrovanou heslem níže stejně, jako System: Configuration: Backups šifruje stažený soubor: obnovte ji tam se stejným heslem. Bez hesla se nic neodešle. Počítá se jako záloha pro varování o stáří zálohy.",
+ "Backup day": "Den zálohy",
+ "Backup time": "Čas zálohy",
+ "24-hour clock, firewall time zone.": "24hodinový formát, časové pásmo firewallu.",
+ "Backup recipients": "Příjemci zálohy",
+ "Who receives the backup. Empty: the default recipients above.": "Kdo zálohu dostane. Prázdné: výchozí příjemci výše.",
+ "Backup password": "Heslo zálohy",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "Heslo, kterým je záloha zašifrována; uschovejte si ho i jinde, protože bez něj zálohu nelze otevřít. Uloženo pouze na tomto firewallu. Ponechte prázdné pro zachování současného hesla."
 }

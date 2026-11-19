@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "Usata per il volume Internet e il limite mensile di dati.",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "Di solito 465 per SSL/TLS o 587 per STARTTLS.",
  "VPN tunnels": "Tunnel VPN",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Avvisa quando l'ultimo backup remoto della configurazione è più vecchio di questo valore. 0 disattiva il controllo.",
  "System language": "Lingua di sistema",
  "BSD-2-Clause licence": "Licenza BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Progetto indipendente, non affiliato a Deciso B.V.",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "Inserisci un indirizzo, ad esempio 192.168.1.20.",
  "The report as a file, with its data as of now:": "Il report come file, con i dati di adesso:",
  "The file could not be made.": "Non è stato possibile creare il file.",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Ogni pianificazione invia un report. Usa il pulsante con l'occhio per l'anteprima, quello con la freccia per scaricarlo come HTML, PDF o CSV e quello con l'aereo per inviarlo subito."
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Ogni pianificazione invia un report. Usa il pulsante con l'occhio per l'anteprima, quello con la freccia per scaricarlo come HTML, PDF o CSV e quello con l'aereo per inviarlo subito.",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "Avvisa quando l'ultimo backup remoto della configurazione, o l'ultimo backup settimanale via e-mail, è più vecchio di questo valore. 0 disattiva il controllo.",
+ "Privacy": "Privacy",
+ "Mask addresses": "Maschera gli indirizzi",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "Mostra invece ogni indirizzo, indirizzo MAC e nome di dispositivo nei report, negli avvisi e nei file scaricati come valore mascherato: lo stesso dispositivo mantiene lo stesso valore da un report all'altro, e il valore non può essere ricondotto all'originale senza una chiave conservata solo su questo firewall. I report conservati prima dell'attivazione restano come sono stati inviati.",
+ "Weekly configuration backup": "Backup settimanale della configurazione",
+ "Send a weekly backup": "Invia un backup settimanale",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "Invia per e-mail la configurazione di questo firewall una volta alla settimana, cifrata con la password qui sotto, nello stesso modo in cui System: Configuration: Backups cifra un download: ripristinala lì, con la stessa password. Senza password non viene inviato nulla. Vale come backup per l'avviso età backup.",
+ "Backup day": "Giorno del backup",
+ "Backup time": "Ora del backup",
+ "24-hour clock, firewall time zone.": "Formato 24 ore, fuso orario del firewall.",
+ "Backup recipients": "Destinatari del backup",
+ "Who receives the backup. Empty: the default recipients above.": "Chi riceve il backup. Vuoto: i destinatari predefiniti indicati sopra.",
+ "Backup password": "Password del backup",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "La password con cui viene cifrato il backup; conservala anche altrove, perché senza di essa il backup non si può aprire. Memorizzata solo su questo firewall. Lascia vuoto per mantenere la password attuale."
 }

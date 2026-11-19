@@ -203,5 +203,12 @@
  "audit_entry": "Entry",
  "only_device": "Device: {device}",
  "only_iface": "Network: {name}",
- "only_iface_off": "Network {name}: gone, or without an IPv4 address of its own - the devices shown are the Local network's"
+ "only_iface_off": "Network {name}: gone, or without an IPv4 address of its own - the devices shown are the Local network's",
+ "anon_note": "addresses, MAC addresses and device names masked",
+ "backup_mail_row": "Weekly backup by mail",
+ "backup_never": "not sent yet",
+ "backup_failed": "failed: {why}",
+ "i_backup_nopass": "The weekly backup by mail is on but has no password, so none is sent.",
+ "backup_subject": "Configuration backup — {title} — {date}",
+ "backup_text": "The configuration of {host}, encrypted with the backup password set in Network Report. To restore it: System: Configuration: Backups, choose this file, tick that it is encrypted, and enter that password."
 }

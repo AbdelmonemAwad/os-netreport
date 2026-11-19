@@ -585,6 +585,9 @@ def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=
         return None
     alert = {'kind': kind, 'key': str(key), 'at': now if at is None else at, 'subject': subject, 'text': text,
              'html': page, 'facts': facts or {}, 'priority': priority, 'tags': list(tags)}
+    if nr.ANON is not None:
+        # General: Mask addresses - what names a device, in every channel; the state keeps its own key
+        alert = nr.ANON.alert(alert)
     if state is not None and state.running:
         past = getattr(state, 'past_deadline', None)
         if defer and callable(past) and past():
@@ -597,7 +600,7 @@ def notify(settings, state, kind, key, subject, text, facts=None, page=None, at=
             # an alert storm: past the cap, an alert is not sent; the collector's one history line and
             # its summary alert say how many (run_collectors)
             state.held += 1
-            state.held_subjects.append(subject)
+            state.held_subjects.append(alert['subject'])     # masked as the alert would have gone
             sent[mark] = now
             return {name: HELD for name in ('mail', 'webhook', 'ntfy')}
         state.handed += 1

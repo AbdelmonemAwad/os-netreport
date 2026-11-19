@@ -88,7 +88,7 @@
  "Used for internet volume and the monthly data cap.",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.",
  "VPN tunnels",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.",
  "System language",
  "This is NOT the language of the reports. Each schedule carries its own, shown in the Language column on the Schedules tab, and a report only follows the system language when that schedule is set to System language. This field is the language of the instant alerts and the test message.",
  "The language this report is written in, whatever the GUI is set to. Choose System language to follow the GUI instead. Changing the alert language on the Settings tab does not change this one.",
@@ -171,5 +171,18 @@
  "Enter one address, for example 192.168.1.20.",
  "The report as a file, with its data as of now:",
  "The file could not be made.",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now."
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.",
+ "Privacy",
+ "Mask addresses",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.",
+ "Weekly configuration backup",
+ "Send a weekly backup",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.",
+ "Backup day",
+ "Backup time",
+ "24-hour clock, firewall time zone.",
+ "Backup recipients",
+ "Who receives the backup. Empty: the default recipients above.",
+ "Backup password",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password."
 ]

@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "Χρησιμοποιείται για τον όγκο internet και το μηνιαίο όριο δεδομένων.",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "Συνήθως 465 για SSL/TLS ή 587 για STARTTLS.",
  "VPN tunnels": "Σήραγγες VPN",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Προειδοποίηση όταν το τελευταίο απομακρυσμένο αντίγραφο ασφαλείας ρυθμίσεων είναι παλαιότερο από αυτό. Το 0 απενεργοποιεί τον έλεγχο.",
  "System language": "Γλώσσα συστήματος",
  "BSD-2-Clause licence": "Άδεια BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Ανεξάρτητο έργο, χωρίς σχέση με την Deciso B.V.",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "Εισαγάγετε μία διεύθυνση, για παράδειγμα 192.168.1.20.",
  "The report as a file, with its data as of now:": "Η αναφορά ως αρχείο, με τα δεδομένα αυτής της στιγμής:",
  "The file could not be made.": "Δεν ήταν δυνατή η δημιουργία του αρχείου.",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Κάθε πρόγραμμα στέλνει μία αναφορά. Χρησιμοποιήστε το κουμπί με το μάτι για προεπισκόπηση, το κουμπί με το βέλος για λήψη ως HTML, PDF ή CSV και το κουμπί με το αεροπλάνο για άμεση αποστολή."
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Κάθε πρόγραμμα στέλνει μία αναφορά. Χρησιμοποιήστε το κουμπί με το μάτι για προεπισκόπηση, το κουμπί με το βέλος για λήψη ως HTML, PDF ή CSV και το κουμπί με το αεροπλάνο για άμεση αποστολή.",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "Προειδοποίηση όταν το τελευταίο απομακρυσμένο αντίγραφο ασφαλείας ρυθμίσεων, ή το τελευταίο εβδομαδιαίο αντίγραφο ασφαλείας μέσω email, είναι παλαιότερο από αυτό. Το 0 απενεργοποιεί τον έλεγχο.",
+ "Privacy": "Απόρρητο",
+ "Mask addresses": "Συγκάλυψη διευθύνσεων",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "Εμφάνιση κάθε διεύθυνσης, διεύθυνσης MAC και ονόματος συσκευής σε αναφορές, ειδοποιήσεις και ληφθέντα αρχεία ως συγκαλυμμένης τιμής: η ίδια συσκευή κρατά την ίδια τιμή από τη μία αναφορά στην επόμενη, και η τιμή δεν αναιρείται χωρίς ένα κλειδί που φυλάσσεται μόνο σε αυτό το τείχος προστασίας. Οι αναφορές που φυλάχτηκαν πριν από την ενεργοποίησή της μένουν όπως στάλθηκαν.",
+ "Weekly configuration backup": "Εβδομαδιαίο αντίγραφο ασφαλείας ρυθμίσεων",
+ "Send a weekly backup": "Αποστολή εβδομαδιαίου αντιγράφου ασφαλείας",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "Στέλνει μέσω email τις ρυθμίσεις αυτού του τείχους προστασίας μία φορά την εβδομάδα, κρυπτογραφημένες με τον παρακάτω κωδικό, όπως το System: Configuration: Backups κρυπτογραφεί μια λήψη: επαναφέρετέ τες εκεί, με τον ίδιο κωδικό. Χωρίς κωδικό δεν στέλνεται τίποτα. Μετρά ως αντίγραφο ασφαλείας για την προειδοποίηση παλαιότητας αντιγράφου ασφαλείας.",
+ "Backup day": "Ημέρα αντιγράφου ασφαλείας",
+ "Backup time": "Ώρα αντιγράφου ασφαλείας",
+ "24-hour clock, firewall time zone.": "Μορφή 24 ωρών, ζώνη ώρας του τείχους προστασίας.",
+ "Backup recipients": "Παραλήπτες αντιγράφου ασφαλείας",
+ "Who receives the backup. Empty: the default recipients above.": "Ποιος λαμβάνει το αντίγραφο ασφαλείας. Κενό: οι προεπιλεγμένοι παραλήπτες παραπάνω.",
+ "Backup password": "Κωδικός αντιγράφου ασφαλείας",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "Ο κωδικός με τον οποίο κρυπτογραφείται το αντίγραφο ασφαλείας· φυλάξτε τον και κάπου αλλού, γιατί χωρίς αυτόν το αντίγραφο ασφαλείας δεν ανοίγει. Αποθηκεύεται μόνο σε αυτό το τείχος προστασίας. Αφήστε κενό για να διατηρηθεί ο τρέχων κωδικός."
 }

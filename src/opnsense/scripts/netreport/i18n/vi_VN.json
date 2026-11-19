@@ -203,5 +203,12 @@
  "audit_entry": "Mục",
  "only_device": "Thiết bị: {device}",
  "only_iface": "Mạng: {name}",
- "only_iface_off": "Mạng {name}: không còn hoặc không có địa chỉ IPv4 riêng – thiết bị hiển thị là của mạng cục bộ"
+ "only_iface_off": "Mạng {name}: không còn hoặc không có địa chỉ IPv4 riêng – thiết bị hiển thị là của mạng cục bộ",
+ "anon_note": "địa chỉ, địa chỉ MAC và tên thiết bị đã được che",
+ "backup_mail_row": "Sao lưu hằng tuần qua email",
+ "backup_never": "chưa gửi",
+ "backup_failed": "thất bại: {why}",
+ "i_backup_nopass": "Sao lưu hằng tuần qua email đang bật nhưng chưa có mật khẩu, nên không có bản nào được gửi.",
+ "backup_subject": "Bản sao lưu cấu hình — {title} — {date}",
+ "backup_text": "Cấu hình của {host}, được mã hóa bằng mật khẩu sao lưu đặt trong “Báo cáo mạng”. Để khôi phục: System: Configuration: Backups, chọn tệp này, đánh dấu rằng tệp đã được mã hóa và nhập mật khẩu đó."
 }

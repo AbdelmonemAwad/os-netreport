@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "Używany do liczenia ruchu internetowego i miesięcznego limitu danych.",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "Zwykle 465 dla SSL/TLS lub 587 dla STARTTLS.",
  "VPN tunnels": "Tunele VPN",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Ostrzegaj, gdy ostatnia zdalna kopia zapasowa konfiguracji jest starsza niż ta wartość. 0 wyłącza sprawdzanie.",
  "System language": "Język systemu",
  "BSD-2-Clause licence": "Licencja BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Niezależny projekt, niepowiązany z Deciso B.V.",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "Wpisz jeden adres, na przykład 192.168.1.20.",
  "The report as a file, with its data as of now:": "Raport jako plik, z danymi z tej chwili:",
  "The file could not be made.": "Nie udało się utworzyć pliku.",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Każdy harmonogram wysyła jeden raport. Przycisk z okiem pokazuje podgląd, przycisk ze strzałką pobiera raport jako HTML, PDF lub CSV, a przycisk z samolotem wysyła go od razu."
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Każdy harmonogram wysyła jeden raport. Przycisk z okiem pokazuje podgląd, przycisk ze strzałką pobiera raport jako HTML, PDF lub CSV, a przycisk z samolotem wysyła go od razu.",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "Ostrzegaj, gdy ostatnia zdalna kopia zapasowa konfiguracji lub ostatnia cotygodniowa kopia zapasowa wysłana e-mailem jest starsza niż ta wartość. 0 wyłącza sprawdzanie.",
+ "Privacy": "Prywatność",
+ "Mask addresses": "Maskuj adresy",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "Pokazuj zamiast tego każdy adres, adres MAC i nazwę urządzenia w raportach, alertach i pobranych plikach jako zamaskowaną wartość: to samo urządzenie zachowuje tę samą wartość od raportu do raportu, a wartości nie da się odwrócić bez klucza przechowywanego wyłącznie na tej zaporze. Raporty przechowywane sprzed włączenia tej opcji pozostają takie, jakie zostały wysłane.",
+ "Weekly configuration backup": "Cotygodniowa kopia zapasowa konfiguracji",
+ "Send a weekly backup": "Wysyłaj cotygodniową kopię zapasową",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "Raz w tygodniu wysyła e-mailem konfigurację tej zapory, zaszyfrowaną poniższym hasłem w taki sam sposób, w jaki System: Configuration: Backups szyfruje pobierany plik: przywróć ją tam, podając to samo hasło. Bez hasła nic nie jest wysyłane. Liczy się jako kopia zapasowa dla ostrzeżenia o wieku kopii zapasowej.",
+ "Backup day": "Dzień kopii zapasowej",
+ "Backup time": "Godzina kopii zapasowej",
+ "24-hour clock, firewall time zone.": "Zegar 24-godzinny, strefa czasowa zapory.",
+ "Backup recipients": "Odbiorcy kopii zapasowej",
+ "Who receives the backup. Empty: the default recipients above.": "Kto otrzymuje kopię zapasową. Puste: domyślni odbiorcy powyżej.",
+ "Backup password": "Hasło kopii zapasowej",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "Hasło, którym szyfrowana jest kopia zapasowa; przechowuj je także w innym miejscu, bo bez niego kopii zapasowej nie da się otworzyć. Przechowywane tylko na tej zaporze. Pozostaw puste, aby zachować obecne hasło."
 }

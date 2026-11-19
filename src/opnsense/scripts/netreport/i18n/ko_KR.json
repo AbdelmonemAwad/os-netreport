@@ -203,5 +203,12 @@
  "audit_entry": "항목",
  "only_device": "기기: {device}",
  "only_iface": "네트워크: {name}",
- "only_iface_off": "네트워크 {name}: 없거나 자체 IPv4 주소가 없습니다. 표시된 기기는 로컬 네트워크의 기기입니다"
+ "only_iface_off": "네트워크 {name}: 없거나 자체 IPv4 주소가 없습니다. 표시된 기기는 로컬 네트워크의 기기입니다",
+ "anon_note": "주소, MAC 주소, 기기 이름 마스킹됨",
+ "backup_mail_row": "주간 메일 백업",
+ "backup_never": "아직 보내지 않음",
+ "backup_failed": "실패: {why}",
+ "i_backup_nopass": "주간 메일 백업이 켜져 있지만 비밀번호가 없어 보내지 않습니다.",
+ "backup_subject": "설정 백업 — {title} — {date}",
+ "backup_text": "{host}의 설정으로, “네트워크 보고서”에서 설정한 백업 비밀번호로 암호화되어 있습니다. 복원하려면 System: Configuration: Backups에서 이 파일을 선택하고, 암호화되어 있다고 표시한 다음, 그 비밀번호를 입력하세요."
 }

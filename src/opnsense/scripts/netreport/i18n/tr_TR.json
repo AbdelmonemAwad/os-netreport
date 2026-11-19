@@ -203,5 +203,12 @@
  "audit_entry": "Kayıt",
  "only_device": "Cihaz: {device}",
  "only_iface": "Ağ: {name}",
- "only_iface_off": "{name} ağı: artık yok veya kendi IPv4 adresi yok - gösterilen cihazlar yerel ağınkilerdir"
+ "only_iface_off": "{name} ağı: artık yok veya kendi IPv4 adresi yok - gösterilen cihazlar yerel ağınkilerdir",
+ "anon_note": "adresler, MAC adresleri ve cihaz adları maskelendi",
+ "backup_mail_row": "E-postayla haftalık yedek",
+ "backup_never": "henüz gönderilmedi",
+ "backup_failed": "başarısız: {why}",
+ "i_backup_nopass": "E-postayla haftalık yedek açık ama parolası yok, bu yüzden hiçbiri gönderilmiyor.",
+ "backup_subject": "Yapılandırma yedeği — {title} — {date}",
+ "backup_text": "{host} yapılandırması, “Ağ Raporu”nda belirlenen yedek parolasıyla şifrelenmiştir. Geri yüklemek için: System: Configuration: Backups, bu dosyayı seçin, şifreli olduğunu işaretleyin ve o parolayı girin."
 }

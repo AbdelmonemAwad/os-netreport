@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "Dùng để tính lưu lượng Internet và hạn mức dữ liệu tháng.",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "Thường là 465 cho SSL/TLS hoặc 587 cho STARTTLS.",
  "VPN tunnels": "Đường hầm VPN",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Cảnh báo khi bản sao lưu cấu hình từ xa gần nhất cũ hơn mức này. 0 là tắt kiểm tra.",
  "System language": "Ngôn ngữ hệ thống",
  "BSD-2-Clause licence": "Giấy phép BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Dự án độc lập, không liên kết với Deciso B.V.",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "Nhập một địa chỉ, ví dụ 192.168.1.20.",
  "The report as a file, with its data as of now:": "Báo cáo dưới dạng tệp, với dữ liệu tại thời điểm này:",
  "The file could not be made.": "Không thể tạo tệp.",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Mỗi lịch gửi một báo cáo. Dùng nút hình con mắt để xem trước, nút mũi tên để tải xuống dạng HTML, PDF hoặc CSV, và nút hình máy bay để gửi ngay."
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Mỗi lịch gửi một báo cáo. Dùng nút hình con mắt để xem trước, nút mũi tên để tải xuống dạng HTML, PDF hoặc CSV, và nút hình máy bay để gửi ngay.",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "Cảnh báo khi bản sao lưu cấu hình từ xa gần nhất, hoặc bản sao lưu hằng tuần qua email gần nhất, cũ hơn mức này. 0 là tắt kiểm tra.",
+ "Privacy": "Quyền riêng tư",
+ "Mask addresses": "Che địa chỉ",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "Hiển thị mọi địa chỉ, địa chỉ MAC và tên thiết bị trong báo cáo, cảnh báo và tệp tải xuống dưới dạng giá trị đã che: cùng một thiết bị giữ cùng một giá trị từ báo cáo này sang báo cáo sau, và không thể khôi phục giá trị gốc nếu không có khóa chỉ lưu trên tường lửa này. Các báo cáo đã lưu từ trước khi bật tùy chọn này vẫn giữ nguyên như khi gửi.",
+ "Weekly configuration backup": "Sao lưu cấu hình hằng tuần",
+ "Send a weekly backup": "Gửi bản sao lưu hằng tuần",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "Gửi cấu hình của tường lửa này qua email mỗi tuần một lần, được mã hóa bằng mật khẩu bên dưới, theo cách System: Configuration: Backups mã hóa một bản tải xuống: hãy khôi phục ở đó, với cùng mật khẩu. Không có mật khẩu thì không gửi gì. Bản này được tính là một bản sao lưu cho cảnh báo tuổi bản sao lưu.",
+ "Backup day": "Ngày sao lưu",
+ "Backup time": "Giờ sao lưu",
+ "24-hour clock, firewall time zone.": "Đồng hồ 24 giờ, theo múi giờ của tường lửa.",
+ "Backup recipients": "Người nhận bản sao lưu",
+ "Who receives the backup. Empty: the default recipients above.": "Người nhận bản sao lưu. Để trống: dùng người nhận mặc định ở trên.",
+ "Backup password": "Mật khẩu sao lưu",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "Mật khẩu dùng để mã hóa bản sao lưu; hãy cất giữ nó ở nơi khác nữa, vì không có nó thì không mở được bản sao lưu. Chỉ lưu trên tường lửa này. Để trống để giữ mật khẩu hiện tại."
 }

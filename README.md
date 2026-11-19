@@ -96,6 +96,15 @@ The report's head says which of the two it has.
   shows it, PDF for printing (Arabic and Persian right to left), or CSV with each table's rows
   for a spreadsheet.
 - Mail goes through the SMTP server already configured for Monit, or a separate one.
+- **Mask addresses** (General, off by default): every address, MAC address and device name in
+  reports, alerts (mail, webhook, ntfy) and downloaded files is shown as a masked value -
+  `ip-3f2a91`, `mac-07c1de`, `name-9b04e2` - the same for the same device from one report to the
+  next, and not to be undone without a key kept on this firewall (`/var/db/netreport/anonymize.key`).
+- **A weekly configuration backup by mail** (General, off by default): `config.xml`, encrypted with
+  a password of its own the way System: Configuration: Backups encrypts a download (OPNsense's own
+  `OPNsense\Backup\Local`), so that page restores it with the same password. Nothing is sent
+  without a password; the report's system section says when the last one went, and it counts for
+  the backup age warning. `configctl netreport backup` sends one now.
 
 ## Alerts
 
@@ -296,6 +305,16 @@ In English: [the schedule's fields](docs/images/report-files/gui-dialog-en.png),
 [download](docs/images/report-files/gui-download-en.png),
 [the audit log of one device, PDF](docs/images/report-files/pdf-audit-en.png).
 
+Mask addresses and the weekly configuration backup (2026-11-19, the second XGS 3300): the two new
+parts of the settings. On that box and on an XGS 136 a masked report and its CSV held none of the
+box's own addresses, MAC addresses or DHCP names; a backup with no password set was refused and
+nothing was mailed; with one set, the backup sent at its scheduled time was decrypted by OPNsense's
+own `OPNsense\Backup\Local` and equal to `config.xml`, and the password was in no log or mail.
+
+| In Arabic | In English |
+| --- | --- |
+| ![Privacy and the weekly backup](docs/images/privacy-backup/settings-ar.png) | ![Privacy and the weekly backup](docs/images/privacy-backup/settings-en.png) |
+
 ## Where the data comes from
 
 The plugin does not collect anything itself; it reads what OPNsense already records. Sections
@@ -407,6 +426,8 @@ not be updated either. Build a new package from a newer tag and `pkg add -f` it.
   and scans the LAN for new devices every five minutes.
 - `src/opnsense/scripts/netreport/alerts.py` is the alert layer and its collectors (see
   [Alerts](#alerts)); `alerts.py test` sends a test alert.
+- `src/opnsense/scripts/netreport/backup.php` encrypts `config.xml` for the weekly backup with
+  OPNsense's own backup class; it takes the password on its standard input, never on a command line.
 - `src/opnsense/scripts/netreport/pdf.py` writes the PDF, with nothing to install: Python's
   standard library and the DejaVu Sans font shipped beside it (`fonts/`, its licence in
   `fonts/LICENSE`), of which each PDF carries the letters it uses, so that any reader shows it;
@@ -475,6 +496,13 @@ the English one.
   other); it is scanned for devices from the moment it is chosen, and what is there at that first
   scan is recorded as known, not as new. Should it go, or lose its address, the report says so in
   its head and shows the Local network's devices.
+- Mask addresses finds addresses and MAC addresses in what a report says by their form, and device
+  names where the report names a device (and a WireGuard peer's name in the VPN section). A user
+  name - an administrator's in the audit log, an IPsec or OpenVPN user - is not masked, nor a domain
+  name, which can name a device's owner as well. Reports archived before it was turned on keep what
+  they said; the device list kept on the firewall itself is not masked.
+- The weekly backup is the configuration only, as System: Configuration: Backups downloads it -
+  not the RRD data or anything else that page can include.
 - Some languages change word forms with the number (Polish, Russian, Ukrainian and others).
   The wording was chosen to read well for most numbers, but not every count is grammatically
   perfect.

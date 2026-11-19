@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "Використовується для підрахунку інтернет-трафіку та місячного ліміту.",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "Зазвичай 465 для SSL/TLS або 587 для STARTTLS.",
  "VPN tunnels": "VPN-тунелі",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Попереджати, якщо остання віддалена резервна копія конфігурації старша за вказаний термін. 0 вимикає перевірку.",
  "System language": "Мова системи",
  "BSD-2-Clause licence": "Ліцензія BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Незалежний проєкт, не пов’язаний з Deciso B.V.",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "Введіть одну адресу, наприклад 192.168.1.20.",
  "The report as a file, with its data as of now:": "Звіт у вигляді файлу, з даними на цю мить:",
  "The file could not be made.": "Не вдалося створити файл.",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Кожен розклад надсилає один звіт. Кнопка з оком відкриває попередній перегляд, кнопка зі стрілкою завантажує звіт як HTML, PDF або CSV, кнопка з літачком надсилає звіт зараз."
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Кожен розклад надсилає один звіт. Кнопка з оком відкриває попередній перегляд, кнопка зі стрілкою завантажує звіт як HTML, PDF або CSV, кнопка з літачком надсилає звіт зараз.",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "Попереджати, якщо остання віддалена резервна копія конфігурації або остання щотижнева резервна копія поштою старша за вказаний термін. 0 вимикає перевірку.",
+ "Privacy": "Конфіденційність",
+ "Mask addresses": "Маскувати адреси",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "Показувати кожну адресу, MAC-адресу та назву пристрою у звітах, сповіщеннях і завантажених файлах як замасковане значення: той самий пристрій зберігає те саме значення від звіту до звіту, а відновити оригінал без ключа, що зберігається лише на цьому брандмауері, неможливо. Звіти, збережені до ввімкнення, лишаються такими, якими їх було надіслано.",
+ "Weekly configuration backup": "Щотижнева резервна копія конфігурації",
+ "Send a weekly backup": "Надсилати щотижневу резервну копію",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "Раз на тиждень надсилає поштою конфігурацію цього брандмауера, зашифровану паролем нижче так само, як System: Configuration: Backups шифрує завантажуваний файл: відновлюйте її там із тим самим паролем. Без пароля нічого не надсилається. Вважається резервною копією для попередження про вік резервної копії.",
+ "Backup day": "День резервного копіювання",
+ "Backup time": "Час резервного копіювання",
+ "24-hour clock, firewall time zone.": "24-годинний формат, часовий пояс брандмауера.",
+ "Backup recipients": "Отримувачі резервної копії",
+ "Who receives the backup. Empty: the default recipients above.": "Хто отримує резервну копію. Порожньо: типові отримувачі, вказані вище.",
+ "Backup password": "Пароль резервної копії",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "Пароль, яким шифрується резервна копія; зберігайте його також деінде, бо без нього резервну копію не відкрити. Зберігається лише на цьому брандмауері. Залиште порожнім, щоб зберегти поточний пароль."
 }

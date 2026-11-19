@@ -18,6 +18,7 @@ cp -R "${HERE}/src/" /usr/local/
 chmod 644 /usr/local/opnsense/scripts/netreport/release-keys/*.pub
 chmod 755 /usr/local/opnsense/scripts/netreport/netreport.py
 chmod 755 /usr/local/opnsense/scripts/netreport/alerts.py
+chmod 755 /usr/local/opnsense/scripts/netreport/backup.php
 chmod 755 /usr/local/opnsense/scripts/netreport/merge_ui_translations.py
 chmod 755 /usr/local/etc/rc.syshook.d/start/60-netreport
 chmod 644 /usr/local/etc/cron.d/netreport

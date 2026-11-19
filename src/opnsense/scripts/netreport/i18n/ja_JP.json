@@ -203,5 +203,12 @@
  "audit_entry": "エントリ",
  "only_device": "デバイス: {device}",
  "only_iface": "ネットワーク: {name}",
- "only_iface_off": "ネットワーク {name}：存在しないか、独自の IPv4 アドレスがありません。表示しているのはローカルネットワークのデバイスです"
+ "only_iface_off": "ネットワーク {name}：存在しないか、独自の IPv4 アドレスがありません。表示しているのはローカルネットワークのデバイスです",
+ "anon_note": "アドレス、MAC アドレス、デバイス名はマスク済み",
+ "backup_mail_row": "週次メールバックアップ",
+ "backup_never": "未送信",
+ "backup_failed": "失敗：{why}",
+ "i_backup_nopass": "週次メールバックアップはオンですが、パスワードがないため送信されません。",
+ "backup_subject": "設定バックアップ — {title} — {date}",
+ "backup_text": "{host} の設定です。「ネットワークレポート」で設定したバックアップパスワードで暗号化されています。復元するには、System: Configuration: Backups でこのファイルを選び、暗号化されていることにチェックを入れて、そのパスワードを入力してください。"
 }

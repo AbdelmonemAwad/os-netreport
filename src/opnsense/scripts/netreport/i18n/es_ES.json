@@ -203,5 +203,12 @@
  "audit_entry": "Entrada",
  "only_device": "Dispositivo: {device}",
  "only_iface": "Red: {name}",
- "only_iface_off": "Red {name}: ya no existe o no tiene dirección IPv4 propia; los dispositivos mostrados son los de la red local"
+ "only_iface_off": "Red {name}: ya no existe o no tiene dirección IPv4 propia; los dispositivos mostrados son los de la red local",
+ "anon_note": "direcciones, direcciones MAC y nombres de dispositivos enmascarados",
+ "backup_mail_row": "Copia de seguridad semanal por correo",
+ "backup_never": "aún no enviada",
+ "backup_failed": "falló: {why}",
+ "i_backup_nopass": "La copia de seguridad semanal por correo está activada pero no tiene contraseña, así que no se envía ninguna.",
+ "backup_subject": "Copia de seguridad de la configuración — {title} — {date}",
+ "backup_text": "La configuración de {host}, cifrada con la contraseña de copia de seguridad definida en «Informe de red». Para restaurarla: System: Configuration: Backups, elige este archivo, marca que está cifrado e introduce esa contraseña."
 }
