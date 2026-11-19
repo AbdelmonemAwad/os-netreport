@@ -156,5 +156,12 @@
  "Webhook": "Webhook",
  "What each alert channel answered:": "Τι απάντησε κάθε κανάλι ειδοποιήσεων:",
  "Test alert": "Δοκιμαστική ειδοποίηση",
- "Send a test alert": "Αποστολή δοκιμαστικής ειδοποίησης"
+ "Send a test alert": "Αποστολή δοκιμαστικής ειδοποίησης",
+ "Web activity by device": "Δραστηριότητα ιστού ανά συσκευή",
+ "Report sources": "Πηγές της αναφοράς",
+ "ntopng address": "Διεύθυνση ntopng",
+ "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "Για την ενότητα Εφαρμογές: η διεύθυνση της διεπαφής ιστού του ntopng (os-ntopng). Κενό: http://127.0.0.1:3000, το ntopng σε αυτό το τείχος προστασίας.",
+ "ntopng API token": "Διακριτικό API του ntopng",
+ "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "Προαιρετικό: ένα διακριτικό που δημιουργήθηκε στο ntopng για το REST API του. Με αυτό, η ενότητα Εφαρμογές δείχνει τις εφαρμογές του ntopng κατά κίνηση· χωρίς αυτό, ό,τι κατέγραψε το Suricata. Αποθηκεύεται μόνο σε αυτό το τείχος προστασίας. Αφήστε το κενό για να κρατήσετε το τρέχον διακριτικό.",
+ "Enter the token as ntopng shows it.": "Εισαγάγετε το διακριτικό όπως το δείχνει το ntopng."
 }

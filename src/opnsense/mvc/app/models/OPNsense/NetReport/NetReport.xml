@@ -90,6 +90,14 @@
             <vpn_interfaces type="InterfaceField">
                 <Multiple>Y</Multiple>
             </vpn_interfaces>
+            <ntopng_url type="TextField">
+                <Mask>/^https?:\/\/[^\s]+$/i</Mask>
+                <ValidationMessage>Enter an address that starts with https:// or http://.</ValidationMessage>
+            </ntopng_url>
+            <ntopng_token type="UpdateOnlyTextField">
+                <Mask>/^[A-Za-z0-9._~+\/=-]{1,256}$/</Mask>
+                <ValidationMessage>Enter the token as ntopng shows it.</ValidationMessage>
+            </ntopng_token>
             <new_device_alert type="BooleanField">
                 <Required>Y</Required>
                 <Default>1</Default>
@@ -316,14 +324,18 @@
                 <sections type="OptionField">
                     <Multiple>Y</Multiple>
                     <Required>Y</Required>
-                    <Default>summary,internet,connection,dns,security,devices,system</Default>
+                    <Default>summary,internet,connection,vpn,dns,web,security,apps,devices,mail,system</Default>
                     <OptionValues>
                         <summary>Highlights</summary>
                         <internet>Internet usage</internet>
                         <connection>Connection quality</connection>
+                        <vpn>VPN</vpn>
                         <dns>DNS filtering</dns>
+                        <web>Web activity by device</web>
                         <security>Security</security>
+                        <apps>Applications</apps>
                         <devices>Devices</devices>
+                        <mail>Mail</mail>
                         <system>Firewall health</system>
                     </OptionValues>
                 </sections>

@@ -49,6 +49,11 @@ jobs:
       - name: alerts.py sends what it should, once
         run: python3 tools/test-alerts.py
 
+      # The report's VPN, web activity, applications and mail sections against recorded-format answers,
+      # logs and a stand-in ntopng on 127.0.0.1.
+      - name: the report's newer sections read what they should
+        run: python3 tools/test-sections.py
+
   syntax:
     name: syntax
     runs-on: ubuntu-latest

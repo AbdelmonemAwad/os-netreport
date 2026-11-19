@@ -156,5 +156,12 @@
  "Webhook": "Webhook",
  "What each alert channel answered:": "각 알림 채널의 응답:",
  "Test alert": "테스트 알림",
- "Send a test alert": "테스트 알림 보내기"
+ "Send a test alert": "테스트 알림 보내기",
+ "Web activity by device": "장치별 웹 활동",
+ "Report sources": "보고서 데이터 출처",
+ "ntopng address": "ntopng 주소",
+ "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "애플리케이션 섹션용: ntopng 웹 인터페이스(os-ntopng)의 주소. 비우면: http://127.0.0.1:3000, 이 방화벽의 ntopng.",
+ "ntopng API token": "ntopng API 토큰",
+ "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "선택 사항: ntopng에서 REST API용으로 만든 토큰. 있으면 애플리케이션 섹션에 ntopng의 트래픽별 애플리케이션을, 없으면 Suricata가 기록한 내용을 보여 줍니다. 이 방화벽에만 저장됩니다. 현재 토큰을 유지하려면 비워 두십시오.",
+ "Enter the token as ntopng shows it.": "ntopng에 표시된 그대로 토큰을 입력하십시오."
 }

@@ -156,5 +156,12 @@
  "Webhook": "Webhook",
  "What each alert channel answered:": "Co odpověděl každý kanál upozornění:",
  "Test alert": "Zkušební upozornění",
- "Send a test alert": "Odeslat zkušební upozornění"
+ "Send a test alert": "Odeslat zkušební upozornění",
+ "Web activity by device": "Webová aktivita podle zařízení",
+ "Report sources": "Zdroje přehledu",
+ "ntopng address": "Adresa ntopng",
+ "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "Pro oddíl Aplikace: adresa webového rozhraní ntopng (os-ntopng). Prázdné: http://127.0.0.1:3000, ntopng na tomto firewallu.",
+ "ntopng API token": "API token ntopng",
+ "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "Volitelné: token vytvořený v ntopng pro jeho REST API. S ním oddíl Aplikace ukazuje aplikace ntopng podle provozu; bez něj to, co zaznamenala Suricata. Uloženo pouze na tomto firewallu. Ponechte prázdné, chcete-li zachovat současný token.",
+ "Enter the token as ntopng shows it.": "Zadejte token tak, jak jej ukazuje ntopng."
 }

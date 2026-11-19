@@ -39,14 +39,25 @@ Tested on OPNsense 26.7.
   tunnels, compared with the previous period.
 - **Connection quality**: state, latency and loss of each monitored gateway, outage alarms in
   the period.
+- **VPN**: each IPsec, OpenVPN and WireGuard connection with its state now, its outages in the
+  period and the time it was down, and who is connected now - user, address, since when and
+  traffic, as each service counts it.
 - **DNS filtering**: queries, blocked queries, most blocked domains, busiest clients.
+- **Web activity by device**: for the devices asking most, the domains they asked for most, how
+  many of their queries were blocked and which, and the hours they were active.
 - **Security**: Suricata alerts by signature and source, CrowdSec alerts and active bans.
+- **Applications**: the protocols Suricata recognised and the sites named in its TLS and HTTP
+  records; with an ntopng API token set, ntopng's applications by traffic.
 - **Devices**: devices online, devices seen for the first time (with the manufacturer), and the
   heaviest users.
+- **Mail**: messages delivered, deferred, bounced and refused by the mail server, and the
+  senders refused most.
 - **Firewall health**: version, uptime, load, temperature, memory, disk, SMART, last backup,
   VPN tunnel state.
 
-Each schedule picks which of these sections it includes.
+Each schedule picks which of these sections it includes. A new schedule has them all; one made
+before the VPN, Web activity, Applications and Mail sections existed keeps the sections it had
+until they are ticked.
 
 ## Features
 
@@ -238,6 +249,17 @@ The GUI below is shown in Arabic, with the right-to-left layout from
 
 The same report in Arabic: [docs/images/report-ar_SA.png](docs/images/report-ar_SA.png).
 
+The newer sections, from previews on lab appliances (2026-11-18; addresses hidden): the VPN section with
+its highlight, from an XGS 3300 whose IPsec tunnel to an appliance taken out of the lab was down, and the
+web activity, applications and mail sections from an XGS 136 with no mail server.
+
+| VPN | Web activity, applications, mail |
+| --- | --- |
+| ![The VPN section](docs/images/report-sections/vpn-en_US.png) | ![Web activity, applications and mail](docs/images/report-sections/web-apps-mail-en_US.png) |
+
+In Arabic: [VPN](docs/images/report-sections/vpn-ar_SA.png),
+[web activity, applications and mail](docs/images/report-sections/web-apps-mail-ar_SA.png).
+
 ## Where the data comes from
 
 The plugin does not collect anything itself; it reads what OPNsense already records. Sections
@@ -247,9 +269,13 @@ whose source is missing simply show "no data".
 | --- | --- | --- |
 | Internet usage | vnstat | `os-vnstat` plugin |
 | Connection quality | dpinger gateway monitoring, system log | gateway monitoring enabled |
+| VPN | `configctl ipsec list status`, `openvpn connections`, `wireguard show` (what each status page reads); outages from the alerts' tunnel watch | a VPN configured |
 | DNS filtering | Unbound query database | Unbound with reporting enabled |
+| Web activity by device | Unbound query database, by client | Unbound DNS statistics on (Reporting: Unbound DNS, its settings) |
 | Security | Suricata `eve.json`, `cscli` | Intrusion Detection, `os-crowdsec` (optional) |
+| Applications | Suricata `eve.json` (`app_proto`, TLS SNI, HTTP Host); ntopng's REST API | Intrusion Detection with its HTTP logging and its TLS logging extended (a TLS record names its site only then); `os-ntopng` and an API token (optional) |
 | Devices | ARP table, host discovery, NetFlow | Insight (NetFlow) for per-device usage |
+| Mail | the mail server's log, `/var/log/postfix/` | `os-postfix` |
 | Firewall health | sysctl, `smartctl`, system log | `os-smart` for SMART (optional) |
 
 ## Installation
@@ -381,6 +407,20 @@ the English one.
   the firewall's own address as the source there (seen on an appliance: three tries out of three),
   which names no device and is left out; the `from inside` rule matches where the packet enters
   the firewall, before NAT, with the device's own address.
+- The VPN section lists as tunnels the connections that should stay up: an IPsec connection with a
+  remote address of its own, an OpenVPN client or server instance, a WireGuard peer this firewall sends
+  a keepalive to. A road warrior - an OpenVPN server's clients, IPsec open to any address, a WireGuard
+  peer with no keepalive - is a session, listed with who is connected now, and its comings and goings
+  are no outages. Outages are counted from the log the tunnel watch keeps since this version (62 days,
+  200 entries a tunnel); a period that began earlier says from when it counts.
+- "Connected now" counts a WireGuard peer while its last handshake is under 300 seconds old, as
+  VPN: WireGuard: Status does; the tunnel watch's 180 seconds above decide a tunnel's outages.
+- The Applications section reads Suricata's log for 60 seconds at most (the scheduler waits while a
+  report is built), and says so when it stopped early. ntopng's figures are its totals since it last
+  started, for the first interface it monitors.
+- A secret field (the ntopng token, like the webhook header and the ntfy token) is kept when left
+  empty, so it cannot be cleared from the page; with os-ntopng removed and no ntopng address set, a
+  token left behind is not used.
 - Some languages change word forms with the number (Polish, Russian, Ukrainian and others).
   The wording was chosen to read well for most numbers, but not every count is grammatically
   perfect.
