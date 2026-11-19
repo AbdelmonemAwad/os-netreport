@@ -226,7 +226,7 @@ s = settings('<backup_mail>1</backup_mail><backup_password>s3cret pass</backup_p
 r = nr.send_backup(s, DAY)
 rcpt, subj, att = MAILS[-1]
 check('a password: sent to the backup\'s recipients', (r['status'], rcpt), ('sent', ['a@example.com', 'b@example.com']))
-check('the password goes to the encryption, whole', CALLS[-1], 's3cret pass')
+check('the password goes to the encryption, whole', CALLS[-1] == 's3cret pass', True)
 check('the file: named as OPNsense names a backup, encrypted', (att[0], att[1], att[2][:26]),
       ('config-fw.example.net-20261118000000.xml', 'application/xml', b'---- BEGIN config.xml ----'))
 check('the password is in neither the mail nor the history',
@@ -266,7 +266,8 @@ nr.backup_due(settings('<backup_mail>0</backup_mail>'), wed + datetime.timedelta
 check('turned off: it forgets its last try', 'last_try' in nr.load_json(nr.STATE_FILE, {}).get('backup', {}), False)
 check('on again two hours after its time: counts from then, sends nothing',
       nr.backup_due(s, wed + datetime.timedelta(days=21, hours=2)), False)
-check('a password\'s spaces kept as typed', settings('<backup_password> p w </backup_password>').get('backup_password'), ' p w ')
+check('a password\'s spaces kept as typed',
+      settings('<backup_password> p w </backup_password>').get('backup_password') == ' p w ', True)
 if hasattr(nr.time, 'tzset'):
     old = os.environ.get('TZ')
     os.environ['TZ'] = 'America/New_York'
