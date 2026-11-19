@@ -87,6 +87,24 @@
         </grid_view>
     </field>
     <field>
+        <id>schedule.filter_interface</id>
+        <label>Interface</label>
+        <type>dropdown</type>
+        <help>Optional: another network whose devices this report covers (devices and their usage). Empty: the Local network set on the Settings tab.</help>
+        <grid_view>
+            <ignore>true</ignore>
+        </grid_view>
+    </field>
+    <field>
+        <id>schedule.filter_device</id>
+        <label>One device only</label>
+        <type>text</type>
+        <help>Optional: one address. The lists per device - DNS, web activity, devices and their usage, alerts on connections it opened, VPN sessions, the audit log - then show this device alone; the totals stay the network's.</help>
+        <grid_view>
+            <ignore>true</ignore>
+        </grid_view>
+    </field>
+    <field>
         <id>schedule.compare</id>
         <label>Compare with previous period</label>
         <type>checkbox</type>
@@ -119,8 +137,8 @@
     <field>
         <id>schedule.attach</id>
         <label>Attach as file</label>
-        <type>checkbox</type>
-        <help>Also attach the report as an HTML file, handy for keeping or forwarding.</help>
+        <type>dropdown</type>
+        <help>Also attach the report as a file, handy for keeping or forwarding: HTML as the mail shows it, PDF for printing, or CSV with each table's rows for a spreadsheet. PDF is written with a font that has no Chinese, Japanese or Korean letters: a report in those languages is attached as HTML instead.</help>
         <grid_view>
             <ignore>true</ignore>
         </grid_view>

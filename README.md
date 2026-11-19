@@ -52,12 +52,27 @@ Tested on OPNsense 26.7.
   heaviest users.
 - **Mail**: messages delivered, deferred, bounced and refused by the mail server, and the
   senders refused most.
+- **Audit log**: sign-ins to the firewall (web GUI and SSH) per user and address, failed
+  sign-ins per address, configuration changes - who, from where, on which page, when - and the
+  rest of the audit log's entries. With only Highlights and Audit log ticked, a schedule is a
+  compliance report: a record of the period from the firewall's own log, not a certificate.
 - **Firewall health**: version, uptime, load, temperature, memory, disk, SMART, last backup,
   VPN tunnel state.
 
-Each schedule picks which of these sections it includes. A new schedule has them all; one made
-before the VPN, Web activity, Applications and Mail sections existed keeps the sections it had
-until they are ticked.
+Each schedule picks which of these sections it includes. A new schedule has them all but the
+Audit log; one made before the VPN, Web activity, Applications, Mail and Audit log sections
+existed keeps the sections it had until they are ticked.
+
+A schedule can also narrow its report:
+
+- **Interface**: another network than the Local network (a guest network, say) - the devices
+  online, new and known there, and their usage.
+- **One device only**: one address - the lists per device (DNS clients, web activity, new
+  devices and top talkers, alerts on connections it opened, devices that tried a
+  command-and-control list, VPN sessions, the audit log) then show that device alone, while the
+  totals stay the network's.
+
+The report's head says which of the two it has.
 
 ## Features
 
@@ -75,8 +90,11 @@ until they are ticked.
   [Alerts](#alerts)).
 - If the firewall is off at the scheduled time, the report goes out when it comes back (up to
   12 hours late).
-- Preview and "send now" buttons, a history of everything sent, and copies of sent reports kept
-  on the firewall for a configurable number of days.
+- Preview, download and "send now" buttons, a history of everything sent, and copies of sent
+  reports kept on the firewall for a configurable number of days.
+- The report as a file, attached to its mail or downloaded from the page: HTML as the mail
+  shows it, PDF for printing (Arabic and Persian right to left), or CSV with each table's rows
+  for a spreadsheet.
 - Mail goes through the SMTP server already configured for Monit, or a separate one.
 
 ## Alerts
@@ -260,6 +278,24 @@ web activity, applications and mail sections from an XGS 136 with no mail server
 In Arabic: [VPN](docs/images/report-sections/vpn-ar_SA.png),
 [web activity, applications and mail](docs/images/report-sections/web-apps-mail-ar_SA.png).
 
+The report as a file, and a schedule's filters (2026-11-18, the second XGS 3300; addresses hidden): the
+schedule's new fields - Interface, One device only, the attachment's format and the Audit log section -
+and the download button's choice of format; then pages of PDFs it made: a report for one device in
+Arabic, right to left, and a compliance report (Highlights and Audit log only) that arrived by mail as a
+PDF at its scheduled time.
+
+| A schedule's filters and attachment | Download |
+| --- | --- |
+| ![The schedule's new fields](docs/images/report-files/gui-dialog-ar.png) | ![The download dialog](docs/images/report-files/gui-download-ar.png) |
+
+| One device, PDF in Arabic | Compliance report, PDF in Arabic |
+| --- | --- |
+| ![A report for one device as a PDF](docs/images/report-files/pdf-device-ar.png) | ![A compliance report as a PDF](docs/images/report-files/pdf-compliance-ar.png) |
+
+In English: [the schedule's fields](docs/images/report-files/gui-dialog-en.png),
+[download](docs/images/report-files/gui-download-en.png),
+[the audit log of one device, PDF](docs/images/report-files/pdf-audit-en.png).
+
 ## Where the data comes from
 
 The plugin does not collect anything itself; it reads what OPNsense already records. Sections
@@ -276,6 +312,7 @@ whose source is missing simply show "no data".
 | Applications | Suricata `eve.json` (`app_proto`, TLS SNI, HTTP Host); ntopng's REST API | Intrusion Detection with its HTTP logging and its TLS logging extended (a TLS record names its site only then); `os-ntopng` and an API token (optional) |
 | Devices | ARP table, host discovery, NetFlow | Insight (NetFlow) for per-device usage |
 | Mail | the mail server's log, `/var/log/postfix/` | `os-postfix` |
+| Audit log | `/var/log/audit/audit_YYYYMMDD.log`: the web GUI's `Successful login for user '<name>' from: <address>`, sshd's `Accepted <method> for <name> from <address> port <n>`, the failed sign-ins as the login alert reads them (see [Where the alerts are read from](#where-the-alerts-are-read-from)), and `user <name>@<address> changed configuration to <backup> in <page> <description>`, which OPNsense writes with every save | nothing (OPNsense keeps the audit log for as long as System: Settings: Logging says) |
 | Firewall health | sysctl, `smartctl`, system log | `os-smart` for SMART (optional) |
 
 ## Installation
@@ -370,6 +407,11 @@ not be updated either. Build a new package from a newer tag and `pkg add -f` it.
   and scans the LAN for new devices every five minutes.
 - `src/opnsense/scripts/netreport/alerts.py` is the alert layer and its collectors (see
   [Alerts](#alerts)); `alerts.py test` sends a test alert.
+- `src/opnsense/scripts/netreport/pdf.py` writes the PDF, with nothing to install: Python's
+  standard library and the DejaVu Sans font shipped beside it (`fonts/`, its licence in
+  `fonts/LICENSE`), of which each PDF carries the letters it uses, so that any reader shows it;
+  Arabic letters joined and lines ordered right to left by its own small bidi step. `netreport.py export <uuid> <html|pdf|csv>`
+  is what the page's download button calls (configd action `netreport export`).
 - The GUI (model, controllers, view) follows the usual OPNsense MVC layout. Settings are stored
   under `OPNsense/NetReport` in `config.xml`.
 - Report texts live in `i18n/<locale>.json`, Arabic among them. The GUI's Arabic is in
@@ -421,6 +463,18 @@ the English one.
 - A secret field (the ntopng token, like the webhook header and the ntfy token) is kept when left
   empty, so it cannot be cleared from the page; with os-ntopng removed and no ntopng address set, a
   token left behind is not used.
+- PDF is written with DejaVu Sans, which has no Chinese, Japanese or Korean letters: a report in
+  those languages is attached and downloaded as HTML when PDF is chosen. Emoji are left out of a
+  PDF.
+- A PDF orders a mixed line with a small subset of the Unicode bidi rules: addresses, dates,
+  domains and numbers inside Arabic text come out right, but a line that mixes the two
+  directions in less common ways can be ordered differently from a browser.
+- "One device only" keeps a VPN session when its address - the virtual address a road warrior
+  got, else its own - is the device's.
+- An interface a schedule covers is one with an IPv4 address of its own (the page offers no
+  other); it is scanned for devices from the moment it is chosen, and what is there at that first
+  scan is recorded as known, not as new. Should it go, or lose its address, the report says so in
+  its head and shows the Local network's devices.
 - Some languages change word forms with the number (Polish, Russian, Ukrainian and others).
   The wording was chosen to read well for most numbers, but not every count is grammatically
   perfect.

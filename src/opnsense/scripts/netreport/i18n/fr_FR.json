@@ -188,5 +188,20 @@
  "mail_rejected": "Refusés",
  "top_rejected": "Expéditeurs les plus refusés",
  "web_slow": "La base de requêtes d’Unbound n’a pas répondu en 120 s.",
- "apps_partial": "Le journal de Suricata n’a été lu que pendant {n} s : les nombres ci-dessus viennent de sa première partie."
+ "apps_partial": "Le journal de Suricata n’a été lu que pendant {n} s : les nombres ci-dessus viennent de sa première partie.",
+ "audit": "📋 Journal d'audit",
+ "audit_signins": "Connexions",
+ "audit_failed": "Connexions échouées",
+ "audit_changes": "Modifications de la configuration",
+ "audit_other": "Autres entrées du journal d'audit",
+ "audit_none": "Ce pare-feu n'a pas de journal d'audit.",
+ "audit_newest": "Les {n} plus récentes sur {total}.",
+ "audit_note": "Tiré du journal d'audit du pare-feu (System: Log Files: Audit) : un relevé de la période, pas un certificat de conformité. D'un nom d'utilisateur saisi lors d'une connexion échouée, seuls les deux premiers caractères sont affichés.",
+ "audit_names": "Noms d'utilisateur essayés",
+ "audit_time": "Heure",
+ "audit_change": "Modification",
+ "audit_entry": "Entrée",
+ "only_device": "Appareil : {device}",
+ "only_iface": "Réseau : {name}",
+ "only_iface_off": "Réseau {name} : supprimé ou sans adresse IPv4 propre – les appareils affichés sont ceux du réseau local"
 }

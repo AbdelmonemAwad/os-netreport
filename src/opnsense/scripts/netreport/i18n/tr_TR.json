@@ -188,5 +188,20 @@
  "mail_rejected": "Reddedildi",
  "top_rejected": "En çok reddedilen gönderenler",
  "web_slow": "Unbound sorgu veritabanı 120 sn içinde yanıt vermedi.",
- "apps_partial": "Suricata günlüğü yalnızca {n} sn okundu: yukarıdaki sayılar onun ilk bölümündendir."
+ "apps_partial": "Suricata günlüğü yalnızca {n} sn okundu: yukarıdaki sayılar onun ilk bölümündendir.",
+ "audit": "📋 Denetim günlüğü",
+ "audit_signins": "Oturum açmalar",
+ "audit_failed": "Başarısız oturum açmalar",
+ "audit_changes": "Yapılandırma değişiklikleri",
+ "audit_other": "Denetim günlüğünün diğer kayıtları",
+ "audit_none": "Bu güvenlik duvarında denetim günlüğü yok.",
+ "audit_newest": "{total} kaydın en yeni {n} tanesi.",
+ "audit_note": "Güvenlik duvarının denetim günlüğünden (System: Log Files: Audit): dönemin kaydıdır, uyumluluk sertifikası değildir. Başarısız bir oturum açmada yazılan kullanıcı adının yalnızca ilk iki karakteri gösterilir.",
+ "audit_names": "Denenen kullanıcı adları",
+ "audit_time": "Zaman",
+ "audit_change": "Değişiklik",
+ "audit_entry": "Kayıt",
+ "only_device": "Cihaz: {device}",
+ "only_iface": "Ağ: {name}",
+ "only_iface_off": "{name} ağı: artık yok veya kendi IPv4 adresi yok - gösterilen cihazlar yerel ağınkilerdir"
 }

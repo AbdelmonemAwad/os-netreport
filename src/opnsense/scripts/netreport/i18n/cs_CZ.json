@@ -188,5 +188,20 @@
  "mail_rejected": "Odmítnuto",
  "top_rejected": "Nejčastěji odmítnutí odesílatelé",
  "web_slow": "Databáze dotazů Unbound neodpověděla do 120 s.",
- "apps_partial": "Log Suricaty byl čten jen {n} s: počty výše jsou z jeho první části."
+ "apps_partial": "Log Suricaty byl čten jen {n} s: počty výše jsou z jeho první části.",
+ "audit": "📋 Protokol auditu",
+ "audit_signins": "Přihlášení",
+ "audit_failed": "Neúspěšná přihlášení",
+ "audit_changes": "Změny konfigurace",
+ "audit_other": "Další záznamy protokolu auditu",
+ "audit_none": "Tento firewall nemá protokol auditu.",
+ "audit_newest": "Nejnovějších {n} z {total}.",
+ "audit_note": "Z protokolu auditu firewallu (System: Log Files: Audit): záznam za dané období, nikoli osvědčení o shodě. Z uživatelského jména zadaného při neúspěšném přihlášení se zobrazují jen první dva znaky.",
+ "audit_names": "Zkoušená uživatelská jména",
+ "audit_time": "Čas",
+ "audit_change": "Změna",
+ "audit_entry": "Záznam",
+ "only_device": "Zařízení: {device}",
+ "only_iface": "Síť: {name}",
+ "only_iface_off": "Síť {name}: neexistuje nebo nemá vlastní adresu IPv4 – zobrazená zařízení jsou z místní sítě"
 }

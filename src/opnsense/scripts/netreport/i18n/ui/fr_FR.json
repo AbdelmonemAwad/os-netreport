@@ -4,7 +4,6 @@
  "Alert language": "Langue des alertes",
  "Alert sent": "Alerte envoyée",
  "Alerts and thresholds": "Alertes et seuils",
- "Also attach the report as an HTML file, handy for keeping or forwarding.": "Joindre aussi le rapport sous forme de fichier HTML, pratique pour le conserver ou le transférer.",
  "Arabic": "Arabe",
  "Attach as file": "Joindre en fichier",
  "Backup age warning (days)": "Alerte d'ancienneté de la sauvegarde (jours)",
@@ -20,7 +19,6 @@
  "Devices on this network are listed in the report and watched for new arrivals.": "Les appareils de ce réseau sont listés dans le rapport et surveillés pour détecter les nouveaux arrivants.",
  "Disk usage warning (%)": "Alerte d'utilisation du disque (%)",
  "Download and upload together. Warns at 80% and 100%. 0 means unlimited.": "Téléchargement et envoi cumulés. Alerte à 80 % et 100 %. 0 signifie illimité.",
- "Each schedule sends one report. Use the eye button to preview it and the plane button to send it now.": "Chaque planification envoie un rapport. Utilisez le bouton en forme d'œil pour l'aperçu et le bouton en forme d'avion pour l'envoyer maintenant.",
  "Edit report schedule": "Modifier la planification du rapport",
  "Encryption": "Chiffrement",
  "Enter a valid email address.": "Saisissez une adresse e-mail valide.",
@@ -163,5 +161,15 @@
  "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "Pour la section Applications : l’adresse de l’interface web de ntopng (os-ntopng). Vide : http://127.0.0.1:3000, ntopng sur ce pare-feu.",
  "ntopng API token": "Jeton d’API ntopng",
  "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "Facultatif : un jeton créé dans ntopng pour son API REST. Avec lui, la section Applications montre les applications de ntopng par trafic ; sans lui, ce que Suricata a enregistré. Conservé sur ce pare-feu uniquement. Laissez vide pour garder le jeton actuel.",
- "Enter the token as ntopng shows it.": "Saisissez le jeton tel que ntopng l’affiche."
+ "Enter the token as ntopng shows it.": "Saisissez le jeton tel que ntopng l’affiche.",
+ "No attachment": "Pas de pièce jointe",
+ "Audit log": "Journal d'audit",
+ "One device only": "Un seul appareil",
+ "Optional: another network whose devices this report covers (devices and their usage). Empty: the Local network set on the Settings tab.": "Facultatif : un autre réseau dont ce rapport couvre les appareils (appareils et leur consommation). Vide : le Réseau local défini dans l'onglet Paramètres.",
+ "Optional: one address. The lists per device - DNS, web activity, devices and their usage, alerts on connections it opened, VPN sessions, the audit log - then show this device alone; the totals stay the network's.": "Facultatif : une adresse. Les listes par appareil – DNS, activité web, appareils et leur consommation, alertes sur les connexions qu'il a ouvertes, sessions VPN, journal d'audit – ne montrent alors que cet appareil ; les totaux restent ceux du réseau.",
+ "Also attach the report as a file, handy for keeping or forwarding: HTML as the mail shows it, PDF for printing, or CSV with each table's rows for a spreadsheet. PDF is written with a font that has no Chinese, Japanese or Korean letters: a report in those languages is attached as HTML instead.": "Joindre aussi le rapport sous forme de fichier, pratique pour le conserver ou le transférer : HTML tel que le montre le courriel, PDF pour l'impression, ou CSV avec les lignes de chaque tableau pour un tableur. Le PDF est écrit avec une police sans caractères chinois, japonais ni coréens : un rapport dans ces langues est joint en HTML à la place.",
+ "Enter one address, for example 192.168.1.20.": "Saisissez une adresse, par exemple 192.168.1.20.",
+ "The report as a file, with its data as of now:": "Le rapport sous forme de fichier, avec ses données d'à présent :",
+ "The file could not be made.": "Le fichier n'a pas pu être créé.",
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Chaque planification envoie un rapport. Utilisez le bouton en forme d'œil pour l'aperçu, le bouton en forme de flèche pour le télécharger en HTML, PDF ou CSV, et le bouton en forme d'avion pour l'envoyer maintenant."
 }

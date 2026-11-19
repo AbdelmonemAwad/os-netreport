@@ -4,7 +4,6 @@
  "Alert language": "알림 언어",
  "Alert sent": "알림 보냄",
  "Alerts and thresholds": "알림 및 임계값",
- "Also attach the report as an HTML file, handy for keeping or forwarding.": "보고서를 HTML 파일로도 첨부합니다. 보관하거나 전달할 때 편리합니다.",
  "Arabic": "아랍어",
  "Attach as file": "파일로 첨부",
  "Backup age warning (days)": "백업 경과 경고(일)",
@@ -20,7 +19,6 @@
  "Devices on this network are listed in the report and watched for new arrivals.": "이 네트워크의 기기가 보고서에 표시되며 새 기기의 연결을 감시합니다.",
  "Disk usage warning (%)": "디스크 사용량 경고 (%)",
  "Download and upload together. Warns at 80% and 100%. 0 means unlimited.": "다운로드와 업로드의 합계입니다. 80%와 100%에서 경고합니다. 0은 무제한입니다.",
- "Each schedule sends one report. Use the eye button to preview it and the plane button to send it now.": "각 일정은 하나의 보고서를 보냅니다. 눈 모양 버튼으로 미리 보고 비행기 모양 버튼으로 바로 보냅니다.",
  "Edit report schedule": "보고서 일정 편집",
  "Encryption": "암호화",
  "Enter a valid email address.": "올바른 이메일 주소를 입력하세요.",
@@ -163,5 +161,15 @@
  "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "애플리케이션 섹션용: ntopng 웹 인터페이스(os-ntopng)의 주소. 비우면: http://127.0.0.1:3000, 이 방화벽의 ntopng.",
  "ntopng API token": "ntopng API 토큰",
  "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "선택 사항: ntopng에서 REST API용으로 만든 토큰. 있으면 애플리케이션 섹션에 ntopng의 트래픽별 애플리케이션을, 없으면 Suricata가 기록한 내용을 보여 줍니다. 이 방화벽에만 저장됩니다. 현재 토큰을 유지하려면 비워 두십시오.",
- "Enter the token as ntopng shows it.": "ntopng에 표시된 그대로 토큰을 입력하십시오."
+ "Enter the token as ntopng shows it.": "ntopng에 표시된 그대로 토큰을 입력하십시오.",
+ "No attachment": "첨부 없음",
+ "Audit log": "감사 로그",
+ "One device only": "기기 하나만",
+ "Optional: another network whose devices this report covers (devices and their usage). Empty: the Local network set on the Settings tab.": "선택: 이 보고서가 다루는 다른 네트워크(기기와 사용량). 비워 두면 설정 탭의 로컬 네트워크입니다.",
+ "Optional: one address. The lists per device - DNS, web activity, devices and their usage, alerts on connections it opened, VPN sessions, the audit log - then show this device alone; the totals stay the network's.": "선택: 주소 하나. 기기별 목록(DNS, 웹 활동, 기기와 사용량, 그 기기가 연 연결에 대한 경고, VPN 세션, 감사 로그)이 이 기기만 표시합니다. 합계는 네트워크 전체 값을 유지합니다.",
+ "Also attach the report as a file, handy for keeping or forwarding: HTML as the mail shows it, PDF for printing, or CSV with each table's rows for a spreadsheet. PDF is written with a font that has no Chinese, Japanese or Korean letters: a report in those languages is attached as HTML instead.": "보고서를 파일로도 첨부합니다. 보관하거나 전달할 때 편리합니다. HTML은 메일에 보이는 그대로, PDF는 인쇄용, CSV는 스프레드시트용으로 각 표의 행을 담습니다. PDF는 중국어, 일본어, 한국어 글자가 없는 글꼴로 작성되므로 이 언어의 보고서는 대신 HTML로 첨부됩니다.",
+ "Enter one address, for example 192.168.1.20.": "주소 하나를 입력하세요(예: 192.168.1.20).",
+ "The report as a file, with its data as of now:": "지금 시점의 데이터로 만든 보고서 파일:",
+ "The file could not be made.": "파일을 만들 수 없습니다.",
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "각 일정은 하나의 보고서를 보냅니다. 눈 모양 버튼으로 미리 보고, 화살표 버튼으로 HTML, PDF 또는 CSV로 내려받고, 비행기 모양 버튼으로 바로 보냅니다."
 }

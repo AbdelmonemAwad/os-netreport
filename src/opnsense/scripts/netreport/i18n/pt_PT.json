@@ -188,5 +188,20 @@
  "mail_rejected": "Recusados",
  "top_rejected": "Remetentes mais recusados",
  "web_slow": "A base de consultas do Unbound não respondeu em 120 s.",
- "apps_partial": "O registo do Suricata foi lido durante apenas {n} s: as contagens acima são da sua primeira parte."
+ "apps_partial": "O registo do Suricata foi lido durante apenas {n} s: as contagens acima são da sua primeira parte.",
+ "audit": "📋 Registo de auditoria",
+ "audit_signins": "Inícios de sessão",
+ "audit_failed": "Inícios de sessão falhados",
+ "audit_changes": "Alterações da configuração",
+ "audit_other": "Outras entradas do registo de auditoria",
+ "audit_none": "Esta firewall não tem registo de auditoria.",
+ "audit_newest": "As {n} mais recentes de {total}.",
+ "audit_note": "Do registo de auditoria da firewall (System: Log Files: Audit): um registo do período, não um certificado de conformidade. De um nome de utilizador escrito num início de sessão falhado, só se mostram os dois primeiros caracteres.",
+ "audit_names": "Nomes de utilizador tentados",
+ "audit_time": "Hora",
+ "audit_change": "Alteração",
+ "audit_entry": "Entrada",
+ "only_device": "Dispositivo: {device}",
+ "only_iface": "Rede: {name}",
+ "only_iface_off": "Rede {name}: já não existe ou não tem endereço IPv4 próprio – os dispositivos mostrados são os da rede local"
 }

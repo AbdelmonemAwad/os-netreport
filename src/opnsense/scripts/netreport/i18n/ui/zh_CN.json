@@ -4,7 +4,6 @@
  "Alert language": "告警语言",
  "Alert sent": "告警已发送",
  "Alerts and thresholds": "告警与阈值",
- "Also attach the report as an HTML file, handy for keeping or forwarding.": "同时以 HTML 文件形式附加报告，便于保存或转发。",
  "Arabic": "阿拉伯语",
  "Attach as file": "作为文件附加",
  "Backup age warning (days)": "备份过期警告（天）",
@@ -20,7 +19,6 @@
  "Devices on this network are listed in the report and watched for new arrivals.": "此网络中的设备将列入报告，并监测新加入的设备。",
  "Disk usage warning (%)": "磁盘使用率警告 (%)",
  "Download and upload together. Warns at 80% and 100%. 0 means unlimited.": "下载与上传合计。在达到 80% 和 100% 时发出警告。0 表示无限制。",
- "Each schedule sends one report. Use the eye button to preview it and the plane button to send it now.": "每个计划发送一份报告。使用眼睛按钮预览，使用纸飞机按钮立即发送。",
  "Edit report schedule": "编辑报告计划",
  "Encryption": "加密",
  "Enter a valid email address.": "请输入有效的电子邮件地址。",
@@ -163,5 +161,15 @@
  "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "用于“应用”部分：ntopng 网页界面（os-ntopng）的地址。留空：http://127.0.0.1:3000，即本防火墙上的 ntopng。",
  "ntopng API token": "ntopng API 令牌",
  "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "可选：在 ntopng 中为其 REST API 创建的令牌。有令牌时，“应用”部分显示 ntopng 按流量统计的应用；没有时，显示 Suricata 记录的内容。仅保存在本防火墙上。留空以保留当前令牌。",
- "Enter the token as ntopng shows it.": "请按 ntopng 显示的样子输入令牌。"
+ "Enter the token as ntopng shows it.": "请按 ntopng 显示的样子输入令牌。",
+ "No attachment": "不附加",
+ "Audit log": "审计日志",
+ "One device only": "仅一台设备",
+ "Optional: another network whose devices this report covers (devices and their usage). Empty: the Local network set on the Settings tab.": "可选：本报告涵盖其设备的另一个网络（设备及其用量）。留空：设置选项卡中设定的本地网络。",
+ "Optional: one address. The lists per device - DNS, web activity, devices and their usage, alerts on connections it opened, VPN sessions, the audit log - then show this device alone; the totals stay the network's.": "可选：一个地址。按设备的列表（DNS、网页活动、设备及其用量、其发起连接的警报、VPN 会话、审计日志）将只显示该设备；总计仍为整个网络的数据。",
+ "Also attach the report as a file, handy for keeping or forwarding: HTML as the mail shows it, PDF for printing, or CSV with each table's rows for a spreadsheet. PDF is written with a font that has no Chinese, Japanese or Korean letters: a report in those languages is attached as HTML instead.": "同时以文件形式附加报告，便于保存或转发：HTML 与邮件显示一致，PDF 用于打印，CSV 以每个表格的行供电子表格使用。PDF 所用字体不含中文、日文或韩文字符：这些语言的报告将改为以 HTML 附加。",
+ "Enter one address, for example 192.168.1.20.": "请输入一个地址，例如 192.168.1.20。",
+ "The report as a file, with its data as of now:": "以当前数据生成的报告文件：",
+ "The file could not be made.": "无法生成文件。",
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "每个计划发送一份报告。使用眼睛按钮预览，使用箭头按钮下载为 HTML、PDF 或 CSV，使用纸飞机按钮立即发送。"
 }

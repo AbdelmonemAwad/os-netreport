@@ -4,7 +4,6 @@
  "Alert language": "アラートの言語",
  "Alert sent": "アラート送信済み",
  "Alerts and thresholds": "アラートとしきい値",
- "Also attach the report as an HTML file, handy for keeping or forwarding.": "レポートを HTML ファイルとしても添付します。保存や転送に便利です。",
  "Arabic": "アラビア語",
  "Attach as file": "ファイルとして添付",
  "Backup age warning (days)": "バックアップ経過日数の警告（日）",
@@ -20,7 +19,6 @@
  "Devices on this network are listed in the report and watched for new arrivals.": "このネットワーク上のデバイスをレポートに掲載し、新しいデバイスの参加を監視します。",
  "Disk usage warning (%)": "ディスク使用率の警告 (%)",
  "Download and upload together. Warns at 80% and 100%. 0 means unlimited.": "ダウンロードとアップロードの合計です。80% と 100% で警告します。0 は無制限です。",
- "Each schedule sends one report. Use the eye button to preview it and the plane button to send it now.": "各スケジュールは 1 つのレポートを送信します。目のボタンでプレビュー、紙飛行機のボタンで今すぐ送信します。",
  "Edit report schedule": "レポートスケジュールの編集",
  "Encryption": "暗号化",
  "Enter a valid email address.": "有効なメールアドレスを入力してください。",
@@ -163,5 +161,15 @@
  "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "「アプリケーション」セクション用：ntopng の Web インターフェイス（os-ntopng）のアドレス。空欄：http://127.0.0.1:3000（このファイアウォール上の ntopng）。",
  "ntopng API token": "ntopng API トークン",
  "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "任意：ntopng で REST API 用に作成したトークン。あれば「アプリケーション」セクションに ntopng のトラフィック別アプリケーションを表示し、なければ Suricata が記録したものを表示します。このファイアウォールにのみ保存されます。現在のトークンを残すには空欄のままにしてください。",
- "Enter the token as ntopng shows it.": "ntopng に表示されたとおりにトークンを入力してください。"
+ "Enter the token as ntopng shows it.": "ntopng に表示されたとおりにトークンを入力してください。",
+ "No attachment": "添付なし",
+ "Audit log": "監査ログ",
+ "One device only": "1 台のデバイスのみ",
+ "Optional: another network whose devices this report covers (devices and their usage). Empty: the Local network set on the Settings tab.": "任意：このレポートが対象とする別のネットワーク（デバイスとその使用量）。空欄：設定タブで指定したローカルネットワーク。",
+ "Optional: one address. The lists per device - DNS, web activity, devices and their usage, alerts on connections it opened, VPN sessions, the audit log - then show this device alone; the totals stay the network's.": "任意：1 つのアドレス。デバイスごとの一覧（DNS、Web アクティビティ、デバイスとその使用量、そのデバイスが開いた接続のアラート、VPN セッション、監査ログ）は、このデバイスだけを表示します。合計はネットワーク全体のままです。",
+ "Also attach the report as a file, handy for keeping or forwarding: HTML as the mail shows it, PDF for printing, or CSV with each table's rows for a spreadsheet. PDF is written with a font that has no Chinese, Japanese or Korean letters: a report in those languages is attached as HTML instead.": "レポートをファイルとしても添付します。保存や転送に便利です。HTML はメールの表示どおり、PDF は印刷用、CSV は表計算ソフト用に各表の行を収めます。PDF は中国語・日本語・韓国語の文字を含まないフォントで作成されるため、これらの言語のレポートは代わりに HTML で添付されます。",
+ "Enter one address, for example 192.168.1.20.": "アドレスを 1 つ入力してください（例：192.168.1.20）。",
+ "The report as a file, with its data as of now:": "現時点のデータによるレポートのファイル：",
+ "The file could not be made.": "ファイルを作成できませんでした。",
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "各スケジュールは 1 つのレポートを送信します。目のボタンでプレビュー、矢印のボタンで HTML・PDF・CSV としてダウンロード、紙飛行機のボタンで今すぐ送信します。"
 }

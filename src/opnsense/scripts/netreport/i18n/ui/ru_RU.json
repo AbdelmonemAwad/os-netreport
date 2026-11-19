@@ -4,7 +4,6 @@
  "Alert language": "Язык оповещений",
  "Alert sent": "Оповещение отправлено",
  "Alerts and thresholds": "Оповещения и пороги",
- "Also attach the report as an HTML file, handy for keeping or forwarding.": "Также прикреплять отчёт как HTML-файл — удобно для хранения или пересылки.",
  "Arabic": "Арабский",
  "Attach as file": "Прикрепить как файл",
  "Backup age warning (days)": "Предупреждение о возрасте резервной копии (дни)",
@@ -20,7 +19,6 @@
  "Devices on this network are listed in the report and watched for new arrivals.": "Устройства этой сети перечисляются в отчёте, а появление новых отслеживается.",
  "Disk usage warning (%)": "Предупреждение о заполнении диска (%)",
  "Download and upload together. Warns at 80% and 100%. 0 means unlimited.": "Загрузка и отдача вместе. Предупреждение при 80% и 100%. 0 — без ограничений.",
- "Each schedule sends one report. Use the eye button to preview it and the plane button to send it now.": "Каждое расписание отправляет один отчёт. Кнопка с глазом открывает предпросмотр, кнопка с самолётиком отправляет отчёт сейчас.",
  "Edit report schedule": "Изменить расписание отчёта",
  "Encryption": "Шифрование",
  "Enter a valid email address.": "Введите корректный адрес электронной почты.",
@@ -163,5 +161,15 @@
  "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "Для раздела «Приложения»: адрес веб-интерфейса ntopng (os-ntopng). Пусто: http://127.0.0.1:3000, ntopng на этом межсетевом экране.",
  "ntopng API token": "API-токен ntopng",
  "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "Необязательно: токен, созданный в ntopng для его REST API. С ним раздел «Приложения» показывает приложения ntopng по трафику; без него — то, что записала Suricata. Хранится только на этом межсетевом экране. Оставьте пустым, чтобы сохранить текущий токен.",
- "Enter the token as ntopng shows it.": "Введите токен так, как его показывает ntopng."
+ "Enter the token as ntopng shows it.": "Введите токен так, как его показывает ntopng.",
+ "No attachment": "Без вложения",
+ "Audit log": "Журнал аудита",
+ "One device only": "Только одно устройство",
+ "Optional: another network whose devices this report covers (devices and their usage). Empty: the Local network set on the Settings tab.": "Необязательно: другая сеть, устройства которой охватывает этот отчёт (устройства и их трафик). Пусто: Локальная сеть, заданная на вкладке Настройки.",
+ "Optional: one address. The lists per device - DNS, web activity, devices and their usage, alerts on connections it opened, VPN sessions, the audit log - then show this device alone; the totals stay the network's.": "Необязательно: один адрес. Списки по устройствам — DNS, веб-активность, устройства и их трафик, оповещения о соединениях, которые оно открыло, сеансы VPN, журнал аудита — тогда показывают только это устройство; итоги остаются по всей сети.",
+ "Also attach the report as a file, handy for keeping or forwarding: HTML as the mail shows it, PDF for printing, or CSV with each table's rows for a spreadsheet. PDF is written with a font that has no Chinese, Japanese or Korean letters: a report in those languages is attached as HTML instead.": "Также прикреплять отчёт как файл — удобно для хранения или пересылки: HTML в том виде, в каком его показывает письмо, PDF для печати или CSV со строками каждой таблицы для электронной таблицы. PDF пишется шрифтом без китайских, японских и корейских символов: отчёт на этих языках прикрепляется вместо этого как HTML.",
+ "Enter one address, for example 192.168.1.20.": "Введите один адрес, например 192.168.1.20.",
+ "The report as a file, with its data as of now:": "Отчёт в виде файла, с данными на текущий момент:",
+ "The file could not be made.": "Не удалось создать файл.",
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Каждое расписание отправляет один отчёт. Кнопка с глазом открывает предпросмотр, кнопка со стрелкой скачивает отчёт в формате HTML, PDF или CSV, кнопка с самолётиком отправляет отчёт сейчас."
 }

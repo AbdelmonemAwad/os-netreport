@@ -54,6 +54,16 @@ jobs:
       - name: the report's newer sections read what they should
         run: python3 tools/test-sections.py
 
+      # The PDF writer (pdf.py) on its own: a valid file, Arabic shaped and right to left, wrapping,
+      # tables over pages, the text copied out as it went in.
+      - name: pdf.py writes a PDF that reads right
+        run: python3 tools/test-pdf.py
+
+      # The report as a file (HTML, PDF, CSV) and in the mail, a schedule's filters and the audit
+      # section, against a recorded-format audit log and stand-ins for the firewall's answers.
+      - name: the report's files, filters and audit section
+        run: python3 tools/test-export.py
+
   syntax:
     name: syntax
     runs-on: ubuntu-latest

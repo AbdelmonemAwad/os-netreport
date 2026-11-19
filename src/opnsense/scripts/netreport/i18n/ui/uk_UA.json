@@ -4,7 +4,6 @@
  "Alert language": "Мова сповіщень",
  "Alert sent": "Сповіщення надіслано",
  "Alerts and thresholds": "Сповіщення та пороги",
- "Also attach the report as an HTML file, handy for keeping or forwarding.": "Також додавати звіт як HTML-файл — зручно для зберігання чи пересилання.",
  "Arabic": "Арабська",
  "Attach as file": "Додати як файл",
  "Backup age warning (days)": "Попередження про вік резервної копії (дні)",
@@ -20,7 +19,6 @@
  "Devices on this network are listed in the report and watched for new arrivals.": "Пристрої цієї мережі перелічуються у звіті, а поява нових відстежується.",
  "Disk usage warning (%)": "Попередження про заповнення диска (%)",
  "Download and upload together. Warns at 80% and 100%. 0 means unlimited.": "Завантаження й відвантаження разом. Попередження при 80% і 100%. 0 — без обмежень.",
- "Each schedule sends one report. Use the eye button to preview it and the plane button to send it now.": "Кожен розклад надсилає один звіт. Кнопка з оком відкриває попередній перегляд, кнопка з літачком надсилає звіт зараз.",
  "Edit report schedule": "Змінити розклад звіту",
  "Encryption": "Шифрування",
  "Enter a valid email address.": "Введіть коректну адресу електронної пошти.",
@@ -163,5 +161,15 @@
  "For the Applications section: the address of ntopng's web interface (os-ntopng). Empty: http://127.0.0.1:3000, ntopng on this firewall.": "Для розділу «Застосунки»: адреса вебінтерфейсу ntopng (os-ntopng). Порожньо: http://127.0.0.1:3000, ntopng на цьому брандмауері.",
  "ntopng API token": "API-токен ntopng",
  "Optional: a token made in ntopng for its REST API. With it, the Applications section shows ntopng's applications by traffic; without it, what Suricata recorded. Stored on this firewall only. Leave empty to keep the current token.": "Необов’язково: токен, створений у ntopng для його REST API. З ним розділ «Застосунки» показує застосунки ntopng за трафіком; без нього — те, що записала Suricata. Зберігається лише на цьому брандмауері. Залиште порожнім, щоб зберегти поточний токен.",
- "Enter the token as ntopng shows it.": "Введіть токен так, як його показує ntopng."
+ "Enter the token as ntopng shows it.": "Введіть токен так, як його показує ntopng.",
+ "No attachment": "Без вкладення",
+ "Audit log": "Журнал аудиту",
+ "One device only": "Лише один пристрій",
+ "Optional: another network whose devices this report covers (devices and their usage). Empty: the Local network set on the Settings tab.": "Необов'язково: інша мережа, пристрої якої охоплює цей звіт (пристрої та їхній трафік). Порожньо: Локальна мережа, задана на вкладці Налаштування.",
+ "Optional: one address. The lists per device - DNS, web activity, devices and their usage, alerts on connections it opened, VPN sessions, the audit log - then show this device alone; the totals stay the network's.": "Необов'язково: одна адреса. Списки за пристроями — DNS, веб-активність, пристрої та їхній трафік, сповіщення про з'єднання, які він відкрив, сеанси VPN, журнал аудиту — тоді показують лише цей пристрій; підсумки лишаються для всієї мережі.",
+ "Also attach the report as a file, handy for keeping or forwarding: HTML as the mail shows it, PDF for printing, or CSV with each table's rows for a spreadsheet. PDF is written with a font that has no Chinese, Japanese or Korean letters: a report in those languages is attached as HTML instead.": "Також додавати звіт як файл — зручно для зберігання чи пересилання: HTML у тому вигляді, у якому його показує лист, PDF для друку або CSV з рядками кожної таблиці для електронної таблиці. PDF пишеться шрифтом без китайських, японських і корейських символів: звіт цими мовами натомість додається як HTML.",
+ "Enter one address, for example 192.168.1.20.": "Введіть одну адресу, наприклад 192.168.1.20.",
+ "The report as a file, with its data as of now:": "Звіт у вигляді файлу, з даними на цю мить:",
+ "The file could not be made.": "Не вдалося створити файл.",
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Кожен розклад надсилає один звіт. Кнопка з оком відкриває попередній перегляд, кнопка зі стрілкою завантажує звіт як HTML, PDF або CSV, кнопка з літачком надсилає звіт зараз."
 }
