@@ -203,5 +203,12 @@
  "audit_entry": "Záznam",
  "only_device": "Zařízení: {device}",
  "only_iface": "Síť: {name}",
- "only_iface_off": "Síť {name}: neexistuje nebo nemá vlastní adresu IPv4 – zobrazená zařízení jsou z místní sítě"
+ "only_iface_off": "Síť {name}: neexistuje nebo nemá vlastní adresu IPv4 – zobrazená zařízení jsou z místní sítě",
+ "anon_note": "adresy, adresy MAC a názvy zařízení maskovány",
+ "backup_mail_row": "Týdenní záloha e-mailem",
+ "backup_never": "zatím neodeslána",
+ "backup_failed": "selhala: {why}",
+ "i_backup_nopass": "Týdenní záloha e-mailem je zapnutá, ale nemá heslo, takže se žádná neodesílá.",
+ "backup_subject": "Záloha konfigurace — {title} — {date}",
+ "backup_text": "Konfigurace {host}, zašifrovaná heslem pro zálohy nastaveným na stránce „Zpráva o síti“. Obnovení: System: Configuration: Backups, vyberte tento soubor, zaškrtněte, že je zašifrovaný, a zadejte toto heslo."
 }

@@ -203,5 +203,12 @@
  "audit_entry": "Voce",
  "only_device": "Dispositivo: {device}",
  "only_iface": "Rete: {name}",
- "only_iface_off": "Rete {name}: non più presente o senza un proprio indirizzo IPv4 – i dispositivi mostrati sono quelli della rete locale"
+ "only_iface_off": "Rete {name}: non più presente o senza un proprio indirizzo IPv4 – i dispositivi mostrati sono quelli della rete locale",
+ "anon_note": "indirizzi, indirizzi MAC e nomi dei dispositivi mascherati",
+ "backup_mail_row": "Backup settimanale via e-mail",
+ "backup_never": "non ancora inviato",
+ "backup_failed": "non riuscito: {why}",
+ "i_backup_nopass": "Il backup settimanale via e-mail è attivo ma non ha una password, quindi non ne viene inviato nessuno.",
+ "backup_subject": "Backup della configurazione — {title} — {date}",
+ "backup_text": "La configurazione di {host}, cifrata con la password di backup impostata in “Report di rete”. Per ripristinarla: System: Configuration: Backups, scegli questo file, indica che è cifrato e inserisci quella password."
 }

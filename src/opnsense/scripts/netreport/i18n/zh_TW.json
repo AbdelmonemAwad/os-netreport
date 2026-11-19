@@ -203,5 +203,12 @@
  "audit_entry": "項目",
  "only_device": "裝置：{device}",
  "only_iface": "網路：{name}",
- "only_iface_off": "網路 {name}：已不存在或沒有自己的 IPv4 位址——顯示的是區域網路的裝置"
+ "only_iface_off": "網路 {name}：已不存在或沒有自己的 IPv4 位址——顯示的是區域網路的裝置",
+ "anon_note": "位址、MAC 位址和裝置名稱已遮蔽",
+ "backup_mail_row": "每週郵件備份",
+ "backup_never": "尚未寄出",
+ "backup_failed": "失敗：{why}",
+ "i_backup_nopass": "每週郵件備份已開啟，但未設定密碼，因此不會寄出。",
+ "backup_subject": "設定備份 — {title} — {date}",
+ "backup_text": "{host} 的設定，已使用在「網路報告」中設定的備份密碼加密。還原方式：在 System: Configuration: Backups 中選擇此檔案，勾選已加密，然後輸入該密碼。"
 }

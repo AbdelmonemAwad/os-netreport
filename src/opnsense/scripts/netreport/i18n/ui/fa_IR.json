@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "برای محاسبه حجم اینترنت و سقف داده ماهانه استفاده می‌شود.",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "معمولاً 465 برای SSL/TLS یا 587 برای STARTTLS.",
  "VPN tunnels": "تونل‌های VPN",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "وقتی آخرین پشتیبان راه دور پیکربندی قدیمی‌تر از این باشد هشدار داده شود. 0 این بررسی را غیرفعال می‌کند.",
  "System language": "زبان سیستم",
  "BSD-2-Clause licence": "مجوز BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "پروژه‌ای مستقل، بدون وابستگی به Deciso B.V.",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "یک نشانی وارد کنید، مثلاً 192.168.1.20.",
  "The report as a file, with its data as of now:": "گزارش به صورت فایل، با داده‌های همین لحظه:",
  "The file could not be made.": "ساخت فایل ممکن نشد.",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "هر زمان‌بندی یک گزارش ارسال می‌کند. برای پیش‌نمایش از دکمه چشم، برای دانلود به صورت HTML، PDF یا CSV از دکمه پیکان و برای ارسال فوری از دکمه هواپیما استفاده کنید."
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "هر زمان‌بندی یک گزارش ارسال می‌کند. برای پیش‌نمایش از دکمه چشم، برای دانلود به صورت HTML، PDF یا CSV از دکمه پیکان و برای ارسال فوری از دکمه هواپیما استفاده کنید.",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "وقتی آخرین پشتیبان راه دور پیکربندی، یا آخرین پشتیبان هفتگی با ایمیل، قدیمی‌تر از این باشد هشدار داده شود. 0 این بررسی را غیرفعال می‌کند.",
+ "Privacy": "حریم خصوصی",
+ "Mask addresses": "پوشاندن نشانی‌ها",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "هر نشانی، نشانی MAC و نام دستگاه در گزارش‌ها، هشدارها و فایل‌های دانلودشده به جای مقدار واقعی با مقداری پوشانده نشان داده شود: هر دستگاه از یک گزارش به گزارش بعد همان مقدار را نگه می‌دارد، و این مقدار بدون کلیدی که فقط روی همین فایروال نگه‌داری می‌شود برگرداندنی نیست. گزارش‌هایی که پیش از روشن کردن آن نگه داشته شده‌اند همان‌طور که ارسال شده‌اند می‌مانند.",
+ "Weekly configuration backup": "پشتیبان هفتگی پیکربندی",
+ "Send a weekly backup": "ارسال پشتیبان هفتگی",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "پیکربندی این فایروال را هفته‌ای یک بار با ایمیل می‌فرستد، رمزگذاری‌شده با گذرواژه زیر، به همان روشی که System: Configuration: Backups یک دانلود را رمزگذاری می‌کند: آن را همان‌جا با همین گذرواژه بازیابی کنید. بدون گذرواژه چیزی فرستاده نمی‌شود. برای هشدار قدمت پشتیبان، یک پشتیبان به شمار می‌آید.",
+ "Backup day": "روز پشتیبان‌گیری",
+ "Backup time": "ساعت پشتیبان‌گیری",
+ "24-hour clock, firewall time zone.": "ساعت 24 ساعته، منطقه زمانی فایروال.",
+ "Backup recipients": "گیرندگان پشتیبان",
+ "Who receives the backup. Empty: the default recipients above.": "چه کسی پشتیبان را دریافت می‌کند. خالی: گیرندگان پیش‌فرض بالا.",
+ "Backup password": "گذرواژه پشتیبان",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "گذرواژه‌ای که پشتیبان با آن رمزگذاری می‌شود؛ آن را جای دیگری هم نگه دارید، چون بدون آن پشتیبان باز نمی‌شود. فقط روی همین فایروال ذخیره می‌شود. برای حفظ گذرواژه فعلی خالی بگذارید."
 }

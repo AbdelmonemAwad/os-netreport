@@ -203,5 +203,12 @@
  "audit_entry": "Entrée",
  "only_device": "Appareil : {device}",
  "only_iface": "Réseau : {name}",
- "only_iface_off": "Réseau {name} : supprimé ou sans adresse IPv4 propre – les appareils affichés sont ceux du réseau local"
+ "only_iface_off": "Réseau {name} : supprimé ou sans adresse IPv4 propre – les appareils affichés sont ceux du réseau local",
+ "anon_note": "adresses, adresses MAC et noms d'appareils masqués",
+ "backup_mail_row": "Sauvegarde hebdomadaire par e-mail",
+ "backup_never": "pas encore envoyée",
+ "backup_failed": "échec : {why}",
+ "i_backup_nopass": "La sauvegarde hebdomadaire par e-mail est activée mais n'a pas de mot de passe : aucune n'est donc envoyée.",
+ "backup_subject": "Sauvegarde de la configuration — {title} — {date}",
+ "backup_text": "La configuration de {host}, chiffrée avec le mot de passe de sauvegarde défini dans « Rapport réseau ». Pour la restaurer : System: Configuration: Backups, choisissez ce fichier, cochez qu'il est chiffré et saisissez ce mot de passe."
 }

@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "Brukes til internettvolum og den månedlige datagrensen.",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "Vanligvis 465 for SSL/TLS eller 587 for STARTTLS.",
  "VPN tunnels": "VPN-tunneler",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Varsle når siste eksterne sikkerhetskopi av konfigurasjonen er eldre enn dette. 0 slår av kontrollen.",
  "System language": "Systemspråk",
  "BSD-2-Clause licence": "Lisens BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Et uavhengig prosjekt, ikke tilknyttet Deciso B.V.",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "Skriv inn én adresse, for eksempel 192.168.1.20.",
  "The report as a file, with its data as of now:": "Rapporten som fil, med dataene slik de er nå:",
  "The file could not be made.": "Filen kunne ikke lages.",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Hver plan sender én rapport. Bruk øyeknappen for forhåndsvisning, pilknappen for å laste den ned som HTML, PDF eller CSV, og flyknappen for å sende den nå."
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Hver plan sender én rapport. Bruk øyeknappen for forhåndsvisning, pilknappen for å laste den ned som HTML, PDF eller CSV, og flyknappen for å sende den nå.",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "Varsle når siste eksterne sikkerhetskopi av konfigurasjonen, eller siste ukentlige sikkerhetskopi på e-post, er eldre enn dette. 0 slår av kontrollen.",
+ "Privacy": "Personvern",
+ "Mask addresses": "Masker adresser",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "Vis i stedet hver adresse, MAC-adresse og hvert enhetsnavn i rapporter, varsler og nedlastede filer som en maskert verdi: samme enhet beholder samme verdi fra én rapport til den neste, og verdien kan ikke føres tilbake uten en nøkkel som bare finnes på denne brannmuren. Rapporter som ble lagret før dette ble slått på, forblir slik de ble sendt.",
+ "Weekly configuration backup": "Ukentlig sikkerhetskopi av konfigurasjonen",
+ "Send a weekly backup": "Send en ukentlig sikkerhetskopi",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "Sender konfigurasjonen til denne brannmuren på e-post én gang i uken, kryptert med passordet nedenfor, slik System: Configuration: Backups krypterer en nedlasting: gjenopprett den der, med samme passord. Ingenting sendes uten passord. Den teller som en sikkerhetskopi for advarselen om alder på sikkerhetskopi.",
+ "Backup day": "Dag for sikkerhetskopi",
+ "Backup time": "Tidspunkt for sikkerhetskopi",
+ "24-hour clock, firewall time zone.": "24-timersklokke, brannmurens tidssone.",
+ "Backup recipients": "Mottakere av sikkerhetskopien",
+ "Who receives the backup. Empty: the default recipients above.": "Hvem som mottar sikkerhetskopien. Tomt: standardmottakerne ovenfor.",
+ "Backup password": "Passord for sikkerhetskopien",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "Passordet sikkerhetskopien krypteres med; ta vare på det et annet sted også, for uten det kan sikkerhetskopien ikke åpnes. Lagres bare på denne brannmuren. La stå tomt for å beholde nåværende passord."
 }

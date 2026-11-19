@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "Se usa para el volumen de Internet y el límite mensual de datos.",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "Normalmente 465 para SSL/TLS o 587 para STARTTLS.",
  "VPN tunnels": "Túneles VPN",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Avisar cuando la última copia de seguridad remota de la configuración sea más antigua que esto. 0 desactiva la comprobación.",
  "System language": "Idioma del sistema",
  "BSD-2-Clause licence": "Licencia BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Proyecto independiente, sin relación con Deciso B.V.",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "Introduce una dirección, por ejemplo 192.168.1.20.",
  "The report as a file, with its data as of now:": "El informe como archivo, con sus datos de ahora:",
  "The file could not be made.": "No se pudo crear el archivo.",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Cada programación envía un informe. Usa el botón del ojo para previsualizarlo, el de la flecha para descargarlo como HTML, PDF o CSV y el del avión para enviarlo ahora."
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Cada programación envía un informe. Usa el botón del ojo para previsualizarlo, el de la flecha para descargarlo como HTML, PDF o CSV y el del avión para enviarlo ahora.",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "Avisar cuando la última copia de seguridad remota de la configuración, o la última copia de seguridad semanal por correo, sea más antigua que esto. 0 desactiva la comprobación.",
+ "Privacy": "Privacidad",
+ "Mask addresses": "Enmascarar direcciones",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "Mostrar en su lugar cada dirección, dirección MAC y nombre de dispositivo de los informes, las alertas y los archivos descargados como un valor enmascarado: el mismo dispositivo conserva el mismo valor de un informe a otro, y el valor no puede revertirse sin una clave que solo se guarda en este cortafuegos. Los informes guardados antes de activarlo se quedan tal como se enviaron.",
+ "Weekly configuration backup": "Copia de seguridad semanal de la configuración",
+ "Send a weekly backup": "Enviar una copia de seguridad semanal",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "Envía por correo la configuración de este cortafuegos una vez por semana, cifrada con la contraseña de abajo, igual que System: Configuration: Backups cifra una descarga: restáurala allí, con la misma contraseña. Sin contraseña no se envía nada. Cuenta como copia de seguridad para el aviso de antigüedad de la copia de seguridad.",
+ "Backup day": "Día de la copia de seguridad",
+ "Backup time": "Hora de la copia de seguridad",
+ "24-hour clock, firewall time zone.": "Formato de 24 horas, zona horaria del cortafuegos.",
+ "Backup recipients": "Destinatarios de la copia de seguridad",
+ "Who receives the backup. Empty: the default recipients above.": "Quién recibe la copia de seguridad. Vacío: los destinatarios predeterminados de arriba.",
+ "Backup password": "Contraseña de la copia de seguridad",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "La contraseña con la que se cifra la copia de seguridad; guárdala también en otro sitio, porque sin ella la copia de seguridad no se puede abrir. Se guarda solo en este cortafuegos. Déjalo vacío para mantener la contraseña actual."
 }

@@ -203,5 +203,12 @@
  "audit_entry": "Wpis",
  "only_device": "Urządzenie: {device}",
  "only_iface": "Sieć: {name}",
- "only_iface_off": "Sieć {name}: nie istnieje lub nie ma własnego adresu IPv4 – pokazane urządzenia są z sieci lokalnej"
+ "only_iface_off": "Sieć {name}: nie istnieje lub nie ma własnego adresu IPv4 – pokazane urządzenia są z sieci lokalnej",
+ "anon_note": "adresy, adresy MAC i nazwy urządzeń zamaskowane",
+ "backup_mail_row": "Cotygodniowa kopia zapasowa e-mailem",
+ "backup_never": "jeszcze nie wysłano",
+ "backup_failed": "nie powiodło się: {why}",
+ "i_backup_nopass": "Cotygodniowa kopia zapasowa e-mailem jest włączona, ale nie ma hasła, więc żadna nie jest wysyłana.",
+ "backup_subject": "Kopia zapasowa konfiguracji — {title} — {date}",
+ "backup_text": "Konfiguracja {host}, zaszyfrowana hasłem kopii zapasowej ustawionym na stronie „Raport sieci”. Aby ją przywrócić: System: Configuration: Backups, wybierz ten plik, zaznacz, że jest zaszyfrowany, i wpisz to hasło."
 }

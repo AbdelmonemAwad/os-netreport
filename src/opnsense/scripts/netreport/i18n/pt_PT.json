@@ -203,5 +203,12 @@
  "audit_entry": "Entrada",
  "only_device": "Dispositivo: {device}",
  "only_iface": "Rede: {name}",
- "only_iface_off": "Rede {name}: já não existe ou não tem endereço IPv4 próprio – os dispositivos mostrados são os da rede local"
+ "only_iface_off": "Rede {name}: já não existe ou não tem endereço IPv4 próprio – os dispositivos mostrados são os da rede local",
+ "anon_note": "endereços, endereços MAC e nomes de dispositivos mascarados",
+ "backup_mail_row": "Cópia de segurança semanal por e-mail",
+ "backup_never": "ainda não enviada",
+ "backup_failed": "falhou: {why}",
+ "i_backup_nopass": "A cópia de segurança semanal por e-mail está ativada, mas não tem palavra-passe, por isso nenhuma é enviada.",
+ "backup_subject": "Cópia de segurança da configuração — {title} — {date}",
+ "backup_text": "A configuração de {host}, encriptada com a palavra-passe de cópia de segurança definida em “Relatório da rede”. Para a restaurar: System: Configuration: Backups, escolha este ficheiro, assinale que está encriptado e introduza essa palavra-passe."
 }

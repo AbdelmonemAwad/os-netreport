@@ -64,6 +64,11 @@ jobs:
       - name: the report's files, filters and audit section
         run: python3 tools/test-export.py
 
+      # General's "Mask addresses" in reports, alerts and files, and the weekly configuration backup
+      # by mail: when it is due, never without a password, and what the mail carries.
+      - name: masking and the weekly backup
+        run: python3 tools/test-privacy.py
+
   syntax:
     name: syntax
     runs-on: ubuntu-latest

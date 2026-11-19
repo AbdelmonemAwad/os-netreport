@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "İnternet hacmi ve aylık veri kotası için kullanılır.",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "Genellikle SSL/TLS için 465, STARTTLS için 587.",
  "VPN tunnels": "VPN tünelleri",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Son uzak yapılandırma yedeği bundan eskiyse uyar. 0 denetimi devre dışı bırakır.",
  "System language": "Sistem dili",
  "BSD-2-Clause licence": "BSD-2-Clause lisansı",
  "An independent project, not affiliated with Deciso B.V.": "Deciso B.V. ile bağlantısı olmayan bağımsız bir proje",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "Bir adres girin, örneğin 192.168.1.20.",
  "The report as a file, with its data as of now:": "Şu anki verileriyle rapor dosyası:",
  "The file could not be made.": "Dosya oluşturulamadı.",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Her zamanlama bir rapor gönderir. Önizlemek için göz düğmesini, HTML, PDF veya CSV olarak indirmek için ok düğmesini, hemen göndermek için uçak düğmesini kullanın."
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Her zamanlama bir rapor gönderir. Önizlemek için göz düğmesini, HTML, PDF veya CSV olarak indirmek için ok düğmesini, hemen göndermek için uçak düğmesini kullanın.",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "Son uzak yapılandırma yedeği veya e-postayla gönderilen son haftalık yedek bundan eskiyse uyar. 0 denetimi devre dışı bırakır.",
+ "Privacy": "Gizlilik",
+ "Mask addresses": "Adresleri maskele",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "Raporlarda, uyarılarda ve indirilen dosyalarda her adresi, MAC adresini ve cihaz adını bunun yerine maskelenmiş bir değer olarak göster: aynı cihaz bir rapordan diğerine aynı değeri korur ve değer, yalnızca bu güvenlik duvarında tutulan bir anahtar olmadan geri çevrilemez. Bu seçenek açılmadan önce saklanan raporlar gönderildikleri gibi kalır.",
+ "Weekly configuration backup": "Haftalık yapılandırma yedeği",
+ "Send a weekly backup": "Haftalık yedek gönder",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "Bu güvenlik duvarının yapılandırmasını haftada bir kez e-postayla gönderir; yapılandırma, System: Configuration: Backups bir indirmeyi nasıl şifreliyorsa aşağıdaki parolayla öyle şifrelenir: aynı parolayla orada geri yükleyin. Parola olmadan hiçbir şey gönderilmez. Yedek yaşı uyarısında yedek olarak sayılır.",
+ "Backup day": "Yedekleme günü",
+ "Backup time": "Yedekleme saati",
+ "24-hour clock, firewall time zone.": "24 saat biçimi, güvenlik duvarının saat dilimi.",
+ "Backup recipients": "Yedek alıcıları",
+ "Who receives the backup. Empty: the default recipients above.": "Yedeği kimin alacağı. Boş: yukarıdaki varsayılan alıcılar.",
+ "Backup password": "Yedek parolası",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "Yedeğin şifrelendiği parola; başka bir yerde de saklayın, çünkü o olmadan yedek açılamaz. Yalnızca bu güvenlik duvarında saklanır. Mevcut parolayı korumak için boş bırakın."
 }

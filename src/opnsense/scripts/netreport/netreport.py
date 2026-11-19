@@ -35,6 +35,7 @@ with the report attached as HTML, PDF (pdf.py) or CSV when the schedule asks for
   netreport.py export <uuid> <html|pdf|csv>
                                 the report as a file to download (prints JSON: name, type, base64)
   netreport.py testmail         send a short test message (prints JSON)
+  netreport.py backup           send the weekly configuration backup now (prints JSON)
   netreport.py history          print the send history (JSON, newest first)
   netreport.py view <file>      print an archived report
 
@@ -51,6 +52,8 @@ import datetime
 import fcntl
 import glob
 import gzip
+import hashlib
+import hmac
 import html
 import io
 import ipaddress
@@ -234,20 +237,28 @@ class Settings:
     }
 
     def __init__(self):
+        global ANON
         self.root = ET.parse(CONFIG).getroot()
         node = self.root.find('./OPNsense/NetReport')
         self.general = dict(self.DEFAULTS)
         self.schedules = {}
         if node is None:
+            ANON = None
             return
         general = node.find('general')
         for child in (list(general) if general is not None else []):
             if (child.text or '').strip() != '' or child.tag in ('recipients', 'vpn_interfaces'):
                 self.general[child.tag] = (child.text or '').strip()
+        if general is not None and general.findtext('backup_password'):
+            # a password as it was typed: a space at its ends is part of it, and the backup page asks
+            # for it whole
+            self.general['backup_password'] = general.findtext('backup_password')
         for item in node.findall('./schedules/schedule'):
             sched = {c.tag: (c.text or '').strip() for c in item}
             sched['uuid'] = item.get('uuid')
             self.schedules[sched['uuid']] = sched
+        # every report, alert and file made from these settings masks what names a device, or none does
+        ANON = Masker() if self.general.get('anonymize') == '1' else None
 
     def get(self, key):
         return self.general.get(key, '')
@@ -407,7 +418,184 @@ def hostnames(settings):
     return names
 
 
+# ---------------------------------------------------------------- masking (General: Mask addresses)
+
+ANON_KEY = os.path.join(STATE_DIR, 'anonymize.key')
+ANON = None                     # the Masker while General's "Mask addresses" is on (set by Settings)
+ARPA_TEXT = re.compile(r'\b((?:\d{1,3}\.){3}\d{1,3})\.in-addr\.arpa\b', re.IGNORECASE)
+ARPA6_TEXT = re.compile(r'\b((?:[0-9a-f]\.){32})ip6\.arpa\b', re.IGNORECASE)
+IPV4_TEXT = re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}\b(?!\.in-addr)')
+# a run of what an IPv6 address, a port, a scope or a word before a colon is written with: the address
+# is looked for inside it at every colon (src:2001:db8::1, 2001:db8::1:, fe80::1%igb0)
+COLON_RUN = re.compile(r'[0-9A-Za-z_.%:]*:[0-9A-Za-z_.%:]*')
+MAC_TEXT = re.compile(r'(?<![0-9A-Fa-f:])[0-9A-Fa-f]{2}(?::[0-9A-Fa-f]{2}){5}(?![0-9A-Fa-f:])')
+# the parts of a webhook's facts that hold a device's name
+NAME_FACTS = ('name', 'hostname', 'device', 'user')
+
+
+class Masker:
+    """One masked value for each address, MAC address and device name, the same in every report, alert
+    and file: a keyed hash (HMAC-SHA256) under a key made once on this firewall and kept beside the
+    plugin's state (ANON_KEY, 0600), so that the value cannot be undone without it, and the same
+    device keeps its value from one report to the next. Reports archived before it was turned on keep
+    what they said."""
+
+    def __init__(self):
+        self._key = None
+
+    def key(self):
+        """The key, read; made where there is none - written whole beside the place and linked into
+        it, so that two processes starting at once (the scheduler and a preview) end with one key:
+        the second finds the first's link there, and reads it."""
+        if self._key is None:
+            for _ in range(3):
+                try:
+                    with open(ANON_KEY, 'rb') as handle:
+                        found = handle.read()
+                    if len(found) >= 32:
+                        self._key = found
+                        break
+                    os.unlink(ANON_KEY)         # a key cut short is no key: made again below
+                except FileNotFoundError:
+                    pass
+                os.makedirs(os.path.dirname(ANON_KEY), exist_ok=True)
+                tmp = '%s.%d.tmp' % (ANON_KEY, os.getpid())
+                fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+                with os.fdopen(fd, 'wb') as handle:
+                    handle.write(os.urandom(32))
+                try:
+                    os.link(tmp, ANON_KEY)
+                except FileExistsError:
+                    pass
+                finally:
+                    os.unlink(tmp)
+            if self._key is None:
+                raise RuntimeError('the masking key could not be read or made')
+        return self._key
+
+    def value(self, kind, raw):
+        digest = hmac.new(self.key(), f'{kind}:{raw}'.encode('utf-8', 'replace'), hashlib.sha256).hexdigest()
+        return f'{kind}-{digest[:6]}'
+
+    def addr(self, address):
+        text = str(address or '')
+        try:
+            return self.value('ip', str(ipaddress.ip_address(text.split('%', 1)[0])))
+        except ValueError:
+            return self.value('ip', text) if text else text
+
+    def mac(self, mac):
+        return self.value('mac', str(mac).lower()) if mac else mac
+
+    def name(self, name):
+        return self.value('name', str(name)) if name else name
+
+    def conn(self, name):
+        """A VPN connection's name with its device's or user's part masked: "WireGuard <peer>" and
+        "OpenVPN <server>: <client>" (alerts.py's names); an IPsec connection names no device."""
+        text = str(name or '')
+        if text.startswith('WireGuard '):
+            return 'WireGuard ' + self.name(text[len('WireGuard '):])
+        if text.startswith('OpenVPN ') and ': ' in text:
+            server, client = text.split(': ', 1)
+            return server + ': ' + self.name(client)
+        return text
+
+    def names(self, text, known):
+        """the device names the firewall knows (DHCP, static hosts) masked where they stand as a host name
+        in a domain - johns-iphone.lan in a list of the domains asked for. A name alone is masked where
+        the report names a device (label()); a name that is also a common word ("mail") is not taken
+        for one elsewhere."""
+        if not isinstance(text, str) or not text:
+            return text
+        for name in sorted({n for n in known if n and len(n) > 1 and n != 'OPNsense'}, key=len, reverse=True):
+            text = re.sub(r'(?<![\w-])' + re.escape(name) + r'(?=\.[A-Za-z])', self.name(name), text)
+        return text
+
+    def text(self, text):
+        """every address and MAC address in a text masked (a reverse lookup's name with the address)"""
+        if not isinstance(text, str) or not text:
+            return text
+
+        def arpa6(m):
+            nibbles = m.group(1).split('.')[:-1][::-1]
+            return self.addr(':'.join(''.join(nibbles[i:i + 4]) for i in range(0, 32, 4))) + '.ip6.arpa'
+        text = ARPA6_TEXT.sub(arpa6, text)
+        text = ARPA_TEXT.sub(lambda m: self.addr('.'.join(reversed(m.group(1).split('.')))) + '.in-addr.arpa', text)
+        text = COLON_RUN.sub(self._v6, text)
+        text = MAC_TEXT.sub(lambda m: self.mac(m.group(0)), text)
+
+        def v4(m):
+            try:
+                ipaddress.IPv4Address(m.group(0))
+            except ValueError:
+                return m.group(0)
+            return self.addr(m.group(0))
+
+        return IPV4_TEXT.sub(v4, text)
+
+    def _v6(self, m):
+        """the longest IPv6 address inside a run of colons, from a colon or the start to a colon or the
+        end - not a bare "::", not a time, not a MAC address (six pairs, no "::")"""
+        run = m.group(0)
+        if run.count(':') < 2:
+            return run
+        starts = [0] + [i + 1 for i, c in enumerate(run) if c == ':']
+        ends = [len(run)] + [i for i, c in enumerate(run) if c == ':']
+        best = None
+        for a in starts:
+            for b in ends:
+                if b - a < 3 or (best and b - a <= best[1] - best[0]):
+                    continue
+                cand = run[a:b]
+                if not cand.strip(':') or ('::' not in cand and cand.count(':') != 7):
+                    continue
+                try:
+                    ipaddress.IPv6Address(cand.split('%', 1)[0])
+                except ValueError:
+                    continue
+                best = (a, b)
+        if best is None:
+            return run
+        a, b = best
+        return run[:a] + self.addr(run[a:b]) + run[b:]
+
+    def facts(self, value, key=''):
+        """a webhook's facts with what names a device masked: addresses anywhere, names by their field"""
+        if isinstance(value, dict):
+            return {k: self.facts(v, k) for k, v in value.items()}
+        if isinstance(value, list):
+            return [self.facts(v, key) for v in value]
+        if isinstance(value, str):
+            if key in NAME_FACTS and value:
+                try:
+                    ipaddress.ip_address(value)
+                except ValueError:
+                    return self.name(value)
+            if key == 'mac':
+                return self.mac(value)
+            return self.text(value)
+        return value
+
+    def alert(self, alert):
+        """an alert as alerts.py builds it, masked; its kind and key (the state's own) stay as they are"""
+        out = dict(alert)
+        facts = dict(alert.get('facts') or {})
+        conn = facts.get('connection')
+        for field in ('subject', 'text', 'html'):
+            said = alert.get(field)
+            if isinstance(said, str) and isinstance(conn, str) and conn:
+                said = said.replace(conn, self.conn(conn))
+            out[field] = self.text(said)
+        if isinstance(conn, str) and conn:
+            facts['connection'] = self.conn(conn)
+        out['facts'] = self.facts(facts)
+        return out
+
+
 def label(ip, names):
+    if ANON is not None:
+        return ANON.addr(ip)
     return f'{names[ip]} ({ip})' if ip in names else ip
 
 
@@ -1248,6 +1436,10 @@ def system_info(settings, t):
                 info['smart_ok'] = False
     info['smart'] = t.get('list_sep', ', ').join(smart)
     info['backup_ts'] = last_backup()
+    # the weekly backup by mail counts as a backup for the age warning, as a remote one does
+    sent = (load_json(STATE_FILE, {}).get('backup') or {}).get('last_sent') or 0
+    if isinstance(sent, (int, float)) and sent > (info['backup_ts'] or 0):
+        info['backup_ts'] = sent
     info['backup'] = ago(time.time() - info['backup_ts'], t) if info['backup_ts'] else t['none_found']
     tunnels = []
     for ifname in csv_list(settings.get('vpn_interfaces')):
@@ -1327,6 +1519,8 @@ def infected_table(t, names, only=None):
         return f'<span class="ltr">{datetime.datetime.fromtimestamp(ts):%Y-%m-%d %H:%M}</span>' if ts else ''
 
     def who(address, entry):
+        if ANON is not None:
+            return ANON.addr(address)
         name = names.get(address) or entry.get('name')
         return f'{name} ({address})' if name else address
 
@@ -1472,7 +1666,7 @@ def build_report(settings, sched, start, end):
                 (t['users_now'], f'{len(vpn["sessions"]):,}', ''),
             ])
             body += table(t, [t['vpn_conn'], t['state_now'], t['since'], t['vpn_outages'], t['down_for']], [
-                [esc(x['name']),
+                [esc(ANON.conn(x['name']) if ANON is not None else x['name']),
                  f'<span class="ok">{esc(t["online"])}</span>' if x['up'] else f'<span class="bad">{esc(t["vpn_down_state"])}</span>',
                  at(x['since']), f'{x["outages"]:,}', esc(alerts.duration(x['down'], t)) if x['down'] else '—']
                 for x in vpn['tunnels']])
@@ -1480,7 +1674,8 @@ def build_report(settings, sched, start, end):
             if sessions:
                 body += f'<h3>{esc(t["active_now"])}</h3>' + table(
                     t, [t['service'], t['vpn_conn'], t['user'], t['address'], t['since'], t['traffic']], [
-                        [esc(svc), esc(conn), esc(user), f'<span class="ltr">{esc(addr)}</span>', at(since), human_bytes(traffic)]
+                        [esc(svc), esc(conn), esc(ANON.name(user) if ANON is not None and user else user),
+                         f'<span class="ltr">{esc(addr)}</span>', at(since), human_bytes(traffic)]
                         for svc, conn, user, addr, since, traffic in sorted(sessions, key=lambda r: -r[5])[:50]])
                 body += f'<p class="muted">{esc(t["vpn_traffic_note"])}</p>'
             if vpn['log_since']:
@@ -1657,6 +1852,9 @@ def build_report(settings, sched, start, end):
     if not info['smart_ok']:
         issues.append(('bad', t['i_smart']))
     backup_warn = settings.num('backup_warn')
+    if backup_warn and settings.get('backup_mail') == '1':
+        # with the weekly backup by mail, a backup is up to a week old (and half a day, its catch-up)
+        backup_warn = max(backup_warn, 7.5)
     if backup_warn:
         if not info['backup_ts']:
             issues.append(('warn', t['i_backup_none']))
@@ -1673,6 +1871,17 @@ def build_report(settings, sched, start, end):
     if info['smart']:
         rows.append([esc(t['smart']), esc(info['smart'])])
     rows.append([esc(t['backup']), esc(info['backup'])])
+    if settings.get('backup_mail') == '1':
+        b = load_json(STATE_FILE, {}).get('backup') or {}
+        if not settings.get('backup_password'):
+            issues.append(('warn', t['i_backup_nopass']))
+        if b.get('status') == 'failed':
+            said = t['backup_failed'].format(why=b.get('detail') or '?')
+        elif b.get('last_sent'):
+            said = ago(time.time() - b['last_sent'], t)
+        else:
+            said = t['backup_never']
+        rows.append([esc(t['backup_mail_row']), esc(said)])
     for name, state in info['tunnels']:
         rows.append([esc(t['tunnel'].format(name=name)), esc(state)])
     parts['system'] = table(t, [t['item'], t['value']], rows)
@@ -1702,6 +1911,8 @@ def build_report(settings, sched, start, end):
             name=settings.descr(asked) if re.fullmatch(r'[A-Za-z0-9_]+', asked) else asked))
     if only:
         scope += ' · ' + esc(t['only_device'].format(device=label(only, names)))
+    if ANON is not None:
+        scope += ' · ' + esc(t['anon_note'])
     body = ''.join(f'<div class="sec"><h2>{esc(t[s])}</h2>{parts[s]}</div>' for s in sections if s in parts)
     page = (f'<!DOCTYPE html><html dir="{t["dir"]}" lang="{t["lang"]}"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width,initial-scale=1"><style>{CSS}</style></head><body>'
@@ -1711,6 +1922,12 @@ def build_report(settings, sched, start, end):
             f'<div class="sec muted">{esc(t["footer"].format(host=settings.hostname(), schedule=sched.get("description", "")))}</div>'
             f'</div></body></html>')
     text = '\n'.join([subject, span, ''] + [f'- {txt}' for _, txt in issues] + ['', t['text_fallback']])
+    if ANON is not None:
+        # whatever a section printed of an address or a MAC address, a reverse lookup's name among them;
+        # and the device names the firewall knows where they stand in a domain list or a line
+        known = set(names.values()) | {str(d.get('name') or '') for d in db.values() if isinstance(d, dict)}
+        page, text = ANON.text(ANON.names(page, known)), ANON.text(ANON.names(text, known))
+        issues = [(level, ANON.text(ANON.names(said, known))) for level, said in issues]
     return subject, page, text, issues
 
 
@@ -2071,6 +2288,110 @@ def new_device_alert(settings, db, macs):
                   tags=['new'])
 
 
+# ---------------------------------------------------------------- the weekly configuration backup
+
+BACKUP_PHP = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'backup.php')
+
+
+def backup_schedule(settings):
+    """the weekly backup's time as a schedule last_occurrence() reads"""
+    return {'frequency': 'weekly', 'weekdays': settings.get('backup_day') or '0',
+            'send_time': settings.get('backup_time') or '03:00'}
+
+
+def encrypted_config(password):
+    """config.xml encrypted as OPNsense's own backup page does it (OPNsense\\Backup\\Local::encrypt,
+    backup.php), so that System: Configuration: Backups restores it with the password; the password
+    goes to the helper on its stdin, never on a command line"""
+    try:
+        done = subprocess.run(['/usr/local/bin/php', BACKUP_PHP], input=password.encode('utf-8'),
+                              capture_output=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        # OPNsense's encrypt writes the password and config.xml beside its output (php-encrypt-*) and
+        # takes them away only when it returns
+        for left in glob.glob('/var/lib/php/tmp/php-encrypt-*') + glob.glob('/tmp/php-encrypt-*'):
+            try:
+                os.unlink(left)
+            except OSError:
+                pass
+        raise RuntimeError('the encryption did not finish in 120 s')
+    out = done.stdout.decode('utf-8', 'replace')
+    if done.returncode != 0 or not out.startswith('---- BEGIN config.xml ----'):
+        raise RuntimeError(done.stderr.decode('utf-8', 'replace').strip() or 'the configuration could not be encrypted')
+    return out
+
+
+def send_backup(settings, now=None):
+    """Mail config.xml, encrypted with the backup password, to the backup's recipients (else the
+    default ones). Never without a password. Kept in state.json's "backup" and the history."""
+    now = now or datetime.datetime.now().replace(second=0, microsecond=0)
+    t = texts(settings.get('language'))
+    b = {}
+    entry = {'schedule': t['backup_mail_row'], 'subject': '', 'recipients': '', 'archive': ''}
+    try:
+        password = settings.get('backup_password')
+        if not password:
+            raise RuntimeError('no backup password is set, so no backup is sent')
+        ms = mail_settings(settings)
+        rcpt = csv_list(settings.get('backup_recipients')) or recipients_for(settings, None, ms)
+        entry['recipients'] = ', '.join(rcpt)
+        title = settings.get('title') or 'OPNsense'
+        subject = t['backup_subject'].format(title=title, date=f'{now:%Y-%m-%d}')
+        entry['subject'] = subject
+        body = t['backup_text'].format(host=settings.hostname())
+        page = (f'<html dir="{t["dir"]}" lang="{t["lang"]}"><body style="font-family:Tahoma,Arial,sans-serif">'
+                f'<p>{esc(body)}</p></body></html>')
+        name = f'config-{settings.hostname()}-{now:%Y%m%d%H%M%S}.xml'
+        send_mail(ms, rcpt, subject, page, body,
+                  (name, 'application/xml', encrypted_config(password).encode('utf-8')))
+        b.update(last_sent=time.time(), status='sent', detail='')
+        entry.update(status='sent', detail='')
+        log(f'configuration backup sent to {entry["recipients"]}')
+        result = {'status': 'sent', 'detail': entry['recipients']}
+    except Exception as exc:
+        b.update(status='failed', detail=str(exc), failed_at=time.time())
+        entry.update(status='failed', detail=str(exc))
+        log(f'configuration backup failed: {exc}')
+        result = {'status': 'failed', 'detail': str(exc)}
+    # the state as it is now, not as it was before the mail: the scheduler may have written it since
+    state = load_json(STATE_FILE, {})
+    state.setdefault('backup', {}).update(b)
+    save_json(STATE_FILE, state)
+    add_history(entry)
+    return result
+
+
+def backup_due(settings, now):
+    """Whether the weekly backup's time has come since its last try; a backup turned on now starts
+    counting from now, as a new schedule does"""
+    state = load_json(STATE_FILE, {})
+    b = state.setdefault('backup', {})
+    if settings.get('backup_mail') != '1':
+        # off: turned on again later, it counts from then, as a new one does
+        if b.pop('last_try', None) is not None:
+            save_json(STATE_FILE, state)
+        return False
+    stamp = now.timestamp()
+    occ = last_occurrence(backup_schedule(settings), now)
+    # a time summer time skips is no time of its own: an occurrence never later than now
+    at = min(occ.timestamp(), stamp)
+    last = b.get('last_try')
+    if not isinstance(last, (int, float)) or last > stamp + 3600:
+        # new, or written while the clock was ahead: count from now
+        b['last_try'] = stamp
+        save_json(STATE_FILE, state)
+        return False
+    due = at > last
+    # a backup that failed is tried again every hour, until its catch-up has passed
+    if not due and b.get('status') == 'failed' and b.get('failed_at', 0) >= at and stamp - last >= 3600:
+        due = True
+    if due and (now - occ).total_seconds() <= CATCH_UP:
+        b['last_try'] = max(stamp, occ.timestamp())
+        save_json(STATE_FILE, state)
+        return True
+    return False
+
+
 def scheduler():
     lock = open(LOCK_FILE, 'w')
     try:
@@ -2102,14 +2423,21 @@ def scheduler():
             # new schedule: start counting from now, don't fire for a time that already passed
             last_sent[uuid] = now.timestamp()
             continue
-        if occ.timestamp() > last_sent[uuid] and (now - occ).total_seconds() <= CATCH_UP:
-            last_sent[uuid] = now.timestamp()
+        if min(occ.timestamp(), now.timestamp()) > last_sent[uuid] and (now - occ).total_seconds() <= CATCH_UP:
+            # max(): a time summer time skips reads as later than now, and was sent every minute of that hour
+            last_sent[uuid] = max(now.timestamp(), occ.timestamp())
             save_json(STATE_FILE, state)
             deliver(settings, sched)
     for uuid in list(last_sent):
         if uuid not in settings.schedules:
             del last_sent[uuid]
     save_json(STATE_FILE, state)
+
+    try:
+        if backup_due(settings, now):
+            send_backup(settings)
+    except Exception as exc:
+        log(f'configuration backup failed: {exc}')
 
     if now.minute % DEVICE_SCAN_MINUTES == 0:
         db, new, _ = update_devices(settings)
@@ -2149,6 +2477,11 @@ def main():
         subject, page = build_report(settings, sched, start, end)[:2]
         name, mime, data = export_file(page, subject, fmt, now)
         print(json.dumps({'status': 'ok', 'name': name, 'type': mime, 'data': base64.b64encode(data).decode('ascii')}))
+    elif cmd == 'backup':
+        # one at a time with the scheduler's run, which may be writing the same state
+        with open(LOCK_FILE, 'w') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            print(json.dumps(send_backup(Settings()), ensure_ascii=False))
     elif cmd == 'testmail':
         settings = Settings()
         t = texts(settings.get('language'))

@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "Используется для подсчёта интернет-трафика и месячного лимита.",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "Обычно 465 для SSL/TLS или 587 для STARTTLS.",
  "VPN tunnels": "VPN-туннели",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Предупреждать, если последняя удалённая резервная копия конфигурации старше указанного срока. 0 отключает проверку.",
  "System language": "Язык системы",
  "BSD-2-Clause licence": "Лицензия BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Независимый проект, не связанный с Deciso B.V.",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "Введите один адрес, например 192.168.1.20.",
  "The report as a file, with its data as of now:": "Отчёт в виде файла, с данными на текущий момент:",
  "The file could not be made.": "Не удалось создать файл.",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Каждое расписание отправляет один отчёт. Кнопка с глазом открывает предпросмотр, кнопка со стрелкой скачивает отчёт в формате HTML, PDF или CSV, кнопка с самолётиком отправляет отчёт сейчас."
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Каждое расписание отправляет один отчёт. Кнопка с глазом открывает предпросмотр, кнопка со стрелкой скачивает отчёт в формате HTML, PDF или CSV, кнопка с самолётиком отправляет отчёт сейчас.",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "Предупреждать, если последняя удалённая резервная копия конфигурации или последняя еженедельная резервная копия по почте старше указанного срока. 0 отключает проверку.",
+ "Privacy": "Конфиденциальность",
+ "Mask addresses": "Маскировать адреса",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "Показывать каждый адрес, MAC-адрес и имя устройства в отчётах, оповещениях и скачанных файлах в виде замаскированного значения: у одного и того же устройства значение не меняется от отчёта к отчёту, а восстановить исходное без ключа, который хранится только на этом межсетевом экране, нельзя. Отчёты, сохранённые до включения, остаются такими, какими были отправлены.",
+ "Weekly configuration backup": "Еженедельная резервная копия конфигурации",
+ "Send a weekly backup": "Отправлять еженедельную резервную копию",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "Раз в неделю отправляет по почте конфигурацию этого межсетевого экрана, зашифрованную паролем ниже так же, как System: Configuration: Backups шифрует скачиваемый файл: восстанавливайте её там с тем же паролем. Без пароля ничего не отправляется. Считается резервной копией для предупреждения о возрасте резервной копии.",
+ "Backup day": "День резервного копирования",
+ "Backup time": "Время резервного копирования",
+ "24-hour clock, firewall time zone.": "24-часовой формат, часовой пояс межсетевого экрана.",
+ "Backup recipients": "Получатели резервной копии",
+ "Who receives the backup. Empty: the default recipients above.": "Кто получает резервную копию. Пусто: получатели по умолчанию, указанные выше.",
+ "Backup password": "Пароль резервной копии",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "Пароль, которым шифруется резервная копия; храните его также в другом месте, так как без него резервную копию не открыть. Хранится только на этом межсетевом экране. Оставьте пустым, чтобы сохранить текущий пароль."
 }

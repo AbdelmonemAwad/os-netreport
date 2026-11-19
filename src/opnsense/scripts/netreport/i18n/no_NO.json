@@ -203,5 +203,12 @@
  "audit_entry": "Oppføring",
  "only_device": "Enhet: {device}",
  "only_iface": "Nettverk: {name}",
- "only_iface_off": "Nettverk {name}: finnes ikke lenger eller har ingen egen IPv4-adresse – enhetene som vises, er det lokale nettverkets"
+ "only_iface_off": "Nettverk {name}: finnes ikke lenger eller har ingen egen IPv4-adresse – enhetene som vises, er det lokale nettverkets",
+ "anon_note": "adresser, MAC-adresser og enhetsnavn maskert",
+ "backup_mail_row": "Ukentlig sikkerhetskopi på e-post",
+ "backup_never": "ikke sendt ennå",
+ "backup_failed": "mislyktes: {why}",
+ "i_backup_nopass": "Den ukentlige sikkerhetskopien på e-post er slått på, men har ikke noe passord, så ingen blir sendt.",
+ "backup_subject": "Sikkerhetskopi av konfigurasjonen — {title} — {date}",
+ "backup_text": "Konfigurasjonen til {host}, kryptert med sikkerhetskopipassordet som er satt i «Nettverksrapport». Slik gjenoppretter du den: System: Configuration: Backups, velg denne filen, kryss av for at den er kryptert, og skriv inn det passordet."
 }

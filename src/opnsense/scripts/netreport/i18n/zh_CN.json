@@ -203,5 +203,12 @@
  "audit_entry": "条目",
  "only_device": "设备：{device}",
  "only_iface": "网络：{name}",
- "only_iface_off": "网络 {name}：已不存在或没有自己的 IPv4 地址——显示的是本地网络的设备"
+ "only_iface_off": "网络 {name}：已不存在或没有自己的 IPv4 地址——显示的是本地网络的设备",
+ "anon_note": "地址、MAC 地址和设备名称已脱敏",
+ "backup_mail_row": "每周邮件备份",
+ "backup_never": "尚未发送",
+ "backup_failed": "失败：{why}",
+ "i_backup_nopass": "每周邮件备份已开启，但未设置密码，因此不会发送。",
+ "backup_subject": "配置备份 — {title} — {date}",
+ "backup_text": "{host} 的配置，已使用在“网络报告”中设置的备份密码加密。恢复方法：在 System: Configuration: Backups 中选择此文件，勾选已加密，然后输入该密码。"
 }

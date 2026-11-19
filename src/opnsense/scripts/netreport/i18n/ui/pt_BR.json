@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "Usada para o volume de internet e a franquia mensal de dados.",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "Normalmente 465 para SSL/TLS ou 587 para STARTTLS.",
  "VPN tunnels": "Túneis VPN",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Avisar quando o último backup remoto da configuração for mais antigo que isso. 0 desativa a verificação.",
  "System language": "Idioma do sistema",
  "BSD-2-Clause licence": "Licença BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Projeto independente, sem vínculo com a Deciso B.V.",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "Digite um endereço, por exemplo 192.168.1.20.",
  "The report as a file, with its data as of now:": "O relatório como arquivo, com os dados de agora:",
  "The file could not be made.": "Não foi possível criar o arquivo.",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Cada agendamento envia um relatório. Use o botão do olho para pré-visualizá-lo, o botão da seta para baixá-lo como HTML, PDF ou CSV e o botão do avião para enviá-lo agora."
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Cada agendamento envia um relatório. Use o botão do olho para pré-visualizá-lo, o botão da seta para baixá-lo como HTML, PDF ou CSV e o botão do avião para enviá-lo agora.",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "Avisar quando o último backup remoto da configuração, ou o último backup semanal por e-mail, for mais antigo que isso. 0 desativa a verificação.",
+ "Privacy": "Privacidade",
+ "Mask addresses": "Mascarar endereços",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "Mostrar cada endereço, endereço MAC e nome de dispositivo em relatórios, alertas e arquivos baixados como um valor mascarado: o mesmo dispositivo mantém o mesmo valor de um relatório para o outro, e o valor não pode ser revertido sem uma chave guardada apenas neste firewall. Relatórios guardados antes de a opção ser ativada ficam como foram enviados.",
+ "Weekly configuration backup": "Backup semanal da configuração",
+ "Send a weekly backup": "Enviar um backup semanal",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "Envia por e-mail a configuração deste firewall uma vez por semana, criptografada com a senha abaixo, do mesmo jeito que System: Configuration: Backups criptografa um download: restaure-a lá, com a mesma senha. Nada é enviado sem senha. Conta como backup para o aviso de idade do backup.",
+ "Backup day": "Dia do backup",
+ "Backup time": "Horário do backup",
+ "24-hour clock, firewall time zone.": "Formato 24 horas, fuso horário do firewall.",
+ "Backup recipients": "Destinatários do backup",
+ "Who receives the backup. Empty: the default recipients above.": "Quem recebe o backup. Vazio: os destinatários padrão acima.",
+ "Backup password": "Senha do backup",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "A senha com que o backup é criptografado; guarde-a também em outro lugar, pois sem ela o backup não pode ser aberto. Armazenada apenas neste firewall. Deixe em branco para manter a senha atual."
 }

@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "インターネット通信量と月間データ上限の計算に使用します。",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "通常は SSL/TLS なら 465、STARTTLS なら 587 です。",
  "VPN tunnels": "VPN トンネル",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "最後のリモート設定バックアップがこの日数より古い場合に警告します。0 でチェックを無効にします。",
  "System language": "システム言語",
  "BSD-2-Clause licence": "BSD-2-Clause ライセンス",
  "An independent project, not affiliated with Deciso B.V.": "独立したプロジェクトであり、Deciso B.V. とは無関係です",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "アドレスを 1 つ入力してください（例：192.168.1.20）。",
  "The report as a file, with its data as of now:": "現時点のデータによるレポートのファイル：",
  "The file could not be made.": "ファイルを作成できませんでした。",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "各スケジュールは 1 つのレポートを送信します。目のボタンでプレビュー、矢印のボタンで HTML・PDF・CSV としてダウンロード、紙飛行機のボタンで今すぐ送信します。"
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "各スケジュールは 1 つのレポートを送信します。目のボタンでプレビュー、矢印のボタンで HTML・PDF・CSV としてダウンロード、紙飛行機のボタンで今すぐ送信します。",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "最後のリモート設定バックアップ、または最後の週次メールバックアップがこの日数より古い場合に警告します。0 でチェックを無効にします。",
+ "Privacy": "プライバシー",
+ "Mask addresses": "アドレスをマスク",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "レポート、アラート、ダウンロードしたファイルで、すべてのアドレス、MAC アドレス、デバイス名を代わりにマスクした値で表示します。同じデバイスはどのレポートでも同じ値になり、このファイアウォールだけに保管された鍵がなければ元に戻せません。有効にする前に保存されたレポートは、送信時のままです。",
+ "Weekly configuration backup": "週次設定バックアップ",
+ "Send a weekly backup": "週次バックアップを送信",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "このファイアウォールの設定を週に 1 回メールで送信します。「System: Configuration: Backups」がダウンロードを暗号化するのと同じ方法で、下のパスワードで暗号化されます。復元はそこで同じパスワードを使って行います。パスワードがなければ何も送信しません。バックアップ経過日数の警告ではバックアップとして扱われます。",
+ "Backup day": "バックアップの曜日",
+ "Backup time": "バックアップの時刻",
+ "24-hour clock, firewall time zone.": "24 時間表記、ファイアウォールのタイムゾーン。",
+ "Backup recipients": "バックアップの宛先",
+ "Who receives the backup. Empty: the default recipients above.": "バックアップを受け取る宛先。空欄：上の既定の宛先。",
+ "Backup password": "バックアップのパスワード",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "バックアップの暗号化に使うパスワードです。これがないとバックアップを開けないため、別の場所にも控えておいてください。このファイアウォールにのみ保存されます。空欄の場合は現在のパスワードを維持します。"
 }

@@ -232,6 +232,51 @@
     </field>
     <field>
         <type>header</type>
+        <label>Privacy</label>
+    </field>
+    <field>
+        <id>netreport.general.anonymize</id>
+        <label>Mask addresses</label>
+        <type>checkbox</type>
+        <help>Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.</help>
+    </field>
+    <field>
+        <type>header</type>
+        <label>Weekly configuration backup</label>
+    </field>
+    <field>
+        <id>netreport.general.backup_mail</id>
+        <label>Send a weekly backup</label>
+        <type>checkbox</type>
+        <help>Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.</help>
+    </field>
+    <field>
+        <id>netreport.general.backup_day</id>
+        <label>Backup day</label>
+        <type>dropdown</type>
+    </field>
+    <field>
+        <id>netreport.general.backup_time</id>
+        <label>Backup time</label>
+        <type>text</type>
+        <help>24-hour clock, firewall time zone.</help>
+    </field>
+    <field>
+        <id>netreport.general.backup_recipients</id>
+        <label>Backup recipients</label>
+        <type>select_multiple</type>
+        <style>tokenize</style>
+        <allownew>true</allownew>
+        <help>Who receives the backup. Empty: the default recipients above.</help>
+    </field>
+    <field>
+        <id>netreport.general.backup_password</id>
+        <label>Backup password</label>
+        <type>password</type>
+        <help>The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.</help>
+    </field>
+    <field>
+        <type>header</type>
         <label>Thresholds</label>
     </field>
     <field>
@@ -253,7 +298,7 @@
         <id>netreport.general.backup_warn</id>
         <label>Backup age warning (days)</label>
         <type>text</type>
-        <help>Warn when the last remote configuration backup is older than this. 0 disables the check.</help>
+        <help>Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.</help>
     </field>
     <field>
         <id>netreport.general.monthly_cap</id>

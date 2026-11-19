@@ -88,7 +88,6 @@
  "Used for internet volume and the monthly data cap.": "Utilisée pour le volume Internet et le quota mensuel de données.",
  "Usually 465 for SSL/TLS or 587 for STARTTLS.": "Généralement 465 pour SSL/TLS ou 587 pour STARTTLS.",
  "VPN tunnels": "Tunnels VPN",
- "Warn when the last remote configuration backup is older than this. 0 disables the check.": "Avertir lorsque la dernière sauvegarde distante de la configuration est plus ancienne que cela. 0 désactive la vérification.",
  "System language": "Langue du système",
  "BSD-2-Clause licence": "Licence BSD-2-Clause",
  "An independent project, not affiliated with Deciso B.V.": "Projet indépendant, sans lien avec Deciso B.V.",
@@ -171,5 +170,19 @@
  "Enter one address, for example 192.168.1.20.": "Saisissez une adresse, par exemple 192.168.1.20.",
  "The report as a file, with its data as of now:": "Le rapport sous forme de fichier, avec ses données d'à présent :",
  "The file could not be made.": "Le fichier n'a pas pu être créé.",
- "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Chaque planification envoie un rapport. Utilisez le bouton en forme d'œil pour l'aperçu, le bouton en forme de flèche pour le télécharger en HTML, PDF ou CSV, et le bouton en forme d'avion pour l'envoyer maintenant."
+ "Each schedule sends one report. Use the eye button to preview it, the arrow button to download it as HTML, PDF or CSV, and the plane button to send it now.": "Chaque planification envoie un rapport. Utilisez le bouton en forme d'œil pour l'aperçu, le bouton en forme de flèche pour le télécharger en HTML, PDF ou CSV, et le bouton en forme d'avion pour l'envoyer maintenant.",
+ "Warn when the last remote configuration backup, or the last weekly backup by mail, is older than this. 0 disables the check.": "Avertir lorsque la dernière sauvegarde distante de la configuration, ou la dernière sauvegarde hebdomadaire par e-mail, est plus ancienne que cela. 0 désactive la vérification.",
+ "Privacy": "Confidentialité",
+ "Mask addresses": "Masquer les adresses",
+ "Show every address, MAC address and device name in reports, alerts and downloaded files as a masked value instead: the same device keeps the same value from one report to the next, and the value cannot be undone without a key kept on this firewall alone. Reports kept before it was turned on stay as they were sent.": "Afficher plutôt chaque adresse, adresse MAC et nom d'appareil sous forme de valeur masquée dans les rapports, les alertes et les fichiers téléchargés : un même appareil garde la même valeur d'un rapport à l'autre, et la valeur ne peut pas être retrouvée sans une clé conservée sur ce seul pare-feu. Les rapports conservés avant son activation restent tels qu'ils ont été envoyés.",
+ "Weekly configuration backup": "Sauvegarde hebdomadaire de la configuration",
+ "Send a weekly backup": "Envoyer une sauvegarde hebdomadaire",
+ "Mail this firewall's configuration once a week, encrypted with the password below, the way System: Configuration: Backups encrypts a download: restore it there, with the same password. Nothing is sent without a password. It counts as a backup for the backup age warning.": "Envoie par e-mail la configuration de ce pare-feu une fois par semaine, chiffrée avec le mot de passe ci-dessous, comme System: Configuration: Backups chiffre un téléchargement : restaurez-la là-bas, avec le même mot de passe. Rien n'est envoyé sans mot de passe. Elle compte comme une sauvegarde pour l'alerte d'ancienneté de la sauvegarde.",
+ "Backup day": "Jour de la sauvegarde",
+ "Backup time": "Heure de la sauvegarde",
+ "24-hour clock, firewall time zone.": "Format 24 heures, fuseau horaire du pare-feu.",
+ "Backup recipients": "Destinataires de la sauvegarde",
+ "Who receives the backup. Empty: the default recipients above.": "Qui reçoit la sauvegarde. Vide : les destinataires par défaut ci-dessus.",
+ "Backup password": "Mot de passe de la sauvegarde",
+ "The password the backup is encrypted with; keep it somewhere else too, as without it the backup cannot be opened. Stored on this firewall only. Leave empty to keep the current password.": "Le mot de passe avec lequel la sauvegarde est chiffrée ; conservez-le aussi ailleurs, car sans lui la sauvegarde ne peut pas être ouverte. Stocké uniquement sur ce pare-feu. Laissez vide pour conserver le mot de passe actuel."
 }

@@ -203,5 +203,12 @@
  "audit_entry": "Eintrag",
  "only_device": "Gerät: {device}",
  "only_iface": "Netzwerk: {name}",
- "only_iface_off": "Netzwerk {name}: nicht mehr vorhanden oder ohne eigene IPv4-Adresse – die gezeigten Geräte sind die des lokalen Netzwerks"
+ "only_iface_off": "Netzwerk {name}: nicht mehr vorhanden oder ohne eigene IPv4-Adresse – die gezeigten Geräte sind die des lokalen Netzwerks",
+ "anon_note": "Adressen, MAC-Adressen und Gerätenamen maskiert",
+ "backup_mail_row": "Wöchentliche Sicherung per E-Mail",
+ "backup_never": "noch nicht gesendet",
+ "backup_failed": "fehlgeschlagen: {why}",
+ "i_backup_nopass": "Die wöchentliche Sicherung per E-Mail ist eingeschaltet, hat aber kein Passwort, daher wird keine gesendet.",
+ "backup_subject": "Konfigurationssicherung — {title} — {date}",
+ "backup_text": "Die Konfiguration von {host}, verschlüsselt mit dem in „Netzwerkbericht“ festgelegten Sicherungspasswort. Zum Wiederherstellen: Wählen Sie unter System: Configuration: Backups diese Datei, kreuzen Sie an, dass sie verschlüsselt ist, und geben Sie dieses Passwort ein."
 }
