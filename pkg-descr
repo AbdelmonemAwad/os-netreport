@@ -11,6 +11,13 @@ joins the local network.
 Plugin Changelog
 ================
 
+1.0.8
+
+* Phase 2: VPN, web activity by device, applications and mail sections
+* Phase 3: the report as a file (HTML, PDF, CSV), a schedule's filters and
+  the audit section
+* Phase 4: Mask addresses and a weekly configuration backup by mail
+
 1.0.7
 
 * a report whose security section holds a high-severity Suricata alert
